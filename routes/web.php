@@ -14,6 +14,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\StaffController;
+use App\Http\Middleware\LimitClients;
 use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
@@ -22,7 +23,7 @@ Route::get('/', fn () => redirect(User::count() ? '/dashboard' : '/setup'));
 Route::get('/setup', [StaffController::class, 'setup'])->name('setup');
 Route::post('/setup', [StaffController::class, 'finishSetup'])->name('setup.store');
 
-Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified', LimitClients::class])->name('dashboard');
 
 // After a git pull on the server: run new migrations and rebuild the caches, instead of SSH.
 Route::post('/refresh', function () {
@@ -32,7 +33,7 @@ Route::post('/refresh', function () {
     return redirect()->route('dashboard')->with('status', 'app-refreshed');
 })->middleware('auth')->name('refresh');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::resource('clients', ClientController::class)->except('show');
     Route::post('/clients/{client}/plan', [ClientController::class, 'plan'])->name('clients.plan');
     Route::get('/clients/{client}/assets', [AssetController::class, 'index'])->name('clients.assets');
@@ -76,6 +77,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
     Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
     Route::delete('/staff/{user}', [StaffController::class, 'destroy'])->name('staff.destroy');
+    Route::patch('/staff/{user}', [StaffController::class, 'update'])->name('staff.update');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

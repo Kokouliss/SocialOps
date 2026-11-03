@@ -13,3 +13,14 @@
     <x-text-input id="password" name="password" type="password" class="mt-1 block w-full" required autocomplete="new-password" />
     <x-input-error class="mt-2" :messages="$errors->get('password')" />
 </div>
+@if (($clients ?? collect())->isNotEmpty())
+    <div>
+        <x-input-label :value="__('Clients this login may see (none ticked: every client, and the Staff page)')" />
+        <div class="mt-2 flex flex-wrap gap-3 text-sm">
+            @foreach ($clients as $client)
+                <label class="flex items-center gap-1"><input type="checkbox" name="client_ids[]" value="{{ $client->id }}" class="rounded border-gray-300" @checked(in_array($client->id, old('client_ids', $selected ?? []))) /> {{ $client->name }}</label>
+            @endforeach
+        </div>
+        <x-input-error class="mt-2" :messages="$errors->get('client_ids')" />
+    </div>
+@endif
