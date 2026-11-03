@@ -88,8 +88,8 @@ A subdomain of the agency domain is enough, for example `social.AGENCY.gr`; the 
    ```
    composer install --no-dev --optimize-autoloader
    php artisan key:generate && php artisan migrate --force && php artisan optimize
-   php artisan staff:create "Your Name" you@AGENCY.gr      # one per staff member, no public registration
    ```
+   Then open `https://SUB/setup` in the browser and create the first staff login (the page disappears once a user exists); add colleagues on the Staff page.
    Front-end assets: if `node -v` works over SSH (Plesk's Node.js extension), run `npm ci && npm run build` there; otherwise run those two commands on your PC and upload the `public/build` folder with File Manager.
 9. **Scheduled Tasks → Add Task**, type *Run a command*, cron style `* * * * *` (every minute), two tasks:
    ```

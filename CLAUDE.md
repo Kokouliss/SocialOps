@@ -43,7 +43,7 @@ Out of MVP: CSV import, evergreen queues, Canva autofill, auto-reports, auto-Ree
 - Each client is isolated: accounts, media, users, data.
 
 ## Dev setup
-`composer install && cp .env.example .env && php artisan key:generate && php artisan migrate && npm install && npm run build`. Create a staff login with `php artisan staff:create "Name" email` (no public registration). Run `php artisan test` and `vendor/bin/pint --test` before every commit; CI runs both. Reminders and escalations need the scheduler (`php artisan schedule:work` locally, cron in production).
+`composer install && cp .env.example .env && php artisan key:generate && php artisan migrate && npm install && npm run build`. The first staff login is created on `/setup` (only while there are no users) or with `php artisan staff:create "Name" email`; more logins on the Staff page (no public registration). Run `php artisan test` and `vendor/bin/pint --test` before every commit; CI runs both. Reminders and escalations need the scheduler (`php artisan schedule:work` locally, cron in production).
 
 ## Conventions
 - Asset/post naming: `CLIENT_YYYYMMDD_PLATFORM_FORMAT_PILLAR_LANG_v#`, e.g. `ALMYRA_20270512_IG_REEL_FOOD_EL-EN_v2`. Enforced automatically on upload; raw inbox uploads use `ANY` for the platform and `IMG`/`VID` for the format (e.g. `ALMYRA_20261103_ANY_IMG_FOOD_EL-EN_v1.jpg`) because platform and post format are decided later on the post.

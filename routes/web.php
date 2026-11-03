@@ -9,11 +9,13 @@ use App\Http\Controllers\PortalController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\StaffController;
+use App\Models\User;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', fn () => redirect(User::count() ? '/dashboard' : '/setup'));
+Route::get('/setup', [StaffController::class, 'setup'])->name('setup');
+Route::post('/setup', [StaffController::class, 'finishSetup'])->name('setup.store');
 
 Route::get('/dashboard', function () {
     return view('dashboard');
@@ -40,6 +42,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/posts/{post}/transition', [PostController::class, 'transition'])->name('posts.transition');
     Route::patch('/posts/{post}/reschedule', [PostController::class, 'reschedule'])->name('posts.reschedule');
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+    Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
+    Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
+    Route::delete('/staff/{user}', [StaffController::class, 'destroy'])->name('staff.destroy');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
