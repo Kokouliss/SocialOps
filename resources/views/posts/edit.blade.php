@@ -57,6 +57,19 @@
                     @include('posts._form')
                 </form>
             @endif
+
+            <div id="notes" class="bg-white p-6 shadow-sm sm:rounded-lg text-sm">
+                <h3 class="font-medium">{{ __('Team notes') }} <span class="text-gray-400 font-normal">({{ __('internal, the client never sees them; @FirstName pings a colleague on Slack') }})</span></h3>
+                @foreach ($post->notes as $note)
+                    <p class="mt-3 border-l-2 border-gray-200 pl-3 whitespace-pre-line"><span class="font-semibold">{{ $note->user?->name ?? __('removed login') }}</span> <span class="text-xs text-gray-500">{{ $note->created_at->format('j M H:i') }}</span><br>{{ $note->body }}</p>
+                @endforeach
+                <form method="POST" action="{{ route('posts.note', $post) }}" class="mt-4">
+                    @csrf
+                    <textarea name="body" rows="2" required maxlength="2000" class="block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm" placeholder="{{ __('e.g. @Maria can you check the Greek?') }}">{{ old('body') }}</textarea>
+                    <x-input-error class="mt-1" :messages="$errors->get('body')" />
+                    <x-primary-button class="mt-2">{{ __('Add note') }}</x-primary-button>
+                </form>
+            </div>
         </div>
     </div>
 </x-app-layout>

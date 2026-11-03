@@ -211,6 +211,17 @@ class PostController extends Controller
     }
 
     /** Drag-and-drop on the calendar: move to another day, keeping the time. */
+    /** An internal note on the post; "@FirstName" pings that colleague on Slack with a link. */
+    public function note(Request $request, Post $post): RedirectResponse
+    {
+        $note = $post->notes()->create($request->validate(['body' => ['required', 'string', 'max:2000']]) + ['user_id' => $request->user()->id]);
+        if ($names = array_map(fn ($u) => strtok($u->name, ' '), $note->mentioned())) {
+            Slack::send("{$request->user()->name} to ".implode(', ', $names)." about {$post->name} ({$post->client->name}): {$note->body}\n".route('posts.edit', $post).'#notes');
+        }
+
+        return redirect()->route('posts.edit', $post)->with('status', 'note-added');
+    }
+
     public function reschedule(Request $request, Post $post): RedirectResponse
     {
         abort_if($post->state === PostState::Published, 422, 'Published posts cannot be moved.');

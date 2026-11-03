@@ -63,6 +63,11 @@ class Post extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function notes(): HasMany
+    {
+        return $this->hasMany(PostNote::class)->with('user')->latest()->orderByDesc('id');
+    }
+
     public function variants(): HasMany
     {
         return $this->hasMany(PostVariant::class)->orderBy('id');
