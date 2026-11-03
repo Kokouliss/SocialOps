@@ -80,6 +80,34 @@ class GbpPublisher implements Publisher
         return $response->json('name');
     }
 
+    /**
+     * The location's reviews, newest first, up to 50. A review the venue already answered carries that reply.
+     *
+     * @return list<array{id: string, author: ?string, text: string, rating: int, posted_at: string, reply: ?string, replied_at: ?string}>
+     */
+    public function reviews(Account $account): array
+    {
+        $stars = ['ONE' => 1, 'TWO' => 2, 'THREE' => 3, 'FOUR' => 4, 'FIVE' => 5];
+        $data = $this->get($this->freshToken($account), "https://mybusiness.googleapis.com/v4/{$account->external_id}/reviews", ['pageSize' => 50])['reviews'] ?? [];
+
+        return array_map(fn ($r) => [
+            'id' => $r['reviewId'],
+            'author' => $r['reviewer']['displayName'] ?? null,
+            'text' => $r['comment'] ?? '',
+            'rating' => $stars[$r['starRating'] ?? ''] ?? 0,
+            'posted_at' => $r['createTime'],
+            'reply' => $r['reviewReply']['comment'] ?? null,
+            'replied_at' => $r['reviewReply']['updateTime'] ?? null,
+        ], $data);
+    }
+
+    /** The venue's public reply to a review (a second call replaces the first). */
+    public function reply(Account $account, string $reviewId, string $text): void
+    {
+        $response = Http::withToken($this->freshToken($account))->put("https://mybusiness.googleapis.com/v4/{$account->external_id}/reviews/{$reviewId}/reply", ['comment' => $text]);
+        throw_unless($response->successful(), new PublishFailed('Google Business: '.($response->json('error.message') ?? $response->body())));
+    }
+
     private static function date(mixed $date): array
     {
         $d = Carbon::parse($date ?: now());

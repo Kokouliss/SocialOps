@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-/** A comment someone left under a client's post. `reply` is a draft until `replied_at` is set. */
-#[Fillable(['account_id', 'post_id', 'platform', 'external_id', 'author', 'text', 'posted_at', 'reply', 'replied_at', 'hidden_at'])]
+/** A comment someone left under a client's post, or a Google review (platform google_business, with a rating). `reply` is a draft until `replied_at` is set. */
+#[Fillable(['account_id', 'post_id', 'platform', 'external_id', 'author', 'text', 'rating', 'posted_at', 'reply', 'replied_at', 'hidden_at'])]
 class Comment extends Model
 {
     protected function casts(): array
