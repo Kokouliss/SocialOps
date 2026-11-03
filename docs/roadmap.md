@@ -17,8 +17,8 @@ Exit: all current clients run one full month through the system.
 - [ ] EU-region storage bucket (depends on D3)
 - [ ] Meta app in dev mode, TikTok sandbox app, GBP test listing, agency test accounts, so every driver is tested before approvals land
 - [x] **Clients & brand profiles:** CRUD; fields from `config/clients/example.yaml`; per-client isolation (every client-owned table carries `client_id`; `php artisan clients:import` loads YAML profiles)
-- [ ] **Asset inbox:** per-client no-login upload link (signed); auto-naming `CLIENT_YYYYMMDD_PLATFORM_FORMAT_PILLAR_LANG_v#`; tags (pillar, season, people/consent, UGC permission)
-- [ ] **Posts & calendar:** post model with state machine (see CLAUDE.md); month/week views per client and all clients; drag-and-drop reschedule
+- [x] **Asset inbox:** per-client no-login upload link (signed); auto-naming `CLIENT_YYYYMMDD_PLATFORM_FORMAT_PILLAR_LANG_v#`; tags (pillar, season, people/consent, UGC permission)
+- [x] **Posts & calendar:** post model with state machine (see CLAUDE.md); month/week views per client and all clients; drag-and-drop reschedule
 - [ ] **AI drafting:** Claude API call using `prompts/caption-draft.md` + brand profile + last approved captions as examples; outputs EL/EN, per-platform variants, alt text, hashtags; human edits before review
 - [x] **Trend-aware batch planning:** `php artisan content:plan <client> --posts=N` researches trends (Claude web search, `prompts/trend-research.md`), plans N posts by pillar quota and key dates (`prompts/content-plan.md`), drafts every caption with `CaptionDrafter` (reusable for the AI drafting item above), and saves a review sheet under `plans/<client>/`. Wire the batch into Draft posts once the Post model exists
 - [ ] **Approval portal:** signed expiring magic link per batch; Instagram/Facebook/TikTok/GBP previews; inline comments; approve / request changes on mobile; lock on approve; auto-schedule on approve; reminders + SLA escalation; auto-approve on timeout for `optional` clients
