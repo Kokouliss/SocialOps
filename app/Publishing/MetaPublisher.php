@@ -180,6 +180,12 @@ class MetaPublisher implements Publisher
         return $out;
     }
 
+    public function withdraw(Account $account, string $externalId): void
+    {
+        throw_if($account->platform === 'instagram', new ManualNeeded('Instagram has no API to delete a post. Delete it in the Instagram app.'));
+        $this->check(Http::withQueryParameters(['access_token' => $account->access_token])->delete($this->graph()."/{$externalId}"));
+    }
+
     /** A comment under the client's own post (the first comment: hashtags or a link); returns its id. */
     public function comment(Account $account, string $mediaId, string $text): string
     {

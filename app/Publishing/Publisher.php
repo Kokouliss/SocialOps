@@ -25,4 +25,12 @@ interface Publisher
      * @throws ManualNeeded when no API can do it (a human posts in the app)
      */
     public function publish(Post $post, Account $account): string;
+
+    /**
+     * Take a published post down again.
+     *
+     * @throws PublishFailed when the platform refused
+     * @throws ManualNeeded when the platform has no API for it (a human deletes it in the app)
+     */
+    public function withdraw(Account $account, string $externalId): void;
 }

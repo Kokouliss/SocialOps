@@ -108,6 +108,12 @@ class GbpPublisher implements Publisher
         throw_unless($response->successful(), new PublishFailed('Google Business: '.($response->json('error.message') ?? $response->body())));
     }
 
+    public function withdraw(Account $account, string $externalId): void
+    {
+        $response = Http::withToken($this->freshToken($account))->delete("https://mybusiness.googleapis.com/v4/{$externalId}");
+        throw_unless($response->successful(), new PublishFailed('Google Business: '.($response->json('error.message') ?? $response->body())));
+    }
+
     private static function date(mixed $date): array
     {
         $d = Carbon::parse($date ?: now());

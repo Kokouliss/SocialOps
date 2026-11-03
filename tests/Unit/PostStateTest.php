@@ -11,7 +11,8 @@ test('the state machine follows the brief', function () {
         ->and(PostState::Approved->canTransitionTo(PostState::Scheduled))->toBeTrue()
         ->and(PostState::Scheduled->canTransitionTo(PostState::Published))->toBeTrue()
         ->and(PostState::Scheduled->canTransitionTo(PostState::ManualNeeded))->toBeTrue()
-        ->and(PostState::Published->next())->toBe([])
+        ->and(PostState::Published->next())->toBe([PostState::Withdrawn])
+        ->and(PostState::Withdrawn->next())->toBe([PostState::InReview])
         ->and(PostState::Draft->isLocked())->toBeFalse()
         ->and(PostState::Approved->isLocked())->toBeTrue();
 });
