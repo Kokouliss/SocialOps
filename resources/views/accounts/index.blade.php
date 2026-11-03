@@ -21,7 +21,13 @@
                                 <span class="text-xs {{ $account->token_expires_at?->isPast() ? 'text-red-600' : ($account->token_expires_at?->lt(now()->addDays(\App\Console\Commands\CheckTokens::ALERT_DAYS)) ? 'text-orange-600' : 'text-gray-500') }}">
                                     {{ $account->token_expires_at ? __('token until :date', ['date' => $account->token_expires_at->format('j M Y')]) : __('token does not expire') }}
                                 </span>
-                                <form method="POST" action="{{ route('accounts.destroy', $account) }}" class="ml-auto" onsubmit="return confirm('{{ __('Disconnect this account?') }}')">
+                                @if (in_array($platform, ['instagram', 'facebook']))
+                                    <form method="POST" action="{{ route('accounts.import', $account) }}" class="ml-auto">
+                                        @csrf
+                                        <button type="submit" class="text-xs hover:underline" title="{{ __('Posts the client published in the app, last 30 days, as Published posts on the calendar') }}">{{ __('Import last 30 days') }}</button>
+                                    </form>
+                                @endif
+                                <form method="POST" action="{{ route('accounts.destroy', $account) }}" class="{{ in_array($platform, ['instagram', 'facebook']) ? '' : 'ml-auto' }}" onsubmit="return confirm('{{ __('Disconnect this account?') }}')">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="text-red-600 hover:underline">{{ __('Disconnect') }}</button>
                                 </form>

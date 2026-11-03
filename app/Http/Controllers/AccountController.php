@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Account;
 use App\Models\Client;
+use App\Posts\PostImporter;
 use App\Publishing\Publishers;
 use App\Publishing\PublishFailed;
 use Illuminate\Http\RedirectResponse;
@@ -60,6 +61,19 @@ class AccountController extends Controller
         }
 
         return redirect()->route('clients.accounts', $client)->with('status', 'account-connected');
+    }
+
+    /** Pull in what the client published themselves in the last 30 days (Instagram and Facebook only). */
+    public function import(Account $account, PostImporter $importer): RedirectResponse
+    {
+        abort_unless(in_array($account->platform, ['instagram', 'facebook'], true), 404);
+        try {
+            $n = $importer->import($account);
+        } catch (PublishFailed $e) {
+            return redirect()->route('clients.accounts', $account->client_id)->withErrors(['connect' => $e->getMessage()]);
+        }
+
+        return redirect()->route('clients.accounts', $account->client_id)->with('status', "imported-{$n}-posts");
     }
 
     public function destroy(Account $account): RedirectResponse
