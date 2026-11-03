@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Alerts\Slack;
+use App\Engagement\CommentTriage;
 use App\Models\Account;
 use App\Models\Comment;
 use App\Posts\PostState;
@@ -10,6 +11,7 @@ use App\Publishing\GbpPublisher;
 use App\Publishing\MetaPublisher;
 use App\Publishing\PublishFailed;
 use Illuminate\Console\Command;
+use Throwable;
 
 class FetchComments extends Command
 {
@@ -17,7 +19,7 @@ class FetchComments extends Command
 
     protected $description = 'Pull new Instagram and Facebook comments (last 30 days of posts) and Google Business Profile reviews into each client\'s inbox';
 
-    public function handle(MetaPublisher $meta, GbpPublisher $gbp): int
+    public function handle(MetaPublisher $meta, GbpPublisher $gbp, CommentTriage $triage): int
     {
         $accounts = Account::with('client')->whereIn('platform', ['instagram', 'facebook', 'google_business'])->get();
         foreach ($accounts as $account) {
@@ -29,17 +31,25 @@ class FetchComments extends Command
                 continue;
             }
             $known = Comment::where('account_id', $account->id)->whereIn('external_id', array_column($rows, 'external_id'))->pluck('external_id')->all();
-            $new = 0;
+            $new = collect();
             foreach ($rows as $row) {
                 if (! in_array($row['external_id'], $known)) {
-                    $account->client->comments()->create($row + ['account_id' => $account->id, 'platform' => $account->platform]);
-                    $new += empty($row['replied_at']) ? 1 : 0; // a review the venue answered before Social Ops is history, not work
+                    $comment = $account->client->comments()->create($row + ['account_id' => $account->id, 'platform' => $account->platform]);
+                    if (empty($row['replied_at'])) { // a review the venue answered before Social Ops is history, not work
+                        $new->push($comment);
+                    }
                 }
             }
-            if ($new) {
+            if ($new->isNotEmpty()) {
+                try {
+                    $triage->tag($account->client->toProfileArray(), $new);
+                } catch (Throwable $e) { // untagged comments still reach the inbox
+                    $this->warn("{$account->client->name} {$account->platform}: triage failed, {$e->getMessage()}");
+                }
+                $attention = $new->filter(fn (Comment $c) => $c->fresh()->needsAttention())->count();
                 $what = $account->platform === 'google_business' ? 'Google reviews' : str_replace('_', ' ', $account->platform).' comments';
-                $this->info("{$account->client->name} {$account->platform}: {$new} new.");
-                Slack::send(__(':client: :n new :what to answer', ['client' => $account->client->name, 'n' => $new, 'what' => $what])."\n".route('clients.comments', $account->client_id));
+                $this->info("{$account->client->name} {$account->platform}: {$new->count()} new, {$attention} need attention.");
+                Slack::send(__(':client: :n new :what to answer, :a need attention', ['client' => $account->client->name, 'n' => $new->count(), 'what' => $what, 'a' => $attention])."\n".route('clients.comments', $account->client_id));
             }
         }
 

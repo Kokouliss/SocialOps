@@ -13,7 +13,7 @@ use Symfony\Component\Yaml\Yaml;
 /** Parses and validates a brand profile written in the config/clients/example.yaml format. */
 final class ClientProfile
 {
-    public const SECTIONS = ['accounts', 'languages', 'extra_languages', 'voice', 'pillars', 'hashtags', 'research', 'approval', 'slots', 'key_dates'];
+    public const SECTIONS = ['accounts', 'languages', 'extra_languages', 'voice', 'pillars', 'hashtags', 'research', 'approval', 'slots', 'saved_replies', 'key_dates'];
 
     public const PLATFORMS = ['instagram', 'facebook', 'tiktok', 'google_business'];
 
@@ -141,6 +141,9 @@ final class ClientProfile
             'approval.approvers.*.phone' => ['nullable', 'string'],
             'slots' => ['present', 'array', 'max:21'],
             'slots.*' => ['string', 'regex:/^(mon|tue|wed|thu|fri|sat|sun) ([01]\d|2[0-3]):[0-5]\d$/i'],
+            'saved_replies' => ['present', 'array', 'max:30'],
+            'saved_replies.*.label' => ['required', 'string', 'max:40'],
+            'saved_replies.*.text' => ['required', 'string', 'max:2200'],
             'key_dates' => ['present', 'array'],
             'key_dates.*.date' => ['required', 'date'],
             'key_dates.*.label' => ['required', 'string'],

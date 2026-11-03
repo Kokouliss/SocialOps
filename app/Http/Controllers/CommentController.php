@@ -20,7 +20,8 @@ class CommentController extends Controller
     {
         return view('comments.index', [
             'client' => $client,
-            'open' => $client->comments()->with('post')->whereNull('replied_at')->whereNull('hidden_at')->latest('posted_at')->get(),
+            'open' => $client->comments()->with('post')->whereNull('replied_at')->whereNull('hidden_at')->latest('posted_at')->get()
+                ->sortByDesc(fn (Comment $c) => ($c->needsAttention() ? '1' : '0').$c->posted_at->timestamp)->values(), // needs attention first, newest first within
             'done' => $client->comments()->with('post')->where(fn ($q) => $q->whereNotNull('replied_at')->orWhereNotNull('hidden_at'))->where('posted_at', '>=', now()->subDays(30))->latest('posted_at')->get(),
         ]);
     }
