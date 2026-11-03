@@ -21,16 +21,20 @@ class CaptionDrafter
      * @param  array  $profile  the client profile, shaped like config/clients/example.yaml
      * @param  array{platforms: list<string>, format: string, pillar: string, brief: string, asset_description: string}  $post
      * @param  list<string>  $examples  recent approved captions, to match the voice
+     * @param  ?string  $image  JPEG bytes of the post's first photo (Asset::preview()), so the captions and alt text describe what is really in it
      */
-    public function draft(array $profile, array $post, array $examples = []): array
+    public function draft(array $profile, array $post, array $examples = [], ?string $image = null): array
     {
+        $text = Prompt::render('caption-draft', Prompt::profileVars($profile) + [
+            'post' => $post + ['photo' => $image ? 'attached above' : 'none'],
+            'examples' => $examples ?: 'none yet',
+        ]);
         $message = $this->claude->messages->create(
             model: config('services.anthropic.model'),
             maxTokens: 8000,
-            messages: [['role' => 'user', 'content' => Prompt::render('caption-draft', Prompt::profileVars($profile) + [
-                'post' => $post,
-                'examples' => $examples ?: 'none yet',
-            ])]],
+            messages: [['role' => 'user', 'content' => $image
+                ? [['type' => 'image', 'source' => ['type' => 'base64', 'media_type' => 'image/jpeg', 'data' => base64_encode($image)]], ['type' => 'text', 'text' => $text]]
+                : $text]],
             outputConfig: ['format' => ['type' => 'json_schema', 'schema' => self::schema($post['platforms'])]],
         );
 
