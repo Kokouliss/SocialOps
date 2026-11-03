@@ -12,6 +12,7 @@
 | D8 | Brand profile stored as one JSON column (`clients.profile`) in the example.yaml shape and edited as YAML text in the staff form; `Client::toProfileArray()` feeds prompts and drivers | Smallest complete version; a per-field form can replace the textarea when non-technical staff edit profiles | 2026-11-03 |
 | D7 | Laravel 13 on PHP 8.3, Pest for tests, Breeze (Blade) for staff auth without public registration, Horizon on Redis for queues | Current stable at kickoff; smallest stack that covers the scaffold proposal | 2026-11-03 |
 | D2 | Publishing layer: direct drivers built in-house (Meta Graph API, TikTok Content Posting API, Google Business Profile API); no paid service | User's call: no paid third-party services (Claude API and hosting are fine). The cost is calendar time: Phase 0 approvals become the critical path | 2026-11-03 |
+| D9 | Trend research: Claude API with its web search tool writes the trend brief the batch planner uses; no scraping services (ScrapeCreators, Apify) and no browser-cookie scrapers in the app. A brief made elsewhere (for example a `/last30days` run) can be passed in with `--brief` | Keeps D2's "no paid third-party services" rule; the last30days tool Panos shared needs ScrapeCreators for TikTok and Instagram and browser sessions for X. Official Instagram hashtag search through our own Meta app is the next source once that app exists | 2026-11-03 |
 
 
 ## Open (ask the user before building on these)

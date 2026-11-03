@@ -1,0 +1,85 @@
+<?php
+
+namespace App\Console\Commands;
+
+use App\Models\Client;
+use App\Planning\DraftBatch;
+use App\Planning\PlanRequest;
+use Carbon\CarbonImmutable;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Storage;
+use RuntimeException;
+
+class PlanContent extends Command
+{
+    protected $signature = 'content:plan
+        {client : The client slug}
+        {--posts=5 : How many posts to draft}
+        {--platforms= : Comma-separated subset of the client accounts (default: all of them)}
+        {--from= : First publishing date, YYYY-MM-DD (default: tomorrow)}
+        {--days=14 : Length of the publishing window in days}
+        {--brief= : Use this trend brief file (for example a /last30days report) instead of researching}';
+
+    protected $description = 'Research current trends and draft a batch of posts for a client, ready for human review';
+
+    public function handle(DraftBatch $batch): int
+    {
+        $profile = Client::where('slug', $this->argument('client'))->firstOrFail()->toProfileArray();
+        $from = CarbonImmutable::parse($this->option('from') ?? 'tomorrow');
+        $request = new PlanRequest(
+            profile: $profile,
+            count: (int) $this->option('posts'),
+            platforms: $this->option('platforms') ? explode(',', $this->option('platforms')) : PlanRequest::accounts($profile),
+            from: $from,
+            to: $from->addDays((int) $this->option('days') - 1),
+        );
+
+        $brief = null;
+        if ($file = $this->option('brief')) {
+            $brief = is_file($file) ? file_get_contents($file) : throw new RuntimeException("No brief file at {$file}");
+        }
+
+        $result = $batch->run($request, $brief, fn (string $step) => $this->line($step));
+
+        $stem = 'plans/'.$profile['slug'].'/'.now()->format('Ymd-Hi');
+        Storage::put("{$stem}.json", json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        Storage::put("{$stem}.md", $this->reviewSheet($result));
+
+        $this->table(
+            ['Date', 'Platforms', 'Format', 'Pillar', 'Trend signal', 'Name'],
+            array_map(fn ($p) => [$p['date'], implode(', ', $p['platforms']), $p['format'], $p['pillar'], $p['trend_signal'] ?? 'evergreen', $p['name']], $result['posts']),
+        );
+        foreach ($result['warnings'] as $warning) {
+            $this->warn($warning);
+        }
+        $this->info("Saved {$stem}.md and .json on the ".config('filesystems.default').' disk. Review before anything moves to In Review.');
+
+        return self::SUCCESS;
+    }
+
+    private function reviewSheet(array $result): string
+    {
+        $md = "# Content batch: {$result['client']}, {$result['window']['start']} to {$result['window']['end']}\n\n";
+        $md .= 'Drafted '.count($result['posts']).' posts for '.implode(', ', $result['platforms']).". Every caption needs a human review before it goes to the client.\n\n";
+        foreach ($result['warnings'] as $warning) {
+            $md .= "> Warning: {$warning}\n";
+        }
+
+        foreach ($result['posts'] as $i => $post) {
+            $md .= "\n## ".($i + 1).". {$post['title']} ({$post['date']})\n\n";
+            $md .= "- Name: `{$post['name']}`\n- Platforms: ".implode(', ', $post['platforms'])." | Format: {$post['format']} | Pillar: {$post['pillar']}\n";
+            $md .= '- Trend: '.($post['trend_signal'] ?? 'evergreen')." | Why now: {$post['why_now']}\n";
+            $md .= "- Angle: {$post['angle']}\n- Asset: {$post['asset_brief']}\n";
+            foreach (['el', 'en'] as $lang) {
+                foreach ($post['captions'][$lang] as $platform => $caption) {
+                    $md .= "\n**".strtoupper($lang)." / {$platform}**\n\n{$caption}\n";
+                }
+            }
+            $md .= "\n- Hashtags: ".implode(' ', $post['captions']['hashtags'])."\n";
+            $md .= "- Alt text EL: {$post['captions']['alt_text']['el']}\n- Alt text EN: {$post['captions']['alt_text']['en']}\n";
+            $md .= "- Notes for reviewer: {$post['captions']['notes_for_reviewer']}\n";
+        }
+
+        return $md."\n---\n\n## Trend brief used\n\n{$result['trend_brief']}\n";
+    }
+}

@@ -48,6 +48,7 @@ Out of MVP: CSV import, evergreen queues, Canva autofill, auto-reports, auto-Ree
 - Asset/post naming: `CLIENT_YYYYMMDD_PLATFORM_FORMAT_PILLAR_LANG_v#`, e.g. `ALMYRA_20270512_IG_REEL_FOOD_EL-EN_v2`. Enforced automatically on upload.
 - Client brand profiles live in the `clients` table (`profile` JSON column in the `example.yaml` shape, `Client::toProfileArray()` returns the full shape). `config/clients/<slug>.yaml` files are imported with `php artisan clients:import`; `example.yaml` stays the template. Every client-owned table carries `client_id`.
 - Caption prompt: `prompts/caption-draft.md`.
+- Trend brief and batch plan prompts: `prompts/trend-research.md`, `prompts/content-plan.md`. `php artisan content:plan <client> --posts=N` drafts a reviewable batch; `--brief <file>` skips the web research and uses a pasted brief instead.
 
 ## Files
 - `docs/research.md`: full research report with sources (tools, APIs, workflow, AI, architecture, risks).
