@@ -30,7 +30,7 @@ Exit: all current clients run one full month through the system.
 Exit: monthly reports fully automatic; onboarding a new client takes under 1 hour.
 
 - [ ] Bulk CSV / Google Sheet import into the calendar
-- [ ] Evergreen queues with time slots (off-season)
+- [x] Evergreen queues with time slots (`slots` in the profile: "Next free slot" on the post form, the planner dates posts on slots, `slots:check` warns on Slack every Thursday when next week's slots are not filled)
 - [ ] Canva Brand Template autofill for repeat graphics (menus, events, offers)
 - [x] Monthly auto-report: insights pull → Claude summary (`posts:insights` daily, `reports:monthly` on the 1st; the report lives in the client's Reports page, .md download; branded PDF still open)
 - [ ] n8n intake: WhatsApp / Google Drive / Dropbox → asset inbox

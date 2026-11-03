@@ -19,6 +19,13 @@
                             <p class="text-gray-500">{{ $comment->rating ? __('Google review') : ucfirst($comment->platform) }} · <span class="font-medium text-gray-800">{{ $comment->author ?? '?' }}</span>@if ($comment->rating) · <span class="text-brand-600">{{ str_repeat('★', $comment->rating) }}</span>{{ str_repeat('☆', 5 - $comment->rating) }}@endif · {{ $comment->posted_at->format('D j M, H:i') }}
                                 @if ($comment->post) · <a href="{{ route('posts.edit', $comment->post) }}" class="font-mono text-xs text-brand-600 hover:underline">{{ $comment->post->name }}</a> @endif
                             </p>
+                            @if ($comment->intent)
+                                <p class="mt-1 text-xs">
+                                    @if ($comment->needsAttention()) <span class="px-2 py-0.5 rounded bg-red-100 text-red-800">{{ __('needs attention') }}</span> @endif
+                                    @if ($comment->intent === 'spam') <span class="px-2 py-0.5 rounded bg-gray-100 text-gray-600">{{ __('looks like spam') }}</span> @endif
+                                    <span class="text-gray-500">{{ __($comment->sentiment) }} · {{ __($comment->intent) }}</span>
+                                </p>
+                            @endif
                             <p class="mt-1 whitespace-pre-line">{{ $comment->text }}</p>
                             <div class="mt-2 flex gap-3">
                                 <form method="POST" action="{{ route('comments.draft', $comment) }}" onsubmit="this.querySelector('button').disabled = true">@csrf<button class="text-brand-600 hover:underline">{{ __('Draft reply with Claude') }}</button></form>
@@ -29,6 +36,14 @@
                         </div>
                         <form method="POST" action="{{ route('comments.reply', $comment) }}">
                             @csrf
+                            @if ($saved = $client->profile['saved_replies'] ?? [])
+                                <select class="mb-2 block w-full border-gray-300 rounded-md shadow-sm text-sm" onchange="if (this.value) this.form.reply.value = this.value; this.selectedIndex = 0">
+                                    <option value="">{{ __('Saved reply…') }}</option>
+                                    @foreach ($saved as $item)
+                                        <option value="{{ $item['text'] }}">{{ $item['label'] }}</option>
+                                    @endforeach
+                                </select>
+                            @endif
                             <textarea name="reply" rows="3" class="block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm" placeholder="{{ __('Your reply') }}">{{ old('reply', $comment->reply) }}</textarea>
                             <x-primary-button class="mt-2">{{ __('Send reply') }}</x-primary-button>
                         </form>

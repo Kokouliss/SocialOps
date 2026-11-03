@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Alerts\Slack;
 use App\Drafting\CaptionDrafter;
+use App\Drafting\CaptionShortener;
 use App\Http\Requests\PostRequest;
 use App\Media\TextOverlay;
 use App\Models\Client;
@@ -16,6 +17,7 @@ use App\Publishing\ManualNeeded;
 use App\Publishing\Publishers;
 use App\Publishing\PublishFailed;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -85,7 +87,7 @@ class PostController extends Controller
                 'pillar' => $post->pillar ?? 'misc',
                 'brief' => (string) $post->brief,
                 'asset_description' => $post->assets->map(fn ($a) => "{$a->kind} {$a->name}".($a->note ? ": {$a->note}" : ''))->join('; ') ?: 'not chosen yet',
-            ], $examples);
+            ], $examples, $post->assets->firstWhere('kind', 'image')?->preview());
         } catch (\Exception $e) { // a malformed reply or an API error is shown on the form, not as a 500
             return back()->withErrors(['draft' => $e->getMessage()]);
         }
@@ -104,6 +106,21 @@ class PostController extends Controller
         $post->reopenForReview();
 
         return redirect()->route('posts.edit', $post)->with(['status' => 'captions-drafted', 'notes' => $captions['notes_for_reviewer']]);
+    }
+
+    /** Shorten the captions typed for one platform so the published text fits; the JSON goes back into the form, nothing is saved. */
+    public function shorten(Request $request, CaptionShortener $shortener, Post $post): JsonResponse
+    {
+        $data = $request->validate(['platform' => ['required', Rule::in(Post::PLATFORMS)], 'captions' => ['required', 'array'], 'captions.*' => ['nullable', 'string'], 'hashtags' => ['nullable', 'string']]);
+        $captions = array_filter(array_map('trim', $data['captions']));
+        if ($captions === []) {
+            return response()->json(['error' => 'Nothing to shorten.'], 422);
+        }
+        try {
+            return response()->json($shortener->shorten($post->client->toProfileArray(), $data['platform'], $captions, preg_split('/\s+/', trim((string) ($data['hashtags'] ?? '')), -1, PREG_SPLIT_NO_EMPTY)));
+        } catch (\Exception $e) { // a malformed reply or an API error is shown next to the button, not as a 500
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
     }
 
     public function update(PostRequest $request, Post $post): RedirectResponse

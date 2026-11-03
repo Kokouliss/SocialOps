@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Http\Requests\PostRequest;
 use App\Posts\InvalidTransition;
+use App\Posts\PostNamer;
 use App\Posts\PostState;
 use App\Publishing\PublishFailed;
 use Database\Factories\PostFactory;
@@ -69,13 +70,19 @@ class Post extends Model
         return $this->belongsToMany(Asset::class)->withPivot('position')->orderByPivot('position');
     }
 
-    /** The text that goes to the platform: every language of the profile in order, then the hashtags once. */
+    /** The platform's signature line from the profile (bookings phone, site), empty when there is none. */
+    public function signatureFor(string $platform): string
+    {
+        return trim((string) ($this->client->profile['signatures'][$platform] ?? ''));
+    }
+
+    /** The text that goes to the platform: every language of the profile in order, the platform's signature, then the hashtags once. */
     public function captionFor(string $platform): string
     {
         $languages = array_merge($this->client->profile['languages'], $this->client->profile['extra_languages'] ?? []);
         $variants = $this->variants->where('platform', $platform)->keyBy('lang');
         $hashtags = $variants->flatMap(fn (PostVariant $v) => $v->hashtags ?? [])->map(fn ($t) => '#'.ltrim($t, '#'))->unique()->join(' ');
-        $caption = collect($languages)->map(fn ($lang) => trim((string) $variants->get($lang)?->caption))->push($hashtags)->filter()->join("\n\n");
+        $caption = collect($languages)->map(fn ($lang) => trim((string) $variants->get($lang)?->caption))->push($this->signatureFor($platform))->push($hashtags)->filter()->join("\n\n");
         $max = PostRequest::CAPTION_MAX[$platform];
         throw_if(mb_strlen($caption) > $max, new PublishFailed(ucfirst($platform).' caption is '.mb_strlen($caption)." characters with both languages, over {$max}"));
 
@@ -111,6 +118,31 @@ class Post extends Model
     }
 
     /** Content went back to review after a change to a locked post (used by the composer for variants). */
+    /** A post set to repeat: its next occurrence as a new Draft a week or a month later, same content, captions and assets. It goes through approval again. */
+    public function spawnRepeat(): ?Post
+    {
+        $repeat = $this->settings['repeat'] ?? null;
+        if (! $repeat || ! $this->scheduled_at) {
+            return null;
+        }
+        $date = $repeat === 'weekly' ? $this->scheduled_at->copy()->addWeek() : $this->scheduled_at->copy()->addMonthNoOverflow();
+        $next = $this->client->posts()->create([
+            'name' => PostNamer::name($this->client, $this->platforms, $this->format, $this->pillar, $date),
+            'state' => PostState::Draft,
+            'platforms' => $this->platforms,
+            'format' => $this->format,
+            'pillar' => $this->pillar,
+            'brief' => $this->brief,
+            'settings' => $this->settings,
+            'scheduled_at' => $date,
+            'created_by' => $this->created_by,
+        ]);
+        $next->variants()->createMany($this->variants->map(fn (PostVariant $v) => $v->only(['platform', 'lang', 'caption', 'alt_text', 'hashtags']))->all());
+        $next->assets()->sync($this->assets->mapWithKeys(fn (Asset $a) => [$a->id => ['position' => $a->pivot->position]])->all());
+
+        return $next;
+    }
+
     public function reopenForReview(): void
     {
         if ($this->state->isLocked() && $this->state !== PostState::Published) {

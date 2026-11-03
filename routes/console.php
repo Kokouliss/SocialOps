@@ -11,6 +11,7 @@ Artisan::command('inspire', function () {
 Schedule::command('reviews:remind')->hourly();
 Schedule::command('posts:publish-due')->everyMinute();
 Schedule::command('accounts:check-tokens')->dailyAt('08:00');
+Schedule::command('slots:check')->weeklyOn(4, '09:00');
 Schedule::command('posts:preflight')->hourlyAt(30);
 Schedule::command('posts:reconcile')->hourlyAt(45);
 Schedule::command('comments:fetch')->hourly();

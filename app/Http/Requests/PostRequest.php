@@ -52,6 +52,7 @@ class PostRequest extends FormRequest
             'settings.gbp.coupon' => ['nullable', 'string', 'max:58'],
             'settings.design.*' => ['nullable', 'string', 'max:5000'],
             'settings.first_comment' => ['nullable', 'string', 'max:2200'],
+            'settings.repeat' => ['nullable', Rule::in(['weekly', 'monthly'])],
             'assets' => ['sometimes', 'array'],
             'assets.*' => [Rule::exists('assets', 'id')->where('client_id', $client->id)],
             'variants' => ['sometimes', 'array'],

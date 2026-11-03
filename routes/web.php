@@ -5,6 +5,7 @@ use App\Http\Controllers\AssetController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\PortalController;
@@ -21,9 +22,7 @@ Route::get('/', fn () => redirect(User::count() ? '/dashboard' : '/setup'));
 Route::get('/setup', [StaffController::class, 'setup'])->name('setup');
 Route::post('/setup', [StaffController::class, 'finishSetup'])->name('setup.store');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 // After a git pull on the server: run new migrations and rebuild the caches, instead of SSH.
 Route::post('/refresh', function () {
@@ -64,6 +63,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
     Route::patch('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
     Route::post('/posts/{post}/draft', [PostController::class, 'draft'])->name('posts.draft');
+    Route::post('/posts/{post}/shorten', [PostController::class, 'shorten'])->name('posts.shorten');
     Route::post('/posts/{post}/transition', [PostController::class, 'transition'])->name('posts.transition');
     Route::patch('/posts/{post}/reschedule', [PostController::class, 'reschedule'])->name('posts.reschedule');
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');

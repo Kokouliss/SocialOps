@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Database\Factories\ClientFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -61,6 +63,24 @@ class Client extends Model
      *
      * @return array<string, mixed>
      */
+    /** The first weekly posting slot after $after (default now) with no post of this client on it; null when the profile has no slots. */
+    public function nextFreeSlot(?CarbonInterface $after = null): ?CarbonImmutable
+    {
+        $after = CarbonImmutable::instance($after ?? now());
+        $slots = collect($this->profile['slots'] ?? [])->map(fn (string $slot) => explode(' ', strtolower($slot)));
+        // shortcut: eight weeks ahead is enough for a planning batch; a full calendar is a different problem
+        for ($day = $after->startOfDay(); $slots->isNotEmpty() && $day->lt($after->addWeeks(8)); $day = $day->addDay()) {
+            foreach ($slots->where(0, strtolower($day->format('D')))->sortBy(1) as [, $time]) {
+                $at = $day->setTimeFromTimeString($time);
+                if ($at->gt($after) && ! $this->posts()->where('scheduled_at', $at)->exists()) {
+                    return $at;
+                }
+            }
+        }
+
+        return null;
+    }
+
     public function toProfileArray(): array
     {
         return [

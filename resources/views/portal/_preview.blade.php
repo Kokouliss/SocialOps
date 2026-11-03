@@ -13,6 +13,9 @@
             <div class="px-3 pb-2 whitespace-pre-line"><span class="text-xs uppercase opacity-60 mr-1">{{ $variant->lang }}</span>{{ $variant->caption }}</div>
         @endif
     @endforeach
+    @if (($platform === 'facebook' || $platform === 'google_business') && $post->signatureFor($platform))
+        <div class="px-3 pb-2 whitespace-pre-line opacity-80">{{ $post->signatureFor($platform) }}</div>
+    @endif
     <div class="bg-gray-100 {{ $vertical ? 'aspect-[9/16]' : ($platform === 'google_business' ? 'aspect-video' : 'aspect-square') }} flex items-center justify-center overflow-hidden">
         @if (! $asset)
             <span class="text-xs text-gray-500">{{ __('Photo or video to follow') }}</span>
@@ -28,6 +31,7 @@
     @foreach ($post->variants->where('platform', $platform) as $variant)
         @if ($platform === 'instagram' || $platform === 'tiktok')
             <div class="px-3 py-2 whitespace-pre-line"><span class="text-xs uppercase opacity-60 mr-1">{{ $variant->lang }}</span><span class="font-semibold mr-1">{{ $review->client->name }}</span>{{ $variant->caption }}
+                @if ($loop->last && $post->signatureFor($platform)) <span class="block opacity-80">{{ $post->signatureFor($platform) }}</span> @endif
                 @if ($variant->hashtags) <span class="{{ $vertical ? 'text-blue-300' : 'text-blue-800' }}">{{ collect($variant->hashtags)->map(fn ($h) => '#'.ltrim($h, '#'))->join(' ') }}</span> @endif
             </div>
         @elseif ($variant->hashtags)
