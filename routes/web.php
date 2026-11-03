@@ -8,6 +8,7 @@ use App\Http\Controllers\InboxController;
 use App\Http\Controllers\PortalController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\StaffController;
 use App\Models\User;
@@ -39,6 +40,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/clients/{client}/reviews', [ReviewController::class, 'index'])->name('clients.reviews');
     Route::post('/clients/{client}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
     Route::get('/clients/{client}/accounts', [AccountController::class, 'index'])->name('clients.accounts');
+    Route::get('/clients/{client}/reports', [ReportController::class, 'index'])->name('clients.reports');
+    Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
+    Route::get('/reports/{report}/download', [ReportController::class, 'download'])->name('reports.download');
     Route::get('/clients/{client}/accounts/connect/{provider}', [AccountController::class, 'connect'])->name('accounts.connect');
     Route::post('/clients/{client}/accounts', [AccountController::class, 'attach'])->name('accounts.attach');
     Route::delete('/accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy');
