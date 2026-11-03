@@ -4,9 +4,11 @@ namespace App\Jobs;
 
 use App\Alerts\Slack;
 use App\Mail\PostNeedsHuman;
+use App\Models\Account;
 use App\Models\Post;
 use App\Posts\PostState;
 use App\Publishing\ManualNeeded;
+use App\Publishing\MetaPublisher;
 use App\Publishing\Publishers;
 use App\Publishing\PublishFailed;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -52,6 +54,7 @@ class PublishPost implements ShouldQueue
             try {
                 $done[$platform] = Publishers::for($platform)->publish($post, $account);
                 $post->forceFill(['external_ids' => $done])->save();
+                $this->firstComment($post, $account, $done[$platform]);
             } catch (ManualNeeded $e) {
                 $manual[] = $e->getMessage();
             }
@@ -67,6 +70,20 @@ class PublishPost implements ShouldQueue
         }
         $post->forceFill(['publish_error' => null])->save();
         $post->transitionTo(PostState::Published);
+    }
+
+    /** The first comment (hashtags or a link) goes under Instagram and Facebook posts; a failure is told to Slack, the post stays Published. */
+    private function firstComment(Post $post, Account $account, string $mediaId): void
+    {
+        $text = trim((string) ($post->settings['first_comment'] ?? ''));
+        if ($text === '' || ! in_array($account->platform, ['instagram', 'facebook'])) {
+            return;
+        }
+        try {
+            app(MetaPublisher::class)->comment($account, $mediaId, $text);
+        } catch (PublishFailed $e) {
+            Slack::send(__(':client: the first comment under :name on :platform failed: :error', ['client' => $post->client->name, 'name' => $post->name, 'platform' => $account->platform, 'error' => $e->getMessage()])."\n".route('posts.edit', $post));
+        }
     }
 
     /** All retries used up: the post is marked Failed with the last error and a human is told. */
