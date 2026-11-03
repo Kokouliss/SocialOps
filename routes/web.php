@@ -30,6 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/clients/{client}/posts', [PostController::class, 'store'])->name('posts.store');
     Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
     Route::patch('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
+    Route::post('/posts/{post}/draft', [PostController::class, 'draft'])->name('posts.draft');
     Route::post('/posts/{post}/transition', [PostController::class, 'transition'])->name('posts.transition');
     Route::patch('/posts/{post}/reschedule', [PostController::class, 'reschedule'])->name('posts.reschedule');
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
