@@ -43,14 +43,16 @@ it('creates Draft posts with captions per platform and language, plus a review s
     expect(Storage::get(collect($files)->first(fn ($f) => str_ends_with($f, '.md'))))->toContain('## 1. Sunset cocktails (2027-05-12)')->toContain('Every caption needs a human review');
 });
 
-it('uses a supplied brief instead of researching', function () {
+it('uses a supplied brief instead of researching, and tells the planner the recent topics', function () {
     Storage::fake();
-    Client::factory()->create(['slug' => 'almyra']);
+    $client = Client::factory()->create(['slug' => 'almyra']);
+    Post::factory()->create(['client_id' => $client->id, 'scheduled_at' => now()->subDays(3), 'brief' => "Sunset cocktails\nGolden hour at the bar.\nTrend: Golden hour reels. Why now: trending."]);
+    Post::factory()->create(['client_id' => $client->id, 'scheduled_at' => now()->subDays(200), 'brief' => 'Too old to matter']);
     $brief = tempnam(sys_get_temp_dir(), 'brief');
     file_put_contents($brief, '# Pasted /last30days brief');
 
     $this->mock(TrendResearcher::class)->shouldNotReceive('brief');
-    $this->mock(ContentPlanner::class)->shouldReceive('plan')->once()->withArgs(fn ($request, $text) => $text === '# Pasted /last30days brief')->andReturn(['posts' => [], 'warnings' => []]);
+    $this->mock(ContentPlanner::class)->shouldReceive('plan')->once()->withArgs(fn ($request, $text, $recent) => $text === '# Pasted /last30days brief' && $recent === ['Sunset cocktails (trend: Golden hour reels)'])->andReturn(['posts' => [], 'warnings' => []]);
 
     $this->artisan("content:plan almyra --posts=1 --brief={$brief}")->assertSuccessful();
 });

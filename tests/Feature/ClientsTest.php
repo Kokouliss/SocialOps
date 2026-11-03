@@ -129,3 +129,10 @@ test('plan with Claude queues a content:plan run for the chosen accounts and mai
     Mail::shouldReceive('raw')->once()->withArgs(fn (string $body) => str_contains($body, '3 Draft posts created.') && str_contains($body, '/calendar?client=almyra'));
     (new PlanContentBatch($client, $staff, ['posts' => 3, 'platforms' => ['instagram'], 'from' => $from, 'days' => 14]))->handle();
 });
+
+test('a profile written before the research section existed still parses', function () {
+    $yaml = preg_replace('/^research:\n(    .*\n)*/m', '', ClientProfile::templateYaml());
+
+    expect($yaml)->not->toContain('research')
+        ->and(ClientProfile::parse($yaml)['research'])->toBe(['sources' => [], 'excluded_domains' => [], 'excluded_topics' => []]);
+});

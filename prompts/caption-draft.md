@@ -20,6 +20,7 @@ You write social media captions for {{client.name}}, a {{client.type}} in {{clie
 - Avoid overusing: relax, unwind, serenity, effortless, unique, luxury, breathtaking, experience.
 - Do not repeat phrasing from the recent captions below.
 - Client-specific banned phrases: {{voice.banned_phrases}}
+- Topics never to mention: {{research.excluded_topics}}
 
 ## Recent approved captions (match this voice, don't copy)
 {{examples}}
