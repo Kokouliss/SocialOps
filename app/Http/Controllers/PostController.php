@@ -14,8 +14,11 @@ use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use ZipArchive;
 
 class PostController extends Controller
 {
@@ -160,6 +163,27 @@ class PostController extends Controller
         $post->delete();
 
         return redirect()->route('calendar')->with('status', 'post-deleted');
+    }
+
+    /** ZIP with the media files and a captions.txt, for posting by hand or designing in Canva while no account is connected. */
+    public function export(Post $post): BinaryFileResponse
+    {
+        $zip = new ZipArchive;
+        $zip->open($tmp = tempnam(sys_get_temp_dir(), 'post'), ZipArchive::OVERWRITE);
+        foreach ($post->assets as $asset) {
+            $zip->addFile(Storage::disk($asset->disk)->path($asset->path), $asset->name); // shortcut: local disk only, use addFromString(get()) for S3
+        }
+        $text = "{$post->name}\nScheduled: ".($post->scheduled_at?->format('Y-m-d H:i') ?? '-')."\nState: {$post->state->label()}\nBrief: {$post->brief}\nMedia: {$post->assets->pluck('name')->join(', ')}\n";
+        foreach ($post->variants->groupBy('platform') as $platform => $variants) {
+            $text .= "\n== ".ucfirst(str_replace('_', ' ', $platform))." ==\n";
+            foreach ($variants as $v) {
+                $text .= '['.strtoupper($v->lang)."]\n{$v->caption}\n".collect($v->hashtags)->map(fn ($t) => '#'.ltrim($t, '#'))->join(' ')."\n".($v->alt_text ? "Alt text: {$v->alt_text}\n" : '');
+            }
+        }
+        $zip->addFromString('captions.txt', $text);
+        $zip->close();
+
+        return response()->download($tmp, "{$post->name}.zip")->deleteFileAfterSend();
     }
 
     /** @return array<int, array{position: int}> */

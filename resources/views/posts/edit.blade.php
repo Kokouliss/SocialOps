@@ -10,6 +10,7 @@
                     <button type="submit" class="px-3 py-1 border rounded text-xs hover:bg-gray-100">{{ __($next->action()) }}</button>
                 </form>
             @endforeach
+            <a class="px-3 py-1 border rounded text-xs hover:bg-gray-100" href="{{ route('posts.export', $post) }}" title="{{ __('Media files plus a captions.txt, to post by hand or design in Canva') }}">{{ __('Export ZIP') }}</a>
             @if ($post->state !== \App\Posts\PostState::Published)
                 <form method="POST" action="{{ route('posts.draft', $post) }}" onsubmit="this.querySelector('button').disabled = true">
                     @csrf

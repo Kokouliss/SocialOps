@@ -19,6 +19,7 @@
             <a class="px-2 py-1 border rounded {{ $view === 'month' ? 'bg-gray-800 text-white' : '' }}" href="{{ route('calendar', ['view' => 'month', 'client' => $clientSlug, 'date' => $date->toDateString()]) }}">{{ __('Month') }}</a>
             <a class="px-2 py-1 border rounded {{ $view === 'week' ? 'bg-gray-800 text-white' : '' }}" href="{{ route('calendar', ['view' => 'week', 'client' => $clientSlug, 'date' => $date->toDateString()]) }}">{{ __('Week') }}</a>
             @if ($clientSlug)
+                <a class="px-2 py-1 border rounded" href="{{ route('posts.csv', [$clients->firstWhere('slug', $clientSlug), 'view' => $view, 'date' => $date->toDateString()]) }}" title="{{ __('The posts shown, one row per platform, for Canva Bulk Create or a spreadsheet') }}">{{ __('Export CSV') }}</a>
                 <a class="ml-auto inline-flex items-center px-4 py-2 bg-gray-800 rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700" href="{{ route('posts.create', $clients->firstWhere('slug', $clientSlug)) }}">{{ __('New post') }}</a>
             @endif
         </div>
