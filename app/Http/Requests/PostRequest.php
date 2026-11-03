@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Models\Client;
 use App\Models\Post;
 use App\Posts\PostState;
+use App\Publishing\TikTokPublisher;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -35,6 +36,18 @@ class PostRequest extends FormRequest
             'pillar' => ['nullable', Rule::in(array_keys($client->profile['pillars']))],
             'brief' => ['nullable', 'string', 'max:5000'],
             'scheduled_at' => ['nullable', 'date'],
+            'settings' => ['sometimes', 'array'],
+            'settings.tiktok.privacy_level' => ['nullable', Rule::in(TikTokPublisher::PRIVACY)],
+            'settings.tiktok.allow_comment' => ['nullable', 'boolean'],
+            'settings.tiktok.allow_duet' => ['nullable', 'boolean'],
+            'settings.tiktok.allow_stitch' => ['nullable', 'boolean'],
+            'settings.tiktok.commercial' => ['nullable', Rule::in(['none', 'your_brand', 'branded_content'])],
+            'settings.tiktok.consent' => ['nullable', 'boolean'],
+            'settings.gbp.title' => ['nullable', 'string', 'max:58', Rule::requiredIf(in_array($this->input('format'), ['gbp_event', 'gbp_offer']))],
+            'settings.gbp.start' => ['nullable', 'date'],
+            'settings.gbp.end' => ['nullable', 'date', 'after_or_equal:settings.gbp.start'],
+            'settings.gbp.link' => ['nullable', 'url', 'max:2000'],
+            'settings.gbp.coupon' => ['nullable', 'string', 'max:58'],
             'assets' => ['sometimes', 'array'],
             'assets.*' => [Rule::exists('assets', 'id')->where('client_id', $client->id)],
             'variants' => ['sometimes', 'array'],
@@ -47,6 +60,10 @@ class PostRequest extends FormRequest
     public function after(): array
     {
         return [function (Validator $validator) {
+            // TikTok's terms: the creator agrees to the posting terms on every post our app makes
+            if (in_array('tiktok', (array) $this->input('platforms')) && ! $this->boolean('settings.tiktok.consent')) {
+                $validator->errors()->add('settings.tiktok.consent', 'Confirm the TikTok posting terms for this post.');
+            }
             foreach ((array) $this->input('variants') as $platform => $langs) {
                 foreach ((array) $langs as $lang => $fields) {
                     $max = self::CAPTION_MAX[$platform] ?? 5000;

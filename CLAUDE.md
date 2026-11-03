@@ -7,7 +7,7 @@ Goal: cut time from every step: asset intake, captions, translation, approvals, 
 
 ## Status
 - Research done (November 2026): `docs/research.md`. Read it before proposing architecture or features.
-- Scaffold, clients CRUD, asset inbox, posts and calendar, approval portal done. Next: the first unticked Phase 1 item in `docs/roadmap.md`.
+- Scaffold, clients CRUD, asset inbox, posts and calendar, approval portal, AI drafting, publishing drivers done. Next: the first unticked Phase 1 item in `docs/roadmap.md`.
 - Decisions taken so far and decisions still open: `docs/decisions.md`. **Ask the user about open decisions before writing code that depends on them.**
 
 ## Core idea

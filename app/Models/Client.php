@@ -35,6 +35,11 @@ class Client extends Model
         return $this->hasMany(Post::class);
     }
 
+    public function accounts(): HasMany
+    {
+        return $this->hasMany(Account::class);
+    }
+
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);

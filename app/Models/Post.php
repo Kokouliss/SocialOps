@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Http\Requests\PostRequest;
 use App\Posts\InvalidTransition;
 use App\Posts\PostState;
+use App\Publishing\PublishFailed;
 use Database\Factories\PostFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-#[Fillable(['name', 'state', 'platforms', 'format', 'pillar', 'brief', 'scheduled_at', 'created_by'])]
+#[Fillable(['name', 'state', 'platforms', 'format', 'pillar', 'brief', 'settings', 'scheduled_at', 'created_by'])]
 class Post extends Model
 {
     /** @use HasFactory<PostFactory> */
@@ -23,13 +25,15 @@ class Post extends Model
     public const FORMATS = ['feed', 'carousel', 'reel', 'story', 'tiktok_video', 'tiktok_photos', 'gbp_update', 'gbp_offer', 'gbp_event'];
 
     /** Changing any of these on a locked post sends it back to review. */
-    public const CONTENT_FIELDS = ['platforms', 'format', 'pillar', 'brief'];
+    public const CONTENT_FIELDS = ['platforms', 'format', 'pillar', 'brief', 'settings'];
 
     protected function casts(): array
     {
         return [
             'state' => PostState::class,
             'platforms' => 'array',
+            'settings' => 'array',
+            'external_ids' => 'array',
             'scheduled_at' => 'datetime',
             'published_at' => 'datetime',
         ];
@@ -49,6 +53,11 @@ class Post extends Model
         return $this->belongsTo(Client::class);
     }
 
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
     public function variants(): HasMany
     {
         return $this->hasMany(PostVariant::class)->orderBy('id');
@@ -57,6 +66,24 @@ class Post extends Model
     public function assets(): BelongsToMany
     {
         return $this->belongsToMany(Asset::class)->withPivot('position')->orderByPivot('position');
+    }
+
+    /** The text that goes to the platform: every language of the profile in order, then the hashtags once. */
+    public function captionFor(string $platform): string
+    {
+        $languages = array_merge($this->client->profile['languages'], $this->client->profile['extra_languages'] ?? []);
+        $variants = $this->variants->where('platform', $platform)->keyBy('lang');
+        $hashtags = $variants->flatMap(fn (PostVariant $v) => $v->hashtags ?? [])->map(fn ($t) => '#'.ltrim($t, '#'))->unique()->join(' ');
+        $caption = collect($languages)->map(fn ($lang) => trim((string) $variants->get($lang)?->caption))->push($hashtags)->filter()->join("\n\n");
+        $max = PostRequest::CAPTION_MAX[$platform];
+        throw_if(mb_strlen($caption) > $max, new PublishFailed(ucfirst($platform).' caption is '.mb_strlen($caption)." characters with both languages, over {$max}"));
+
+        return $caption;
+    }
+
+    public function altTextFor(string $platform): ?string
+    {
+        return $this->variants->where('platform', $platform)->whereNotNull('alt_text')->first()?->alt_text;
     }
 
     /** Every review batch this post was part of, with the approver's decision and comment on the pivot. */

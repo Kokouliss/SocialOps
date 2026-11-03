@@ -58,6 +58,54 @@
     </div>
 @endif
 
+@php($tiktok = $client->accounts->firstWhere('platform', 'tiktok'))
+@php($tt = old('settings.tiktok', $post->settings['tiktok'] ?? []))
+<fieldset class="mt-6 border rounded-md p-4 text-sm">
+    <legend class="px-1 text-sm font-medium">TikTok {{ $tiktok ? __('(posting as :name)', ['name' => $tiktok->name]) : '' }}</legend>
+    <div class="grid gap-4 md:grid-cols-3">
+        <div>
+            <x-input-label for="tt-privacy" :value="__('Who can see it')" />
+            <select id="tt-privacy" name="settings[tiktok][privacy_level]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                @foreach ($tiktok->meta['privacy_level_options'] ?? \App\Publishing\TikTokPublisher::PRIVACY as $level)
+                    <option value="{{ $level }}" @selected(($tt['privacy_level'] ?? 'PUBLIC_TO_EVERYONE') === $level)>{{ ucfirst(strtolower(str_replace('_', ' ', $level))) }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="space-y-1">
+            <input type="hidden" name="settings[tiktok][allow_comment]" value="0"><input type="hidden" name="settings[tiktok][allow_duet]" value="0"><input type="hidden" name="settings[tiktok][allow_stitch]" value="0">
+            <label class="flex items-center gap-2"><input type="checkbox" name="settings[tiktok][allow_comment]" value="1" class="rounded border-gray-300" @checked($tt['allow_comment'] ?? true) /> {{ __('Allow comments') }}</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name="settings[tiktok][allow_duet]" value="1" class="rounded border-gray-300" @checked($tt['allow_duet'] ?? true) /> {{ __('Allow duet') }}</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name="settings[tiktok][allow_stitch]" value="1" class="rounded border-gray-300" @checked($tt['allow_stitch'] ?? true) /> {{ __('Allow stitch') }}</label>
+        </div>
+        <div>
+            <x-input-label for="tt-commercial" :value="__('Commercial content')" />
+            <select id="tt-commercial" name="settings[tiktok][commercial]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                <option value="none" @selected(($tt['commercial'] ?? 'none') === 'none')>{{ __('None') }}</option>
+                <option value="your_brand" @selected(($tt['commercial'] ?? '') === 'your_brand')>{{ __('Your brand (promotes the client\'s own business)') }}</option>
+                <option value="branded_content" @selected(($tt['commercial'] ?? '') === 'branded_content')>{{ __('Branded content (paid partnership with a third party)') }}</option>
+            </select>
+        </div>
+    </div>
+    <label class="mt-3 flex items-start gap-2">
+        <input type="hidden" name="settings[tiktok][consent]" value="0">
+        <input type="checkbox" name="settings[tiktok][consent]" value="1" class="mt-1 rounded border-gray-300" @checked($tt['consent'] ?? false) />
+        <span>{{ __('The creator agrees to TikTok\'s') }} <a href="https://www.tiktok.com/legal/page/global/music-usage-confirmation/en" target="_blank" class="underline">Music Usage Confirmation</a> {{ __('and, for branded content, the') }} <a href="https://www.tiktok.com/legal/page/global/bc-policy/en" target="_blank" class="underline">Branded Content Policy</a>. {{ __('The creator sees the preview in the approval link before it goes out.') }}</span>
+    </label>
+    <x-input-error class="mt-1" :messages="$errors->get('settings.tiktok.consent')" />
+</fieldset>
+
+@php($gbp = old('settings.gbp', $post->settings['gbp'] ?? []))
+<fieldset class="mt-6 border rounded-md p-4 text-sm">
+    <legend class="px-1 text-sm font-medium">Google Business Profile <span class="text-gray-400">({{ __('title and dates for events and offers') }})</span></legend>
+    <div class="grid gap-4 md:grid-cols-5">
+        <div><x-input-label for="gbp-title" :value="__('Title')" /><x-text-input id="gbp-title" name="settings[gbp][title]" type="text" maxlength="58" class="mt-1 block w-full" :value="$gbp['title'] ?? ''" /><x-input-error class="mt-1" :messages="$errors->get('settings.gbp.title')" /></div>
+        <div><x-input-label for="gbp-start" :value="__('Starts')" /><x-text-input id="gbp-start" name="settings[gbp][start]" type="date" class="mt-1 block w-full" :value="$gbp['start'] ?? ''" /></div>
+        <div><x-input-label for="gbp-end" :value="__('Ends')" /><x-text-input id="gbp-end" name="settings[gbp][end]" type="date" class="mt-1 block w-full" :value="$gbp['end'] ?? ''" /><x-input-error class="mt-1" :messages="$errors->get('settings.gbp.end')" /></div>
+        <div><x-input-label for="gbp-link" :value="__('Learn more link')" /><x-text-input id="gbp-link" name="settings[gbp][link]" type="url" class="mt-1 block w-full" :value="$gbp['link'] ?? ''" /><x-input-error class="mt-1" :messages="$errors->get('settings.gbp.link')" /></div>
+        <div><x-input-label for="gbp-coupon" :value="__('Coupon code (offers)')" /><x-text-input id="gbp-coupon" name="settings[gbp][coupon]" type="text" class="mt-1 block w-full" :value="$gbp['coupon'] ?? ''" /></div>
+    </div>
+</fieldset>
+
 <h3 class="mt-8 font-semibold text-gray-800">{{ __('Captions') }} <span class="text-sm font-normal text-gray-500">{{ __('(only the ticked platforms are saved; Greek is reviewed by a human before approval)') }}</span></h3>
 @foreach (\App\Models\Post::PLATFORMS as $platform)
     <fieldset class="mt-4 border rounded-md p-4">

@@ -32,6 +32,11 @@
             @error('draft') <p class="text-sm text-red-600">{{ __('Drafting failed') }}: {{ $message }}</p> @enderror
             @if (session('notes'))
                 <p class="text-sm text-blue-800 bg-blue-50 rounded-md p-3">{{ __('Notes from the drafter, check before sending for review') }}: {{ session('notes') }}</p>
+            @if ($post->publish_error)
+                <p class="text-sm text-red-800 bg-red-50 rounded-md p-3">{{ __('Publishing') }}: {{ $post->publish_error }}</p>
+            @endif
+            @if ($post->external_ids)
+                <p class="text-sm text-green-800 bg-green-50 rounded-md p-3">{{ __('Published') }}: {{ collect($post->external_ids)->map(fn ($id, $platform) => str_replace('_', ' ', $platform)." ($id)")->join(', ') }}</p>
             @endif
             @if ($post->state->isLocked())
                 <p class="text-sm text-yellow-800 bg-yellow-50 rounded-md p-3">{{ $post->state === \App\Posts\PostState::Published ? __('This post is published and can no longer be edited.') : __('This post is approved and locked. Saving a change sends it back to review.') }}</p>
