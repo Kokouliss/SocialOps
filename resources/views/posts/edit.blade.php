@@ -11,6 +11,11 @@
                 </form>
             @endforeach
             <a class="px-3 py-1 border rounded text-xs hover:bg-gray-100" href="{{ route('posts.export', $post) }}" title="{{ __('Media files plus a captions.txt, to post by hand or design in Canva') }}">{{ __('Export ZIP') }}</a>
+            @if ($post->assets->firstWhere('kind', 'image'))
+                @foreach (array_keys(array_filter($post->settings['design'] ?? [])) as $lang)
+                    <a class="px-3 py-1 border rounded text-xs hover:bg-gray-100" href="{{ route('posts.image', [$post, $lang]) }}" title="{{ __('The first photo with the design text burned in, ready to post') }}">{{ __('Image :lang', ['lang' => strtoupper($lang)]) }}</a>
+                @endforeach
+            @endif
             @if ($post->state !== \App\Posts\PostState::Published)
                 <form method="POST" action="{{ route('posts.draft', $post) }}" onsubmit="this.querySelector('button').disabled = true">
                     @csrf
