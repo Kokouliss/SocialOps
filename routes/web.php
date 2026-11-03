@@ -53,6 +53,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/clients/{client}/accounts/connect/{provider}', [AccountController::class, 'connect'])->name('accounts.connect');
     Route::post('/clients/{client}/accounts', [AccountController::class, 'attach'])->name('accounts.attach');
     Route::delete('/accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy');
+    Route::post('/accounts/{account}/import', [AccountController::class, 'import'])->name('accounts.import');
     Route::get('/oauth/{provider}/callback', [AccountController::class, 'callback'])->name('oauth.callback');
     Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar');
     Route::get('/jobs', [JobController::class, 'index'])->name('jobs.index');

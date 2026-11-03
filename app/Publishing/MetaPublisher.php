@@ -185,6 +185,27 @@ class MetaPublisher implements Publisher
         $this->get("/{$account->external_id}", ['fields' => 'id', 'access_token' => $account->access_token]);
     }
 
+    /**
+     * What the account itself published in the last days, with our post format for each. shortcut: first 100 per call, add paging when a client posts more than that in 30 days.
+     *
+     * @return list<array{id: string, caption: string, at: string, format: string}>
+     */
+    public function recentPosts(Account $account, int $days = 30): array
+    {
+        $query = ['access_token' => $account->access_token, 'since' => now()->subDays($days)->timestamp, 'limit' => 100];
+        if ($account->platform === 'instagram') {
+            $format = fn (array $m) => match (true) {
+                $m['media_type'] === 'CAROUSEL_ALBUM' => 'carousel',
+                $m['media_type'] === 'VIDEO' && ($m['media_product_type'] ?? '') === 'REELS' => 'reel',
+                default => 'feed',
+            };
+
+            return array_map(fn ($m) => ['id' => $m['id'], 'caption' => $m['caption'] ?? '', 'at' => $m['timestamp'], 'format' => $format($m)], $this->get("/{$account->external_id}/media", $query + ['fields' => 'id,caption,media_type,media_product_type,timestamp'])['data'] ?? []);
+        }
+
+        return array_map(fn ($p) => ['id' => $p['id'], 'caption' => $p['message'] ?? '', 'at' => $p['created_time'], 'format' => 'feed'], $this->get("/{$account->external_id}/posts", $query + ['fields' => 'id,message,created_time'])['data'] ?? []);
+    }
+
     public function withdraw(Account $account, string $externalId): void
     {
         throw_if($account->platform === 'instagram', new ManualNeeded('Instagram has no API to delete a post. Delete it in the Instagram app.'));
