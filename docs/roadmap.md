@@ -17,7 +17,7 @@ Exit: all current clients run one full month through the system.
 - [ ] EU-region storage bucket (depends on D3)
 - [ ] Meta app in dev mode, TikTok sandbox app, GBP test listing, agency test accounts, so every driver is tested before approvals land
 - [x] **Clients & brand profiles:** CRUD; fields from `config/clients/example.yaml`; per-client isolation (every client-owned table carries `client_id`; `php artisan clients:import` loads YAML profiles)
-- [ ] **Asset inbox:** per-client no-login upload link (signed); auto-naming `CLIENT_YYYYMMDD_PLATFORM_FORMAT_PILLAR_LANG_v#`; tags (pillar, season, people/consent, UGC permission)
+- [x] **Asset inbox:** per-client no-login upload link (signed); auto-naming `CLIENT_YYYYMMDD_PLATFORM_FORMAT_PILLAR_LANG_v#`; tags (pillar, season, people/consent, UGC permission)
 - [ ] **Posts & calendar:** post model with state machine (see CLAUDE.md); month/week views per client and all clients; drag-and-drop reschedule
 - [ ] **AI drafting:** Claude API call using `prompts/caption-draft.md` + brand profile + last approved captions as examples; outputs EL/EN, per-platform variants, alt text, hashtags; human edits before review
 - [ ] **Approval portal:** signed expiring magic link per batch; Instagram/Facebook/TikTok/GBP previews; inline comments; approve / request changes on mobile; lock on approve; auto-schedule on approve; reminders + SLA escalation; auto-approve on timeout for `optional` clients

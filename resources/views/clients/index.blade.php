@@ -32,6 +32,7 @@
                                 <td class="px-6 py-3">{{ collect($client->profile['accounts'])->filter()->keys()->map(fn ($p) => str_replace('_', ' ', $p))->join(', ') ?: '—' }}</td>
                                 <td class="px-6 py-3">{{ $client->profile['approval']['policy'] }}</td>
                                 <td class="px-6 py-3 text-right whitespace-nowrap">
+                                    <a href="{{ route('clients.assets', $client) }}" class="text-indigo-600 hover:underline mr-3">{{ __('Assets') }}</a>
                                     <a href="{{ route('clients.edit', $client) }}" class="text-indigo-600 hover:underline">{{ __('Edit') }}</a>
                                     <form method="POST" action="{{ route('clients.destroy', $client) }}" class="inline ml-3" onsubmit="return confirm('{{ __('Delete this client and everything it owns?') }}')">
                                         @csrf
