@@ -19,6 +19,15 @@
                     <x-primary-button>{{ __('Monthly report') }}</x-primary-button>
                     <x-input-error :messages="$errors->get('month')" />
                 </form>
+                @if (\App\Reporting\ListeningReport::watches($client))
+                    <form method="POST" action="{{ route('reports.listening', $client) }}" class="mt-3">
+                        @csrf
+                        <x-secondary-button type="submit">{{ __('Listening report now') }}</x-secondary-button>
+                        <span class="ml-2 text-gray-500">{{ __('Runs every Monday for the hashtags and competitors in the profile.') }}</span>
+                    </form>
+                @else
+                    <p class="mt-3 text-gray-500">{{ __('Add hashtags_to_watch or competitors under research in the profile to get a weekly listening report.') }}</p>
+                @endif
                 <table class="mt-4 w-full">
                     <thead><tr class="text-left text-gray-500"><th class="py-1">{{ __('Date') }}</th><th>{{ __('Kind') }}</th><th>{{ __('Title') }}</th></tr></thead>
                     <tbody>
