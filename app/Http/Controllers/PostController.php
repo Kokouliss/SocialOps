@@ -29,7 +29,7 @@ class PostController extends Controller
         $data = $request->validated();
 
         $post = DB::transaction(function () use ($request, $client, $data) {
-            $date = $data['scheduled_at'] ? Carbon::parse($data['scheduled_at']) : now();
+            $date = ($data['scheduled_at'] ?? null) ? Carbon::parse($data['scheduled_at']) : now(); // absent when the form is posted without the field
             $post = $client->posts()->create([
                 'name' => PostNamer::name($client, $data['platforms'], $data['format'], $data['pillar'] ?? null, $date),
                 'state' => PostState::Draft,
@@ -37,6 +37,7 @@ class PostController extends Controller
                 'format' => $data['format'],
                 'pillar' => $data['pillar'] ?? null,
                 'brief' => $data['brief'] ?? null,
+                'settings' => $data['settings'] ?? null,
                 'scheduled_at' => $data['scheduled_at'] ?? null,
                 'created_by' => $request->user()->id,
             ]);
@@ -71,6 +72,7 @@ class PostController extends Controller
                 'format' => $data['format'],
                 'pillar' => $data['pillar'] ?? null,
                 'brief' => $data['brief'] ?? null,
+                'settings' => $data['settings'] ?? null,
                 'scheduled_at' => $data['scheduled_at'] ?? null,
             ])->save();
 

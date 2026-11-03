@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ClientController;
@@ -21,6 +22,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/clients/{client}/assets', [AssetController::class, 'index'])->name('clients.assets');
     Route::get('/assets/{asset}/download', [AssetController::class, 'download'])->name('assets.download');
     Route::delete('/assets/{asset}', [AssetController::class, 'destroy'])->name('assets.destroy');
+    Route::get('/clients/{client}/accounts', [AccountController::class, 'index'])->name('clients.accounts');
+    Route::get('/clients/{client}/accounts/connect/{provider}', [AccountController::class, 'connect'])->name('accounts.connect');
+    Route::post('/clients/{client}/accounts', [AccountController::class, 'attach'])->name('accounts.attach');
+    Route::delete('/accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy');
+    Route::get('/oauth/{provider}/callback', [AccountController::class, 'callback'])->name('oauth.callback');
     Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar');
     Route::get('/clients/{client}/posts/create', [PostController::class, 'create'])->name('posts.create');
     Route::post('/clients/{client}/posts', [PostController::class, 'store'])->name('posts.store');

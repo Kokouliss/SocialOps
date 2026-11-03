@@ -23,7 +23,10 @@ php artisan migrate && npm install && npm run build
 php artisan staff:create "Your Name" you@agency.gr
 php artisan serve
 ```
-`php artisan test` runs the suite; `php artisan horizon` runs the queue.
+`php artisan test` runs the suite; `php artisan horizon` runs the queue; `php artisan schedule:work` runs the scheduler (cron in production).
+
+## Publishing
+Each client's accounts are connected on its Accounts page through the platform's own login (our Meta app, TikTok app and Google Cloud project from Phase 0; ids in `.env`, redirect URIs `APP_URL/oauth/{meta,tiktok,google}/callback`). Every minute `posts:publish-due` queues a `PublishPost` job for each Scheduled post whose time has come; the job asks Instagram for its live publishing limit, publishes platform by platform, retries twice on platform errors, then marks the post Failed and e-mails the sender. Things no API can do (a public TikTok before our audit, a video on Google Business) land in Manual-Needed with an e-mail. Media must be reachable by the platforms: an EU S3 bucket in production (signed URLs), a public `APP_URL` in development; TikTok also wants the media domain verified in its developer portal.
 
 ## Folder map
 | Path | What |
