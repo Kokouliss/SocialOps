@@ -149,6 +149,8 @@ final class ClientProfile
             'saved_replies' => ['present', 'array', 'max:30'],
             'saved_replies.*.label' => ['required', 'string', 'max:40'],
             'saved_replies.*.text' => ['required', 'string', 'max:2200'],
+            'saved_replies.*.keywords' => ['nullable', 'array', 'max:20'],
+            'saved_replies.*.keywords.*' => ['string', 'max:40'],
             'signatures' => ['present', 'array:'.implode(',', self::PLATFORMS)],
             'signatures.*' => ['nullable', 'string', 'max:300'],
             'fields' => ['present', 'array', 'max:50'],

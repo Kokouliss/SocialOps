@@ -54,7 +54,8 @@ approval:
       phone: "+30 69x xxx xxxx"     # for reminders
 
 slots: []               # weekly posting slots, e.g. [mon 10:00, wed 18:00, fri 10:00]: "Next free slot" on the post form, the planner and the low-queue warning use them
-saved_replies: []       # answers you give often, offered in the comment inbox, e.g. [{ label: Opening hours, text: "Ανοιχτά κάθε μέρα 10:00–02:00 / Open daily 10:00–02:00" }]
+saved_replies: []       # answers you give often, offered in the comment inbox, e.g. [{ label: Opening hours, text: "Ανοιχτά κάθε μέρα 10:00–02:00 / Open daily 10:00–02:00", keywords: [ώρες, hours] }]
+                        # keywords (optional): a new Instagram or Facebook comment containing one of them gets that reply at once; complaints, questions and anything negative wait for a human
 signatures: {}          # a line added under every caption of that platform at publish time, e.g. { facebook: "Κρατήσεις / Bookings: +30 28210 00000", google_business: "almyra.gr" }
 fields: {}              # placeholders for captions, signatures and the first comment, written as {{phone}} and filled at publish time, e.g. { phone: "+30 28210 00000", site: almyra.gr, booking: "https://almyra.gr/book" }
 
