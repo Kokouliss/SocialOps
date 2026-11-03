@@ -5,6 +5,7 @@ use App\Http\Controllers\AssetController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\JobController;
 use App\Http\Controllers\PortalController;
@@ -21,9 +22,7 @@ Route::get('/', fn () => redirect(User::count() ? '/dashboard' : '/setup'));
 Route::get('/setup', [StaffController::class, 'setup'])->name('setup');
 Route::post('/setup', [StaffController::class, 'finishSetup'])->name('setup.store');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
 // After a git pull on the server: run new migrations and rebuild the caches, instead of SSH.
 Route::post('/refresh', function () {
