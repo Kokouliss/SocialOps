@@ -1,9 +1,13 @@
 <?php
 
 use App\Clients\ClientProfile;
+use App\Jobs\PlanContentBatch;
 use App\Models\Client;
 use App\Models\User;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Mail;
 
 function clientInput(array $overrides = []): array
 {
@@ -105,4 +109,23 @@ test('clients:import creates and updates clients from YAML files and skips the t
         ->and(Client::first()->name)->toBe('Almyra Lounge');
 
     File::deleteDirectory($dir);
+});
+
+test('plan with Claude queues a content:plan run for the chosen accounts and mails the outcome', function () {
+    Bus::fake();
+    $staff = User::factory()->create();
+    $client = Client::factory()->create(['slug' => 'almyra']);
+    $from = now()->addDay()->toDateString();
+
+    $this->actingAs($staff)->get("/clients/{$client->id}/edit")->assertOk()->assertSee('Plan with Claude');
+    $this->actingAs($staff)->post("/clients/{$client->id}/plan", ['posts' => 3, 'platforms' => ['instagram'], 'from' => $from, 'days' => 14])
+        ->assertRedirect("/clients/{$client->id}/edit")->assertSessionHas('status', 'plan-started');
+    Bus::assertDispatched(PlanContentBatch::class, fn (PlanContentBatch $job) => $job->options['posts'] === 3 && $job->options['platforms'] === ['instagram']);
+    $this->actingAs($staff)->post("/clients/{$client->id}/plan", ['posts' => 3, 'platforms' => ['linkedin'], 'from' => '2020-01-01', 'days' => 14])
+        ->assertSessionHasErrors(['platforms.0', 'from']);
+
+    Artisan::shouldReceive('call')->once()->with('content:plan', ['client' => 'almyra', '--posts' => 3, '--platforms' => 'instagram', '--from' => $from, '--days' => 14]);
+    Artisan::shouldReceive('output')->andReturn('3 Draft posts created.');
+    Mail::shouldReceive('raw')->once()->withArgs(fn (string $body) => str_contains($body, '3 Draft posts created.') && str_contains($body, '/calendar?client=almyra'));
+    (new PlanContentBatch($client, $staff, ['posts' => 3, 'platforms' => ['instagram'], 'from' => $from, 'days' => 14]))->handle();
 });
