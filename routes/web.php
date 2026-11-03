@@ -52,6 +52,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/comments/{comment}/hide', [CommentController::class, 'hide'])->name('comments.hide');
     Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
     Route::get('/reports/{report}/download', [ReportController::class, 'download'])->name('reports.download');
+    Route::post('/reports/{report}/send', [ReportController::class, 'send'])->name('reports.send');
     Route::get('/clients/{client}/accounts/connect/{provider}', [AccountController::class, 'connect'])->name('accounts.connect');
     Route::delete('/accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy');
     Route::post('/accounts/{account}/import', [AccountController::class, 'import'])->name('accounts.import');
@@ -90,6 +91,7 @@ Route::middleware('signed')->group(function () {
     Route::get('/connect/{client:slug}', [AccountController::class, 'clientConnect'])->name('connect.show');
     Route::get('/connect/{client:slug}/{provider}', [AccountController::class, 'connect'])->name('connect.start');
     Route::get('/calendar/{client:slug}', [CalendarController::class, 'client'])->name('calendar.client');
+    Route::get('/reports/{report}/client', [ReportController::class, 'client'])->name('reports.client');
     Route::get('/inbox/{client:slug}', [InboxController::class, 'show'])->name('inbox.show');
     Route::post('/inbox/{client:slug}', [InboxController::class, 'store'])->name('inbox.store');
     Route::get('/review/{review}', [PortalController::class, 'show'])->name('portal.show');

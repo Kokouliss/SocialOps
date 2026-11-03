@@ -24,7 +24,8 @@ class GenerateMonthlyReport implements ShouldQueue
     public function handle(MonthlyReport $reports): void
     {
         $report = $reports->generate($this->client, CarbonImmutable::parse($this->month.'-01'));
-        Slack::send("{$this->client->name}: {$report->title} is ready\n".route('reports.show', $report));
+        $mailed = ($this->client->profile['approval']['email_monthly_report'] ?? false) ? $reports->mail($report) : 0;
+        Slack::send("{$this->client->name}: {$report->title} is ready".($mailed ? ", mailed to {$mailed} approvers" : '')."\n".route('reports.show', $report));
     }
 
     public function failed(?Throwable $e): void

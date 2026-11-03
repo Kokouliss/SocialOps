@@ -4,17 +4,23 @@ namespace App\Reporting;
 
 use Anthropic\Client as Claude;
 use App\Drafting\Reply;
+use App\Mail\ReportMail;
 use App\Models\ClaudeCall;
 use App\Models\Client;
 use App\Models\Report;
 use App\Planning\Prompt;
 use App\Posts\PostState;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 
 /** One month of a client in numbers (built here, so no figure is invented) plus Claude's reading of them (prompts/monthly-report.md). */
 class MonthlyReport
 {
     public const METRICS = ['reach', 'views', 'likes', 'comments', 'shares', 'saved'];
+
+    /** How long the client's link to a mailed report works. */
+    public const LINK_DAYS = 30;
 
     public function __construct(private Claude $claude) {}
 
@@ -37,7 +43,37 @@ class MonthlyReport
             'kind' => 'monthly',
             'title' => 'Monthly report '.$month->format('F Y'),
             'body' => Reply::text($message)."\n\n## The numbers\n\n".$numbers,
+            'meta' => ['month' => $month->format('Y-m')],
         ]);
+    }
+
+    /** Mail the report to the client's approvers with a signed link and the month's numbers as a CSV; returns how many got it. */
+    public function mail(Report $report): int
+    {
+        $emails = array_filter(array_column($report->client->profile['approval']['approvers'] ?? [], 'email'));
+        if ($emails) {
+            $url = URL::temporarySignedRoute('reports.client', now()->addDays(self::LINK_DAYS), ['report' => $report->id]);
+            $csv = $this->csv($report->client, CarbonImmutable::parse(($report->meta['month'] ?? $report->created_at->subMonth()->format('Y-m')).'-01'));
+            Mail::to(array_values($emails))->send(new ReportMail($report, $url, $csv));
+        }
+
+        return count($emails);
+    }
+
+    /** The month's posts with their summed metrics, one row per post, for a spreadsheet. */
+    public function csv(Client $client, CarbonImmutable $month): string
+    {
+        $out = fopen('php://temp', 'r+');
+        fwrite($out, "\xEF\xBB\xBF"); // so Excel reads the Greek
+        fputcsv($out, array_merge(['date', 'post', 'platforms', 'format', 'pillar', 'state'], self::METRICS));
+        $posts = $client->posts()->whereBetween('scheduled_at', [$month->startOfMonth(), $month->endOfMonth()])->orderBy('scheduled_at')->get();
+        foreach ($posts as $post) {
+            $sums = array_map(fn ($k) => ($v = array_filter(array_column($post->metrics ?? [], $k), fn ($x) => $x !== null)) ? array_sum($v) : '', self::METRICS);
+            fputcsv($out, array_merge([$post->scheduled_at->toDateString(), $post->name, implode(', ', $post->platforms), $post->format, $post->pillar ?? '', $post->state->label()], $sums));
+        }
+        rewind($out);
+
+        return stream_get_contents($out);
     }
 
     /** Markdown tables: every post with its metrics, totals per platform, the pillar mix against the profile, the audience, comments and reviews. */
