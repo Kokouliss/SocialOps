@@ -70,13 +70,19 @@ class Post extends Model
         return $this->belongsToMany(Asset::class)->withPivot('position')->orderByPivot('position');
     }
 
-    /** The text that goes to the platform: every language of the profile in order, then the hashtags once. */
+    /** The platform's signature line from the profile (bookings phone, site), empty when there is none. */
+    public function signatureFor(string $platform): string
+    {
+        return trim((string) ($this->client->profile['signatures'][$platform] ?? ''));
+    }
+
+    /** The text that goes to the platform: every language of the profile in order, the platform's signature, then the hashtags once. */
     public function captionFor(string $platform): string
     {
         $languages = array_merge($this->client->profile['languages'], $this->client->profile['extra_languages'] ?? []);
         $variants = $this->variants->where('platform', $platform)->keyBy('lang');
         $hashtags = $variants->flatMap(fn (PostVariant $v) => $v->hashtags ?? [])->map(fn ($t) => '#'.ltrim($t, '#'))->unique()->join(' ');
-        $caption = collect($languages)->map(fn ($lang) => trim((string) $variants->get($lang)?->caption))->push($hashtags)->filter()->join("\n\n");
+        $caption = collect($languages)->map(fn ($lang) => trim((string) $variants->get($lang)?->caption))->push($this->signatureFor($platform))->push($hashtags)->filter()->join("\n\n");
         $max = PostRequest::CAPTION_MAX[$platform];
         throw_if(mb_strlen($caption) > $max, new PublishFailed(ucfirst($platform).' caption is '.mb_strlen($caption)." characters with both languages, over {$max}"));
 

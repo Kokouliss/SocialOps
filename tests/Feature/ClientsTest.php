@@ -136,3 +136,10 @@ test('a profile written before the research section existed still parses', funct
     expect($yaml)->not->toContain('research')
         ->and(ClientProfile::parse($yaml)['research'])->toBe(['sources' => [], 'excluded_domains' => [], 'excluded_topics' => []]);
 });
+
+test('a profile written before the slots, saved replies and signatures sections existed still parses', function () {
+    $yaml = preg_replace('/^(slots|saved_replies|signatures):.*\n/m', '', ClientProfile::templateYaml());
+
+    expect($yaml)->not->toContain('signatures')
+        ->and(ClientProfile::parse($yaml))->toMatchArray(['slots' => [], 'saved_replies' => [], 'signatures' => []]);
+});

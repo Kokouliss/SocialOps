@@ -32,7 +32,7 @@ Out of MVP: CSV import, evergreen queues, Canva autofill, auto-reports, auto-Ree
 - Approved posts are locked; editing one sends it back to In Review.
 - Approval auto-schedules the post.
 - A post with `settings.repeat` (weekly or monthly) spawns its next occurrence as a Draft right after it is published (`Post::spawnRepeat()`); the Draft goes through approval again.
-- Code: `App\Posts\PostState` (enum with the transitions), `Post::transitionTo()`; captions live in `post_variants` per platform and language.
+- Code: `App\Posts\PostState` (enum with the transitions), `Post::transitionTo()`; captions live in `post_variants` per platform and language; `Post::captionFor()` builds the published text (languages, then the profile's `signatures.<platform>` line, then the hashtags).
 - Manual-Needed covers things no API can do (Instagram Story stickers, shopping tags, public TikTok through our own app before its audit): notify a human to post in-app.
 
 ## Rules that must not be broken
