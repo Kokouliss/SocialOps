@@ -9,6 +9,7 @@
 | A4 | Own the workflow and the publishing: our own platform apps and drivers behind a `Publisher` adapter; no paid aggregator | User's call at kickoff (replaces the research recommendation to rent publishing); the adapter keeps each platform a separate driver | 2026-11-03 |
 | A5 | Platforms: Instagram, Facebook, TikTok and Google Business Profile, all four in the MVP; no other platform, now or later | User's call (replaces the research recommendation of TikTok in Phase 2); TikTok posts are private-only until our audit passes | 2026-11-03 |
 | D1 | App stack: custom Laravel app | Matches the team's PHP/WordPress skills; publishing stays behind an adapter | 2026-11-03 |
+| D8 | Brand profile stored as one JSON column (`clients.profile`) in the example.yaml shape and edited as YAML text in the staff form; `Client::toProfileArray()` feeds prompts and drivers | Smallest complete version; a per-field form can replace the textarea when non-technical staff edit profiles | 2026-11-03 |
 | D7 | Laravel 13 on PHP 8.3, Pest for tests, Breeze (Blade) for staff auth without public registration, Horizon on Redis for queues | Current stable at kickoff; smallest stack that covers the scaffold proposal | 2026-11-03 |
 | D2 | Publishing layer: direct drivers built in-house (Meta Graph API, TikTok Content Posting API, Google Business Profile API); no paid service | User's call: no paid third-party services (Claude API and hosting are fine). The cost is calendar time: Phase 0 approvals become the critical path | 2026-11-03 |
 

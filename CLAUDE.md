@@ -7,7 +7,7 @@ Goal: cut time from every step: asset intake, captions, translation, approvals, 
 
 ## Status
 - Research done (November 2026): `docs/research.md`. Read it before proposing architecture or features.
-- Scaffold done (Laravel 13, PHP 8.3, Pest, Breeze auth for staff, Horizon). Next: the first unticked Phase 1 item in `docs/roadmap.md`.
+- Scaffold and clients CRUD done. Next: the first unticked Phase 1 item in `docs/roadmap.md`.
 - Decisions taken so far and decisions still open: `docs/decisions.md`. **Ask the user about open decisions before writing code that depends on them.**
 
 ## Core idea
@@ -46,7 +46,7 @@ Out of MVP: CSV import, evergreen queues, Canva autofill, auto-reports, auto-Ree
 
 ## Conventions
 - Asset/post naming: `CLIENT_YYYYMMDD_PLATFORM_FORMAT_PILLAR_LANG_v#`, e.g. `ALMYRA_20270512_IG_REEL_FOOD_EL-EN_v2`. Enforced automatically on upload.
-- Client brand profiles: `config/clients/<slug>.yaml` (see `example.yaml`) until they move into the database.
+- Client brand profiles live in the `clients` table (`profile` JSON column in the `example.yaml` shape, `Client::toProfileArray()` returns the full shape). `config/clients/<slug>.yaml` files are imported with `php artisan clients:import`; `example.yaml` stays the template. Every client-owned table carries `client_id`.
 - Caption prompt: `prompts/caption-draft.md`.
 
 ## Files
