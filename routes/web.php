@@ -51,10 +51,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
     Route::get('/reports/{report}/download', [ReportController::class, 'download'])->name('reports.download');
     Route::get('/clients/{client}/accounts/connect/{provider}', [AccountController::class, 'connect'])->name('accounts.connect');
-    Route::post('/clients/{client}/accounts', [AccountController::class, 'attach'])->name('accounts.attach');
     Route::delete('/accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy');
     Route::post('/accounts/{account}/import', [AccountController::class, 'import'])->name('accounts.import');
-    Route::get('/oauth/{provider}/callback', [AccountController::class, 'callback'])->name('oauth.callback');
     Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar');
     Route::get('/jobs', [JobController::class, 'index'])->name('jobs.index');
     Route::post('/jobs/{uuid}/retry', [JobController::class, 'retry'])->name('jobs.retry');
@@ -79,8 +77,14 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// OAuth return and the pick step: the state and candidates in the session are the credential, staff or client alike
+Route::get('/oauth/{provider}/callback', [AccountController::class, 'callback'])->name('oauth.callback');
+Route::post('/clients/{client}/accounts', [AccountController::class, 'attach'])->name('accounts.attach');
+
 // Client-facing pages: no login, the signed link is the credential (GET and POST share the URL)
 Route::middleware('signed')->group(function () {
+    Route::get('/connect/{client:slug}', [AccountController::class, 'clientConnect'])->name('connect.show');
+    Route::get('/connect/{client:slug}/{provider}', [AccountController::class, 'connect'])->name('connect.start');
     Route::get('/inbox/{client:slug}', [InboxController::class, 'show'])->name('inbox.show');
     Route::post('/inbox/{client:slug}', [InboxController::class, 'store'])->name('inbox.store');
     Route::get('/review/{review}', [PortalController::class, 'show'])->name('portal.show');
