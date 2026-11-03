@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Drafting\CaptionDrafter;
 use App\Http\Requests\PostRequest;
 use App\Models\Client;
 use App\Models\Post;
+use App\Models\PostVariant;
 use App\Posts\InvalidTransition;
 use App\Posts\PostNamer;
 use App\Posts\PostState;
@@ -57,6 +59,41 @@ class PostController extends Controller
             'post' => $post,
             'variants' => $post->variants->keyBy(fn ($v) => "{$v->platform}.{$v->lang}"),
         ]);
+    }
+
+    /** Claude drafts EL and EN captions into the form; a human edits them before the post goes for review. */
+    public function draft(CaptionDrafter $drafter, Post $post): RedirectResponse
+    {
+        abort_if($post->state === PostState::Published, 422, 'Published posts cannot be redrafted.');
+        $client = $post->client;
+        $examples = PostVariant::whereHas('post', fn ($q) => $q->where('client_id', $client->id)->whereIn('state', [PostState::Approved, PostState::Scheduled, PostState::Published]))
+            ->latest('id')->limit(6)->pluck('caption')->filter()->values()->all();
+
+        try {
+            $captions = $drafter->draft($client->toProfileArray(), [
+                'platforms' => $post->platforms,
+                'format' => $post->format,
+                'pillar' => $post->pillar ?? 'misc',
+                'brief' => (string) $post->brief,
+                'asset_description' => $post->assets->map(fn ($a) => "{$a->kind} {$a->name}".($a->note ? ": {$a->note}" : ''))->join('; ') ?: 'not chosen yet',
+            ], $examples);
+        } catch (\Exception $e) { // a malformed reply or an API error is shown on the form, not as a 500
+            return back()->withErrors(['draft' => $e->getMessage()]);
+        }
+
+        // shortcut: only el and en are drafted (the prompt's schema), extra_languages stay hand-written until a client needs more
+        foreach ($post->platforms as $platform) {
+            foreach (['el', 'en'] as $lang) {
+                $post->variants()->updateOrCreate(['platform' => $platform, 'lang' => $lang], [
+                    'caption' => $captions[$lang][$platform],
+                    'alt_text' => $platform === 'tiktok' ? null : $captions['alt_text'][$lang],
+                    'hashtags' => $platform === 'google_business' ? [] : $captions['hashtags'],
+                ]);
+            }
+        }
+        $post->reopenForReview();
+
+        return redirect()->route('posts.edit', $post)->with(['status' => 'captions-drafted', 'notes' => $captions['notes_for_reviewer']]);
     }
 
     public function update(PostRequest $request, Post $post): RedirectResponse
