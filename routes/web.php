@@ -85,6 +85,7 @@ Route::post('/clients/{client}/accounts', [AccountController::class, 'attach'])-
 Route::middleware('signed')->group(function () {
     Route::get('/connect/{client:slug}', [AccountController::class, 'clientConnect'])->name('connect.show');
     Route::get('/connect/{client:slug}/{provider}', [AccountController::class, 'connect'])->name('connect.start');
+    Route::get('/calendar/{client:slug}', [CalendarController::class, 'client'])->name('calendar.client');
     Route::get('/inbox/{client:slug}', [InboxController::class, 'show'])->name('inbox.show');
     Route::post('/inbox/{client:slug}', [InboxController::class, 'store'])->name('inbox.store');
     Route::get('/review/{review}', [PortalController::class, 'show'])->name('portal.show');
