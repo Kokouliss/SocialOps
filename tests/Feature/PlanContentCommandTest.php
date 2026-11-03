@@ -2,11 +2,13 @@
 
 use App\Drafting\CaptionDrafter;
 use App\Models\Client;
+use App\Models\Post;
 use App\Planning\ContentPlanner;
 use App\Planning\TrendResearcher;
+use App\Posts\PostState;
 use Illuminate\Support\Facades\Storage;
 
-it('drafts a batch into the plans folder for review, publishing nothing', function () {
+it('creates Draft posts with captions per platform and language, plus a review sheet, publishing nothing', function () {
     Storage::fake();
     Client::factory()->create(['slug' => 'almyra', 'code' => 'ALMYRA']);
     $post = ['date' => '2027-05-12', 'platforms' => ['instagram'], 'format' => 'reel', 'pillar' => 'food_drink', 'title' => 'Sunset cocktails',
@@ -18,9 +20,19 @@ it('drafts a batch into the plans folder for review, publishing nothing', functi
     $this->mock(CaptionDrafter::class)->shouldReceive('draft')->twice()->andReturn($captions);
 
     $this->artisan('content:plan almyra --posts=2 --from=2027-05-10')
-        ->expectsOutputToContain('ALMYRA_20270512_IG_REEL_FOOD_DRINK_EL-EN_v1')
+        ->expectsOutputToContain('ALMYRA_20270512_IG_REEL_FOODDRINK_EL-EN_v2')
         ->expectsOutputToContain('Pillar place: planned 0, quota 1')
         ->assertSuccessful();
+
+    expect(Post::count())->toBe(2);
+    $draft = Post::where('name', 'ALMYRA_20270512_IG_REEL_FOODDRINK_EL-EN_v1')->firstOrFail();
+    expect($draft->state)->toBe(PostState::Draft)
+        ->and($draft->scheduled_at->toDateString())->toBe('2027-05-12')
+        ->and($draft->brief)->toContain('Trend: Golden hour reels')
+        ->and($draft->variants->map(fn ($v) => [$v->platform, $v->lang, $v->caption, $v->alt_text, $v->hashtags])->all())->toBe([
+            ['instagram', 'el', 'Κοκτέιλ στο ηλιοβασίλεμα', 'α', ['#chania']],
+            ['instagram', 'en', 'Sunset cocktails', 'a', ['#chania']],
+        ]);
 
     $files = Storage::files('plans/almyra');
     expect($files)->toHaveCount(2);
