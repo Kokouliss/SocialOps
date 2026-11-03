@@ -4,5 +4,5 @@
     <span class="font-mono">{{ $post->client->code }}</span>
     {{ str_replace('_', ' ', $post->format) }}
     @if ($post->scheduled_at) <span class="text-gray-500">{{ $post->scheduled_at->format('H:i') }}</span> @endif
-    · {{ $post->state->label() }}
+    · {{ $post->state->label() }}@if ($post->settings['repeat'] ?? null) ↻@endif
 </a>

@@ -70,6 +70,9 @@ class PublishPost implements ShouldQueue
         }
         $post->forceFill(['publish_error' => null])->save();
         $post->transitionTo(PostState::Published);
+        if ($next = $post->spawnRepeat()) {
+            Slack::send("{$post->client->name}: next {$post->settings['repeat']} repeat drafted, {$next->name}, send it to review\n".route('posts.edit', $next));
+        }
     }
 
     /** The first comment (hashtags or a link) goes under Instagram and Facebook posts; a failure is told to Slack, the post stays Published. */
