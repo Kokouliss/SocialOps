@@ -26,7 +26,7 @@
         @endif
     </div>
     @if ($platform === 'google_business')
-        <div class="px-3 py-2 text-xs font-semibold text-blue-700">{{ __(match ($post->format) { 'gbp_offer' => 'View offer', 'gbp_event' => 'Learn more', default => 'Learn more' }) }}</div>
+        <div class="px-3 py-2 text-xs font-semibold text-blue-700">{{ __($post->format === 'gbp_offer' ? 'View offer' : (\App\Publishing\GbpPublisher::CTAS[$post->settings['gbp']['cta'] ?? 'LEARN_MORE'] ?? 'Learn more')) }}</div>
     @endif
     @foreach ($post->variants->where('platform', $platform) as $variant)
         @if ($platform === 'instagram' || $platform === 'tiktok')

@@ -104,7 +104,14 @@
         <div><x-input-label for="gbp-title" :value="__('Title')" /><x-text-input id="gbp-title" name="settings[gbp][title]" type="text" maxlength="58" class="mt-1 block w-full" :value="$gbp['title'] ?? ''" /><x-input-error class="mt-1" :messages="$errors->get('settings.gbp.title')" /></div>
         <div><x-input-label for="gbp-start" :value="__('Starts')" /><x-text-input id="gbp-start" name="settings[gbp][start]" type="date" class="mt-1 block w-full" :value="$gbp['start'] ?? ''" /></div>
         <div><x-input-label for="gbp-end" :value="__('Ends')" /><x-text-input id="gbp-end" name="settings[gbp][end]" type="date" class="mt-1 block w-full" :value="$gbp['end'] ?? ''" /><x-input-error class="mt-1" :messages="$errors->get('settings.gbp.end')" /></div>
-        <div><x-input-label for="gbp-link" :value="__('Learn more link')" /><x-text-input id="gbp-link" name="settings[gbp][link]" type="url" class="mt-1 block w-full" :value="$gbp['link'] ?? ''" /><x-input-error class="mt-1" :messages="$errors->get('settings.gbp.link')" /></div>
+        <div><x-input-label for="gbp-cta" :value="__('Button')" />
+            <select id="gbp-cta" name="settings[gbp][cta]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                @foreach (\App\Publishing\GbpPublisher::CTAS as $cta => $label)
+                    <option value="{{ $cta }}" @selected(($gbp['cta'] ?? 'LEARN_MORE') === $cta)>{{ __($label) }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div><x-input-label for="gbp-link" :value="__('Button link (Call needs none)')" /><x-text-input id="gbp-link" name="settings[gbp][link]" type="url" class="mt-1 block w-full" :value="$gbp['link'] ?? ''" /><x-input-error class="mt-1" :messages="$errors->get('settings.gbp.link')" /></div>
         <div><x-input-label for="gbp-coupon" :value="__('Coupon code (offers)')" /><x-text-input id="gbp-coupon" name="settings[gbp][coupon]" type="text" class="mt-1 block w-full" :value="$gbp['coupon'] ?? ''" /></div>
     </div>
 </fieldset>
