@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ApiToken;
 use App\Models\Client;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -12,7 +13,7 @@ class StaffController extends Controller
 {
     public function index()
     {
-        return view('staff.index', ['users' => User::orderBy('name')->get(), 'clients' => Client::orderBy('name')->get()]);
+        return view('staff.index', ['users' => User::orderBy('name')->get(), 'clients' => Client::orderBy('name')->get(), 'tokens' => ApiToken::with('client')->latest()->get()]);
     }
 
     public function store(Request $request)
@@ -20,6 +21,22 @@ class StaffController extends Controller
         $this->create($request);
 
         return redirect()->route('staff.index')->with('status', 'login-added');
+    }
+
+    /** A new API token (docs/api.md); the plain token is shown once on the next page. */
+    public function tokenStore(Request $request)
+    {
+        $data = $request->validate(['name' => ['required', 'string', 'max:60'], 'client_id' => ['nullable', 'integer', Rule::exists('clients', 'id')]]);
+        [, $plain] = ApiToken::issue($data['name'], $data['client_id'] ?? null, $request->user()->id);
+
+        return redirect()->route('staff.index')->with('status', 'token-created')->with('token', $plain);
+    }
+
+    public function tokenDestroy(ApiToken $token)
+    {
+        $token->delete();
+
+        return redirect()->route('staff.index')->with('status', 'token-revoked');
     }
 
     /** Limit a login to some clients, or lift the limit (no client ticked). */

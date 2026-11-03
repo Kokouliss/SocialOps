@@ -55,6 +55,34 @@
                     </tbody>
                 </table>
             </div>
+            @if (session('token'))
+                <p class="text-sm text-yellow-800 bg-yellow-50 rounded-md p-3">{{ __('New API token, copy it now, it is not shown again:') }} <code class="font-mono select-all">{{ session('token') }}</code></p>
+            @endif
+            <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+                <h3 class="text-lg font-medium text-gray-900">{{ __('API tokens') }} <span class="text-sm font-normal text-gray-500">({{ __('for scripts and other tools, see docs/api.md') }})</span></h3>
+                <table class="mt-3 min-w-full text-sm">
+                    <thead class="text-left text-gray-600"><tr><th class="py-1 pr-6">{{ __('Name') }}</th><th class="py-1 pr-6">{{ __('Client') }}</th><th class="py-1 pr-6">{{ __('Last used') }}</th><th></th></tr></thead>
+                    <tbody class="divide-y divide-gray-100">
+                        @forelse ($tokens as $token)
+                            <tr>
+                                <td class="py-2 pr-6 font-medium text-gray-900">{{ $token->name }}</td>
+                                <td class="py-2 pr-6">{{ $token->client?->name ?? __('all') }}</td>
+                                <td class="py-2 pr-6 text-gray-500">{{ $token->last_used_at?->diffForHumans() ?? __('never') }}</td>
+                                <td class="py-2 text-right"><form method="POST" action="{{ route('staff.tokens.destroy', $token) }}" onsubmit="return confirm('{{ __('Revoke this token? Scripts using it stop working at once.') }}')">@csrf @method('DELETE')<button class="text-red-600 hover:underline">{{ __('Revoke') }}</button></form></td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="4" class="py-2 text-gray-500">{{ __('None yet.') }}</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+                <form method="POST" action="{{ route('staff.tokens.store') }}" class="mt-4 flex flex-wrap items-end gap-3 text-sm">
+                    @csrf
+                    <div><x-input-label for="token-name" :value="__('Token name')" /><x-text-input id="token-name" name="name" type="text" class="mt-1 block" required maxlength="60" placeholder="{{ __('e.g. Zapier, reporting script') }}" /></div>
+                    <div><x-input-label for="token-client" :value="__('Limited to')" />
+                        <select id="token-client" name="client_id" class="mt-1 block border-gray-300 rounded-md shadow-sm text-sm"><option value="">{{ __('All clients') }}</option>@foreach ($clients as $client)<option value="{{ $client->id }}">{{ $client->name }}</option>@endforeach</select></div>
+                    <x-primary-button>{{ __('Create token') }}</x-primary-button>
+                </form>
+            </div>
             <div class="bg-white p-6 shadow-sm sm:rounded-lg max-w-xl">
                 <h3 class="text-lg font-medium text-gray-900">{{ __('Add a login') }}</h3>
                 <form method="POST" action="{{ route('staff.store') }}" class="mt-4 space-y-4">

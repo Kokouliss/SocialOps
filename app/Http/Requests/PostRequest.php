@@ -59,7 +59,8 @@ class PostRequest extends FormRequest
             'variants' => ['sometimes', 'array'],
             'variants.*.*.caption' => ['nullable', 'string'],
             'variants.*.*.alt_text' => ['nullable', 'string', 'max:1000'],
-            'variants.*.*.hashtags' => ['nullable', 'string', 'max:1000'],
+            'variants.*.*.hashtags' => ['nullable'], // "#a #b" from the form, or a list from the API
+            'variants.*.*.hashtags.*' => ['string', 'max:100'],
         ];
     }
 
@@ -106,7 +107,7 @@ class PostRequest extends FormRequest
                     'lang' => $lang,
                     'caption' => $fields['caption'] ?? null,
                     'alt_text' => $fields['alt_text'] ?? null,
-                    'hashtags' => array_values(array_filter(preg_split('/[\s,]+/', (string) ($fields['hashtags'] ?? '')))),
+                    'hashtags' => array_values(array_filter(is_array($fields['hashtags'] ?? null) ? $fields['hashtags'] : preg_split('/[\s,]+/', (string) ($fields['hashtags'] ?? '')))),
                 ];
             }
         }
