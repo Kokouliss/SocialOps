@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Drafting\CaptionDrafter;
 use App\Http\Requests\PostRequest;
+use App\Media\TextOverlay;
 use App\Models\Client;
 use App\Models\Post;
 use App\Models\PostVariant;
@@ -13,6 +14,7 @@ use App\Posts\PostState;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -174,6 +176,13 @@ class PostController extends Controller
         foreach ($post->assets as $asset) {
             $zip->addFile(Storage::disk($asset->disk)->path($asset->path), $asset->name); // shortcut: local disk only, use addFromString(get()) for S3
         }
+        foreach (array_keys(array_filter($post->settings['design'] ?? [])) as $lang) {
+            try {
+                $zip->addFromString("{$post->name}_".strtoupper($lang).'.jpg', $this->overlay($post, $lang));
+            } catch (\RuntimeException) {
+                // no image asset, or one GD cannot read: the captions still export
+            }
+        }
         $text = "{$post->name}\nScheduled: ".($post->scheduled_at?->format('Y-m-d H:i') ?? '-')."\nState: {$post->state->label()}\nBrief: {$post->brief}\nMedia: {$post->assets->pluck('name')->join(', ')}\n";
         foreach (array_filter($post->settings['design'] ?? []) as $lang => $design) {
             $text .= "\n== Design text ".strtoupper($lang)." ==\n{$design}\n";
@@ -188,6 +197,27 @@ class PostController extends Controller
         $zip->close();
 
         return response()->download($tmp, "{$post->name}.zip")->deleteFileAfterSend();
+    }
+
+    /** The first image with the design text of one language burned in, to post by hand. */
+    public function image(Post $post, string $lang): Response
+    {
+        try {
+            $jpeg = $this->overlay($post, $lang);
+        } catch (\RuntimeException $e) {
+            abort(404, $e->getMessage());
+        }
+
+        return response($jpeg, 200, ['Content-Type' => 'image/jpeg', 'Content-Disposition' => 'attachment; filename="'.$post->name.'_'.strtoupper($lang).'.jpg"']);
+    }
+
+    /** @throws \RuntimeException when the post has no design text in that language or no readable image */
+    private function overlay(Post $post, string $lang): string
+    {
+        $text = $post->settings['design'][$lang] ?? throw new \RuntimeException("No design text in {$lang}");
+        $image = $post->assets->firstWhere('kind', 'image') ?? throw new \RuntimeException('No image on this post');
+
+        return TextOverlay::render(Storage::disk($image->disk)->get($image->path), $text);
     }
 
     /** @return array<int, array{position: int}> */
