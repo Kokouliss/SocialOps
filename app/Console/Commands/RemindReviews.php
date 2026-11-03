@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Alerts\Slack;
 use App\Mail\ReviewMail;
 use App\Models\Review;
 use Illuminate\Console\Command;
@@ -26,9 +27,11 @@ class RemindReviews extends Command
                 $review->pending()->get()->each(fn ($post) => $review->decide($post, 'approved', null, 'auto'));
                 $this->info("Auto-approved review {$review->id} for {$review->client->name}.");
             } elseif (! $review->escalated_at) {
+                $mail = new ReviewMail($review, 'overdue');
                 if ($review->creator) {
-                    Mail::to($review->creator->email)->send(new ReviewMail($review, 'overdue'));
+                    Mail::to($review->creator->email)->send($mail);
                 }
+                Slack::mailed($mail, route('clients.reviews', $review->client_id));
                 $review->forceFill(['escalated_at' => now()])->save();
             }
         }

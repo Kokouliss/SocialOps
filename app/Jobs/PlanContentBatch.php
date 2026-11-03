@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Alerts\Slack;
 use App\Models\Client;
 use App\Models\User;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -42,5 +43,6 @@ class PlanContentBatch implements ShouldQueue
     {
         $calendar = route('calendar', ['client' => $this->client->slug, 'date' => $this->options['from']]);
         Mail::raw("{$body}\n\nCalendar: {$calendar}", fn ($message) => $message->to($this->user->email, $this->user->name)->subject($subject));
+        Slack::send("{$subject}\n".last(array_filter(explode("\n", trim($body))))."\n{$calendar}"); // the last line is the outcome or the error
     }
 }

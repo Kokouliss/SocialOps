@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Alerts\Slack;
 use App\Mail\PostNeedsHuman;
 use App\Models\Post;
 use App\Posts\PostState;
@@ -59,7 +60,8 @@ class PublishPost implements ShouldQueue
         if ($manual) {
             $post->forceFill(['publish_error' => implode(' ', $manual)])->save();
             $post->transitionTo(PostState::ManualNeeded);
-            Mail::to(self::whoToTell($post))->send(new PostNeedsHuman($post, 'manual'));
+            Mail::to(self::whoToTell($post))->send($mail = new PostNeedsHuman($post, 'manual'));
+            Slack::mailed($mail, route('posts.edit', $post));
 
             return;
         }
@@ -76,7 +78,8 @@ class PublishPost implements ShouldQueue
         }
         $post->forceFill(['publish_error' => $e->getMessage()])->save();
         $post->transitionTo(PostState::Failed);
-        Mail::to(self::whoToTell($post))->send(new PostNeedsHuman($post, 'failed'));
+        Mail::to(self::whoToTell($post))->send($mail = new PostNeedsHuman($post, 'failed'));
+        Slack::mailed($mail, route('posts.edit', $post));
     }
 
     public static function whoToTell(Post $post): string
