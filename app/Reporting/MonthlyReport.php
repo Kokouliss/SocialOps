@@ -11,7 +11,6 @@ use App\Planning\Prompt;
 use App\Posts\PostState;
 use App\Publishing\GbpPublisher;
 use Carbon\CarbonImmutable;
-use Throwable;
 
 /** One month of a client in numbers (built here, so no figure is invented) plus Claude's reading of them (prompts/monthly-report.md). */
 class MonthlyReport
@@ -107,7 +106,7 @@ class MonthlyReport
             try {
                 $p = app(GbpPublisher::class)->performance($gbp, $month, $end);
                 $md .= "| Views on Search and Maps | Website clicks | Calls | Direction requests |\n|---|---|---|---|\n| {$p['views']} | {$p['website_clicks']} | {$p['calls']} | {$p['directions']} |\n";
-            } catch (Throwable $e) { // the rest of the report stands without it
+            } catch (\Throwable $e) { // the rest of the report stands without it
                 $md .= "(not read: {$e->getMessage()})\n";
             }
         }
