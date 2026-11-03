@@ -18,7 +18,7 @@
                             <span class="w-40 font-medium">{{ str_replace('_', ' ', ucfirst($platform)) }}</span>
                             @if ($account)
                                 <span>{{ $account->name }}</span>
-                                <span class="text-xs {{ $account->token_expires_at?->isPast() ? 'text-red-600' : 'text-gray-500' }}">
+                                <span class="text-xs {{ $account->token_expires_at?->isPast() ? 'text-red-600' : ($account->token_expires_at?->lt(now()->addDays(\App\Console\Commands\CheckTokens::ALERT_DAYS)) ? 'text-orange-600' : 'text-gray-500') }}">
                                     {{ $account->token_expires_at ? __('token until :date', ['date' => $account->token_expires_at->format('j M Y')]) : __('token does not expire') }}
                                 </span>
                                 <form method="POST" action="{{ route('accounts.destroy', $account) }}" class="ml-auto" onsubmit="return confirm('{{ __('Disconnect this account?') }}')">

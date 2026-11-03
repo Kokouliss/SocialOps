@@ -56,7 +56,7 @@ class AccountController extends Controller
 
         foreach (array_unique($picked) as $i) {
             $candidate = $pending['candidates'][$i];
-            $client->accounts()->updateOrCreate(['platform' => $candidate['platform']], $candidate + ['connected_by' => $request->user()->id]);
+            $client->accounts()->updateOrCreate(['platform' => $candidate['platform']], $candidate + ['connected_by' => $request->user()->id, 'token_alerted_at' => null]);
         }
 
         return redirect()->route('clients.accounts', $client)->with('status', 'account-connected');
