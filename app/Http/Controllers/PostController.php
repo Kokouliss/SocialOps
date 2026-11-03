@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Alerts\Slack;
 use App\Drafting\CaptionDrafter;
 use App\Http\Requests\PostRequest;
 use App\Media\TextOverlay;
@@ -11,6 +12,9 @@ use App\Models\PostVariant;
 use App\Posts\InvalidTransition;
 use App\Posts\PostNamer;
 use App\Posts\PostState;
+use App\Publishing\ManualNeeded;
+use App\Publishing\Publishers;
+use App\Publishing\PublishFailed;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -136,12 +140,38 @@ class PostController extends Controller
         $to = PostState::from($request->validate(['state' => ['required', Rule::enum(PostState::class)]])['state']);
 
         try {
-            $post->transitionTo($to);
-        } catch (InvalidTransition $e) {
+            $to === PostState::Withdrawn ? $this->withdraw($post) : $post->transitionTo($to);
+        } catch (InvalidTransition|PublishFailed $e) {
             return back()->withErrors(['state' => $e->getMessage()]);
         }
 
         return redirect()->route('posts.edit', $post)->with('status', 'post-'.$post->state->value);
+    }
+
+    /**
+     * Take the post down on every platform that has an API for it (Facebook, Google Business); the ids of the rest stay on
+     * the post with a note, and Slack is told to delete those by hand. A platform refusal stops here, the removed ids are gone, so a retry picks up the rest.
+     */
+    private function withdraw(Post $post): void
+    {
+        throw_unless($post->state->canTransitionTo(PostState::Withdrawn), new InvalidTransition("Only a published post can be withdrawn, this one is {$post->state->label()}."));
+        $ids = $post->external_ids ?? [];
+        $manual = [];
+        foreach ($ids as $platform => $id) {
+            try {
+                $account = $post->client->accounts()->where('platform', $platform)->first() ?? throw new ManualNeeded("No {$platform} account is connected any more. Delete it in the app.");
+                Publishers::for($platform)->withdraw($account, $id);
+                unset($ids[$platform]);
+                $post->forceFill(['external_ids' => $ids ?: null])->save();
+            } catch (ManualNeeded $e) {
+                $manual[] = ucfirst(str_replace('_', ' ', $platform)).': '.$e->getMessage();
+            }
+        }
+        $post->forceFill(['publish_error' => $manual ? implode(' ', $manual) : null])->save();
+        $post->transitionTo(PostState::Withdrawn);
+        if ($manual) {
+            Slack::send("{$post->client->name}: delete by hand, {$post->name}\n".implode(' ', $manual)."\n".route('posts.edit', $post));
+        }
     }
 
     /** Drag-and-drop on the calendar: move to another day, keeping the time. */

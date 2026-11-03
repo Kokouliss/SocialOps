@@ -28,7 +28,7 @@ Own the workflow and the publishing. No paid middleman.
 Out of MVP: CSV import, evergreen queues, Canva autofill, auto-reports, auto-Reels, link-in-bio. LinkedIn, YouTube, Threads, Pinterest and X are not planned.
 
 ## Post state machine
-`Idea → Draft → In Review → Changes Requested → Approved (locked) → Scheduled → Published | Failed | Manual-Needed`
+`Idea → Draft → In Review → Changes Requested → Approved (locked) → Scheduled → Published | Failed | Manual-Needed`, and `Published → Withdrawn` (the Withdraw button deletes the post through the Facebook and Google Business APIs; Instagram and TikTok have none, so those stay listed on the post with a note until a human deletes them in the app).
 - Approved posts are locked; editing one sends it back to In Review.
 - Approval auto-schedules the post.
 - Code: `App\Posts\PostState` (enum with the transitions), `Post::transitionTo()`; captions live in `post_variants` per platform and language.

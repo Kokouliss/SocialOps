@@ -3,7 +3,7 @@
 namespace App\Posts;
 
 /**
- * Idea → Draft → In Review → Changes Requested → Approved (locked) → Scheduled → Published | Failed | Manual-Needed.
+ * Idea → Draft → In Review → Changes Requested → Approved (locked) → Scheduled → Published | Failed | Manual-Needed, Published → Withdrawn.
  * Approved and later states are locked: editing content sends the post back to In Review.
  */
 enum PostState: string
@@ -17,6 +17,7 @@ enum PostState: string
     case Published = 'published';
     case Failed = 'failed';
     case ManualNeeded = 'manual_needed';
+    case Withdrawn = 'withdrawn';
 
     private const TRANSITIONS = [
         'idea' => ['draft'],
@@ -25,9 +26,10 @@ enum PostState: string
         'changes_requested' => ['in_review', 'draft'],
         'approved' => ['scheduled', 'in_review'],
         'scheduled' => ['published', 'failed', 'manual_needed', 'in_review'],
-        'published' => [],
+        'published' => ['withdrawn'],
         'failed' => ['scheduled', 'in_review'],
         'manual_needed' => ['published', 'in_review'],
+        'withdrawn' => ['in_review'],
     ];
 
     public function canTransitionTo(self $to): bool
@@ -44,7 +46,7 @@ enum PostState: string
     /** Locked content: changing it must go back through review. */
     public function isLocked(): bool
     {
-        return in_array($this, [self::Approved, self::Scheduled, self::Published, self::Failed, self::ManualNeeded], true);
+        return in_array($this, [self::Approved, self::Scheduled, self::Published, self::Failed, self::ManualNeeded, self::Withdrawn], true);
     }
 
     public function label(): string
@@ -59,6 +61,7 @@ enum PostState: string
             self::Published => 'Published',
             self::Failed => 'Failed',
             self::ManualNeeded => 'Manual needed',
+            self::Withdrawn => 'Withdrawn',
         };
     }
 
@@ -75,6 +78,7 @@ enum PostState: string
             self::Published => 'Mark published',
             self::Failed => 'Mark failed',
             self::ManualNeeded => 'Needs manual posting',
+            self::Withdrawn => 'Withdraw',
         };
     }
 }

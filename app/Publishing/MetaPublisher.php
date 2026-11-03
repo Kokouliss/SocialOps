@@ -180,6 +180,12 @@ class MetaPublisher implements Publisher
         return $out;
     }
 
+    public function withdraw(Account $account, string $externalId): void
+    {
+        throw_if($account->platform === 'instagram', new ManualNeeded('Instagram has no API to delete a post. Delete it in the Instagram app.'));
+        $this->check(Http::withQueryParameters(['access_token' => $account->access_token])->delete($this->graph()."/{$externalId}"));
+    }
+
     /**
      * The top posts under a hashtag through the Hashtag Search API. Instagram allows 30 distinct hashtags per account per rolling week.
      *
