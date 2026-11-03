@@ -15,6 +15,16 @@ We publish through our own platform apps (no paid middleman), so nothing goes li
 - [ ] TikTok developer app + Content Posting API audit (required for public TikTok posts; private-only until it passes)
 - [ ] Sign Data Processing Agreements with each client (GDPR)
 
+## Dev setup
+PHP 8.3, Composer, Node 22, Postgres, Redis. Then:
+```
+composer install && cp .env.example .env && php artisan key:generate
+php artisan migrate && npm install && npm run build
+php artisan staff:create "Your Name" you@agency.gr
+php artisan serve
+```
+`php artisan test` runs the suite; `php artisan horizon` runs the queue.
+
 ## Folder map
 | Path | What |
 |---|---|
