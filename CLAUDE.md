@@ -59,6 +59,7 @@ Out of MVP: CSV import, evergreen queues, Canva autofill, auto-reports, auto-Ree
 - Listening report prompt: `prompts/listening-report.md` (`App\Reporting\ListeningReport`, weekly `listening:report`: the profile's `research.hashtags_to_watch` through the Instagram Hashtag Search API, `research.competitors` through Business Discovery, both via the client's connected Instagram account; no scraping, ever).
 - Monthly report prompt: `prompts/monthly-report.md` (`App\Reporting\MonthlyReport`: numbers built in PHP from `posts.metrics`, read back daily by `posts:insights`; Claude writes the reading).
 - Trend brief and batch plan prompts: `prompts/trend-research.md`, `prompts/content-plan.md`. `php artisan content:plan <client> --posts=N` drafts a reviewable batch; `--brief <file>` skips the web research and uses a pasted brief instead. The "Plan with Claude" form on the client page runs the same command as a queued job (`App\Jobs\PlanContentBatch`) and mails the outcome.
+- Monthly report to the client: "Email to client" on the report page, or `approval.email_monthly_report: true` for the job to do it, mails the approvers a signed 30-day link (`/reports/{id}/client`, guest layout) with the month's numbers attached as CSV (`MonthlyReport::mail()`, `MonthlyReport::csv()`).
 
 ## Files
 - `docs/research.md`: full research report with sources (tools, APIs, workflow, AI, architecture, risks).

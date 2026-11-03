@@ -144,6 +144,7 @@ final class ClientProfile
             'approval.approvers.*.name' => ['required', 'string'],
             'approval.approvers.*.email' => ['required', 'email'],
             'approval.approvers.*.phone' => ['nullable', 'string'],
+            'approval.email_monthly_report' => ['nullable', 'boolean'],
             'slots' => ['present', 'array', 'max:21'],
             'slots.*' => ['string', 'regex:/^(mon|tue|wed|thu|fri|sat|sun) ([01]\d|2[0-3]):[0-5]\d$/i'],
             'saved_replies' => ['present', 'array', 'max:30'],

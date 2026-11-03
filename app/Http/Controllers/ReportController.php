@@ -7,6 +7,7 @@ use App\Jobs\GenerateMonthlyReport;
 use App\Models\Client;
 use App\Models\Report;
 use App\Reporting\ListeningReport;
+use App\Reporting\MonthlyReport;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -39,6 +40,26 @@ class ReportController extends Controller
     public function show(Report $report): View
     {
         return view('reports.show', [
+            'report' => $report,
+            'html' => Str::markdown($report->body, ['html_input' => 'strip', 'allow_unsafe_links' => false]),
+        ]);
+    }
+
+    /** "Email to client": the report goes to the approvers with a signed link and the numbers as CSV. */
+    public function send(Report $report, MonthlyReport $reports): RedirectResponse
+    {
+        abort_unless($report->kind === 'monthly', 404);
+        $n = $reports->mail($report);
+
+        return $n
+            ? redirect()->route('reports.show', $report)->with('status', "report-mailed-to-{$n}")
+            : redirect()->route('reports.show', $report)->withErrors(['send' => __('The profile has no approver with an email address.')]);
+    }
+
+    /** The report as the client sees it through the signed link in the mail. */
+    public function client(Report $report): View
+    {
+        return view('reports.client', [
             'report' => $report,
             'html' => Str::markdown($report->body, ['html_input' => 'strip', 'allow_unsafe_links' => false]),
         ]);

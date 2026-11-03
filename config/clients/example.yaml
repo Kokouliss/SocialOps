@@ -52,6 +52,7 @@ approval:
     - name: Owner Name
       email: owner@example.com
       phone: "+30 69x xxx xxxx"     # for reminders
+  email_monthly_report: false   # true mails each monthly report to the approvers as soon as it is written; off, the "Email to client" button on the report page sends it after you have read it
 
 slots: []               # weekly posting slots, e.g. [mon 10:00, wed 18:00, fri 10:00]: "Next free slot" on the post form, the planner and the low-queue warning use them
 saved_replies: []       # answers you give often, offered in the comment inbox, e.g. [{ label: Opening hours, text: "Ανοιχτά κάθε μέρα 10:00–02:00 / Open daily 10:00–02:00" }]
