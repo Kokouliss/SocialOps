@@ -13,7 +13,7 @@ use Symfony\Component\Yaml\Yaml;
 /** Parses and validates a brand profile written in the config/clients/example.yaml format. */
 final class ClientProfile
 {
-    public const SECTIONS = ['accounts', 'languages', 'extra_languages', 'voice', 'pillars', 'hashtags', 'research', 'approval', 'slots', 'saved_replies', 'signatures', 'key_dates'];
+    public const SECTIONS = ['accounts', 'languages', 'extra_languages', 'voice', 'pillars', 'hashtags', 'research', 'approval', 'slots', 'saved_replies', 'signatures', 'fields', 'key_dates'];
 
     public const PLATFORMS = ['instagram', 'facebook', 'tiktok', 'google_business'];
 
@@ -26,13 +26,18 @@ final class ClientProfile
      */
     public static function parse(string $yaml): array
     {
-        $data = Arr::only(self::parseYaml($yaml), self::SECTIONS) + ['extra_languages' => [], 'slots' => [], 'saved_replies' => [], 'signatures' => [], 'key_dates' => [], 'research' => ['sources' => [], 'excluded_domains' => [], 'excluded_topics' => []]];
+        $data = Arr::only(self::parseYaml($yaml), self::SECTIONS) + ['extra_languages' => [], 'slots' => [], 'saved_replies' => [], 'signatures' => [], 'fields' => [], 'key_dates' => [], 'research' => ['sources' => [], 'excluded_domains' => [], 'excluded_topics' => []]];
 
         $validator = Validator::make($data, self::rules());
 
         $validator->after(function ($v) use ($data) {
             if (is_array($data['pillars'] ?? null) && array_sum($data['pillars']) !== 100) {
                 $v->errors()->add('pillars', 'Pillar shares must add up to 100.');
+            }
+            foreach (array_keys(is_array($data['fields'] ?? null) ? $data['fields'] : []) as $key) {
+                if (! preg_match('/^[a-z][a-z0-9_]*$/', (string) $key)) {
+                    $v->errors()->add('fields', "Field names are lowercase letters, digits and underscores: '{$key}' is not.");
+                }
             }
             if (($data['approval']['auto_approve_on_timeout'] ?? false) && ($data['approval']['policy'] ?? null) !== 'optional') {
                 $v->errors()->add('approval.auto_approve_on_timeout', 'Auto-approve on timeout is only allowed when the policy is optional.');
@@ -146,6 +151,8 @@ final class ClientProfile
             'saved_replies.*.text' => ['required', 'string', 'max:2200'],
             'signatures' => ['present', 'array:'.implode(',', self::PLATFORMS)],
             'signatures.*' => ['nullable', 'string', 'max:300'],
+            'fields' => ['present', 'array', 'max:50'],
+            'fields.*' => ['nullable', 'string', 'max:300'],
             'key_dates' => ['present', 'array'],
             'key_dates.*.date' => ['required', 'date'],
             'key_dates.*.label' => ['required', 'string'],

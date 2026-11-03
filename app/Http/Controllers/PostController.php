@@ -235,12 +235,12 @@ class PostController extends Controller
             $text .= "\n== Design text ".strtoupper($lang)." ==\n{$design}\n";
         }
         if ($first = $post->settings['first_comment'] ?? null) {
-            $text .= "\n== First comment ==\n{$first}\n";
+            $text .= "\n== First comment ==\n{$post->client->substitute($first)}\n";
         }
         foreach ($post->variants->groupBy('platform') as $platform => $variants) {
             $text .= "\n== ".ucfirst(str_replace('_', ' ', $platform))." ==\n";
             foreach ($variants as $v) {
-                $text .= '['.strtoupper($v->lang)."]\n{$v->caption}\n".collect($v->hashtags)->map(fn ($t) => '#'.ltrim($t, '#'))->join(' ')."\n".($v->alt_text ? "Alt text: {$v->alt_text}\n" : '');
+                $text .= '['.strtoupper($v->lang)."]\n{$post->client->substitute($v->caption)}\n".collect($v->hashtags)->map(fn ($t) => '#'.ltrim($t, '#'))->join(' ')."\n".($v->alt_text ? "Alt text: {$v->alt_text}\n" : '');
             }
         }
         $zip->addFromString('captions.txt', $text);
