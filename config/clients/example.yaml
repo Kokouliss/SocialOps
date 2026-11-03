@@ -53,6 +53,8 @@ approval:
       email: owner@example.com
       phone: "+30 69x xxx xxxx"     # for reminders
 
+slots: []               # weekly posting slots, e.g. [mon 10:00, wed 18:00, fri 10:00]: "Next free slot" on the post form, the planner and the low-queue warning use them
+
 key_dates:
   - { date: 2027-05-01, label: Season opening }
   - { date: 2027-08-15, label: Dekapentavgoustos party }
