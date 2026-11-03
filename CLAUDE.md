@@ -31,7 +31,7 @@ Out of MVP: CSV import, evergreen queues, Canva autofill, auto-reports, auto-Ree
 `Idea → Draft → In Review → Changes Requested → Approved (locked) → Scheduled → Published | Failed | Manual-Needed`, and `Published → Withdrawn` (the Withdraw button deletes the post through the Facebook and Google Business APIs; Instagram and TikTok have none, so those stay listed on the post with a note until a human deletes them in the app).
 - Approved posts are locked; editing one sends it back to In Review.
 - Approval auto-schedules the post.
-- Code: `App\Posts\PostState` (enum with the transitions), `Post::transitionTo()`; captions live in `post_variants` per platform and language.
+- Code: `App\Posts\PostState` (enum with the transitions), `Post::transitionTo()`; captions live in `post_variants` per platform and language; `Post::captionFor()` builds the published text (languages, then the profile's `signatures.<platform>` line, then the hashtags).
 - Manual-Needed covers things no API can do (Instagram Story stickers, shopping tags, public TikTok through our own app before its audit): notify a human to post in-app.
 
 ## Rules that must not be broken

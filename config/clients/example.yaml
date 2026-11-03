@@ -53,6 +53,8 @@ approval:
       email: owner@example.com
       phone: "+30 69x xxx xxxx"     # for reminders
 
+signatures: {}          # a line added under every caption of that platform at publish time, e.g. { facebook: "Κρατήσεις / Bookings: +30 28210 00000", google_business: "almyra.gr" }
+
 key_dates:
   - { date: 2027-05-01, label: Season opening }
   - { date: 2027-08-15, label: Dekapentavgoustos party }
