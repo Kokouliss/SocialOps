@@ -1,5 +1,6 @@
 <?php
 
+use App\Engagement\CommentTriage;
 use App\Engagement\ReplyDrafter;
 use App\Models\ClaudeCall;
 use App\Models\Client;
@@ -27,14 +28,17 @@ test('comments:fetch pulls new comments under published posts, skips the account
         'hooks.slack.com/*' => Http::response('ok'),
     ]);
 
-    $this->artisan('comments:fetch')->expectsOutputToContain('Almyra instagram: 1 new.')->assertSuccessful();
+    $this->instance(CommentTriage::class, new CommentTriage(fakeClaude(json_encode(['comments' => [['n' => 1, 'sentiment' => 'neutral', 'intent' => 'question']]]))));
+
+    $this->artisan('comments:fetch')->expectsOutputToContain('Almyra instagram: 1 new, 1 need attention.')->assertSuccessful();
     $this->artisan('comments:fetch')->assertSuccessful();
 
     expect(Comment::count())->toBe(1);
     $comment = Comment::first();
-    expect($comment)->toMatchArray(['external_id' => 'c1', 'author' => 'maria', 'text' => 'Τι ώρα ανοίγετε;', 'platform' => 'instagram', 'post_id' => $this->post->id, 'client_id' => $this->client->id]);
+    expect($comment)->toMatchArray(['external_id' => 'c1', 'author' => 'maria', 'text' => 'Τι ώρα ανοίγετε;', 'platform' => 'instagram', 'post_id' => $this->post->id, 'client_id' => $this->client->id, 'sentiment' => 'neutral', 'intent' => 'question']);
+    expect(json_decode((string) claudeRequests()[0]['request']->getBody(), true)['messages'][0]['content'])->toContain('1. (instagram) maria: Τι ώρα ανοίγετε;');
     Http::assertSentCount(3); // two fetches, one Slack line
-    Http::assertSent(fn ($r) => str_contains($r->url(), 'hooks.slack.com') && str_contains($r['text'], 'Almyra: 1 new instagram comments'));
+    Http::assertSent(fn ($r) => str_contains($r->url(), 'hooks.slack.com') && str_contains($r['text'], 'Almyra: 1 new instagram comments to answer, 1 need attention'));
 });
 
 test('a staff member drafts a reply with Claude, edits it, sends it, or hides the comment', function () {
@@ -74,7 +78,8 @@ test('Google reviews land in the same inbox with their stars, answered ones as h
         'hooks.slack.com/*' => Http::response('ok'),
     ]);
 
-    $this->artisan('comments:fetch')->expectsOutputToContain('Almyra google_business: 1 new.')->assertSuccessful();
+    $this->instance(CommentTriage::class, new CommentTriage(fakeClaude(json_encode(['comments' => [['n' => 1, 'sentiment' => 'positive', 'intent' => 'praise']]]))));
+    $this->artisan('comments:fetch')->expectsOutputToContain('Almyra google_business: 1 new, 0 need attention.')->assertSuccessful();
 
     $reviews = Comment::where('platform', 'google_business')->orderBy('external_id')->get();
     expect($reviews)->toHaveCount(2)
