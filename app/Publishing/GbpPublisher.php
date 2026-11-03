@@ -70,7 +70,7 @@ class GbpPublisher implements Publisher
         if ($cta === 'CALL') {
             $body['callToAction'] = ['actionType' => 'CALL']; // Google dials the location's own number
         } elseif ($settings['link'] ?? null) {
-            $body['callToAction'] = ['actionType' => $cta, 'url' => $settings['link']];
+            $body['callToAction'] = ['actionType' => $cta, 'url' => $post->client->tagLinks($settings['link'], 'google_business', $post->name)];
         }
         if ($type !== 'STANDARD') {
             // Google wants a title and dates for events and offers; the offer details are optional on top

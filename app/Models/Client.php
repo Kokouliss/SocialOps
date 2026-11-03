@@ -87,6 +87,26 @@ class Client extends Model
         return preg_replace_callback('/\{\{\s*([a-z0-9_]+)\s*\}\}/i', fn ($m) => (string) ($this->profile['fields'][strtolower($m[1])] ?? $m[0]), (string) $text);
     }
 
+    /** With `utm: true` in the profile, every http(s) link in the text gets utm_source=platform, utm_medium=social and utm_campaign=post name; links that already carry utm_ stay as written. */
+    public function tagLinks(?string $text, string $platform, string $campaign): string
+    {
+        if (! ($this->profile['utm'] ?? false)) {
+            return (string) $text;
+        }
+        $query = http_build_query(['utm_source' => $platform, 'utm_medium' => 'social', 'utm_campaign' => $campaign]);
+
+        // a link ends before whitespace or a closing bracket; trailing sentence punctuation stays outside it
+        return preg_replace_callback('~https?://[^\s<>"\')\]]+~i', function ($m) use ($query) {
+            $url = rtrim($m[0], '.,;:!?');
+            $tail = substr($m[0], strlen($url));
+            if (str_contains($url, 'utm_')) {
+                return $m[0];
+            }
+
+            return $url.(str_contains($url, '?') ? '&' : '?').$query.$tail;
+        }, (string) $text);
+    }
+
     public function toProfileArray(): array
     {
         return [

@@ -57,6 +57,7 @@ slots: []               # weekly posting slots, e.g. [mon 10:00, wed 18:00, fri 
 saved_replies: []       # answers you give often, offered in the comment inbox, e.g. [{ label: Opening hours, text: "Ανοιχτά κάθε μέρα 10:00–02:00 / Open daily 10:00–02:00" }]
 signatures: {}          # a line added under every caption of that platform at publish time, e.g. { facebook: "Κρατήσεις / Bookings: +30 28210 00000", google_business: "almyra.gr" }
 fields: {}              # placeholders for captions, signatures and the first comment, written as {{phone}} and filled at publish time, e.g. { phone: "+30 28210 00000", site: almyra.gr, booking: "https://almyra.gr/book" }
+utm: false              # true adds utm_source=<platform>&utm_medium=social&utm_campaign=<post name> to every link in captions, first comments and Google buttons at publish time (links that already carry utm_ are left alone)
 
 key_dates:
   - { date: 2027-05-01, label: Season opening }
