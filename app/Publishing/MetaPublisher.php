@@ -12,7 +12,7 @@ use Illuminate\Support\Sleep;
 /** Instagram and Facebook Pages through the Graph API with our own Meta app. One authorisation covers both. */
 class MetaPublisher implements Publisher
 {
-    public const SCOPES = 'pages_show_list,pages_manage_posts,pages_read_engagement,instagram_basic,instagram_content_publish,business_management';
+    public const SCOPES = 'pages_show_list,pages_manage_posts,pages_read_engagement,pages_read_user_content,pages_manage_engagement,instagram_basic,instagram_content_publish,instagram_manage_comments,business_management';
 
     public function authorizeUrl(string $state): string
     {
@@ -124,6 +124,41 @@ class MetaPublisher implements Publisher
         $media = $assets->map(fn (Asset $a) => ['media_fbid' => $this->post("$page/photos", $token + ['url' => $a->publicUrl(), 'published' => 'false'])['id']]);
 
         return $this->post("$page/feed", $token + ['message' => $caption, 'attached_media' => $media->values()->all()])['id'];
+    }
+
+    /**
+     * Comments other people left under one published post, newest first, up to 50.
+     *
+     * @return list<array{id: string, text: string, author: ?string, posted_at: string}>
+     */
+    public function comments(Account $account, string $mediaId): array
+    {
+        $token = ['access_token' => $account->access_token];
+        if ($account->platform === 'instagram') {
+            $data = $this->get("/{$mediaId}/comments", $token + ['fields' => 'id,text,username,timestamp', 'limit' => 50])['data'] ?? [];
+            $own = ltrim($account->name, '@');
+
+            return array_values(array_map(fn ($c) => ['id' => $c['id'], 'text' => $c['text'] ?? '', 'author' => $c['username'] ?? null, 'posted_at' => $c['timestamp']],
+                array_filter($data, fn ($c) => ($c['username'] ?? null) !== $own)));
+        }
+        $data = $this->get("/{$mediaId}/comments", $token + ['fields' => 'id,message,from,created_time', 'limit' => 50])['data'] ?? [];
+
+        return array_values(array_map(fn ($c) => ['id' => $c['id'], 'text' => $c['message'] ?? '', 'author' => $c['from']['name'] ?? null, 'posted_at' => $c['created_time']],
+            array_filter($data, fn ($c) => ($c['from']['id'] ?? null) !== $account->external_id)));
+    }
+
+    /** Reply under someone's comment; returns the reply's id. */
+    public function reply(Account $account, string $commentId, string $text): string
+    {
+        $edge = $account->platform === 'instagram' ? 'replies' : 'comments';
+
+        return $this->post("/{$commentId}/{$edge}", ['access_token' => $account->access_token, 'message' => $text])['id'];
+    }
+
+    public function hide(Account $account, string $commentId): void
+    {
+        $field = $account->platform === 'instagram' ? 'hide' : 'is_hidden';
+        $this->post("/{$commentId}", ['access_token' => $account->access_token, $field => 'true']);
     }
 
     private function get(string $path, array $query): array
