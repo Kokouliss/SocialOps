@@ -10,6 +10,7 @@ use App\Media\TextOverlay;
 use App\Models\Client;
 use App\Models\Post;
 use App\Models\PostVariant;
+use App\Posts\CsvImport;
 use App\Posts\InvalidTransition;
 use App\Posts\PostNamer;
 use App\Posts\PostState;
@@ -61,6 +62,24 @@ class PostController extends Controller
         });
 
         return redirect()->route('posts.edit', $post)->with('status', 'post-created');
+    }
+
+    /** The CSV template for a bulk import: the client's own columns and one example row. */
+    public function importTemplate(Client $client): Response
+    {
+        return response(CsvImport::template($client), 200, ['Content-Type' => 'text/csv; charset=UTF-8', 'Content-Disposition' => 'attachment; filename="'.$client->code.'_posts_template.csv"']);
+    }
+
+    /** Bulk import: every row becomes a Draft on the calendar, or nothing does and the row errors come back. */
+    public function import(Request $request, Client $client): RedirectResponse
+    {
+        $request->validate(['csv' => ['required', 'file', 'mimes:csv,txt', 'max:2048']]);
+        $result = CsvImport::import($client, $request->file('csv')->get(), $request->user());
+        if ($result['errors']) {
+            return redirect()->route('clients.edit', $client)->withErrors(['csv' => $result['errors']]);
+        }
+
+        return redirect()->route('calendar', ['client' => $client->slug])->with('status', "imported-{$result['imported']}-drafts");
     }
 
     public function edit(Post $post): View
