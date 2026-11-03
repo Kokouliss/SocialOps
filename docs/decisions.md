@@ -12,6 +12,8 @@
 | D11 | Approval link: a Laravel signed URL per review batch, valid 30 days like the inbox link (D9); one decision per post per batch; reminders and escalation by e-mail only; `multi_level` behaves like `required` for now | No login for clients; SMS would mean a paid service (D2); nobody has asked for two approval levels yet | 2026-11-03 |
 | D13 | What goes to a platform is one post with every profile language in order (EL then EN for most clients), a blank line between, the hashtags once at the end; the platform limit is checked on the combined text | Clients here post bilingual captions in one post; separate posts per language would double the feed | 2026-11-03 |
 | D14 | OAuth connect flow written with the HTTP client, no Socialite (TikTok and Business Profile would need community providers anyway); staff pick which Page, creator or location is the client's after the login; a TikTok post is published only as SELF_ONLY until `TIKTOK_AUDITED=true`, otherwise it goes to Manual-Needed; TikTok options (privacy, comments, duet, stitch, commercial disclosure, consent) and GBP event/offer fields live in `posts.settings` | Three small exchanges beat a dependency; the agency manages many Pages under one login; TikTok forces private posts before the audit and requires those controls in any composer | 2026-11-03 |
+| D3 | Hosting: Panos's own server (setup in `docs/pilot-setup.md`); media on the server's disk behind signed links for the pilot, an EU S3-compatible bucket before more clients are added | Panos already has hosting; one less account before the pilot | 2026-11-03 |
+| D4 | First pilot client: Fuse Pharmacy (code `FUSE`, type `brand`) | Panos's call | 2026-11-03 |
 | D10 | Post state machine is a PHP enum (`App\Posts\PostState`) with a transitions map, not the spatie/laravel-model-states package named in the scaffold proposal | Nine states and a dozen transitions fit in 60 lines; no dependency, no magic | 2026-11-03 |
 | D9 | Inbox upload links are Laravel signed URLs that expire after 30 days, shown on the client's assets page; there is no per-link revocation (rotating APP_KEY invalidates all) | No login for clients was the requirement; a token table can be added if a link leaks | 2026-11-03 |
 | D8 | Brand profile stored as one JSON column (`clients.profile`) in the example.yaml shape and edited as YAML text in the staff form; `Client::toProfileArray()` feeds prompts and drivers | Smallest complete version; a per-field form can replace the textarea when non-technical staff edit profiles | 2026-11-03 |
@@ -23,7 +25,5 @@
 ## Open (ask the user before building on these)
 | # | Question | Options | Research leaning |
 |---|---|---|---|
-| D3 | Hosting | Own VPS (EU) / managed platform (EU region) | EU region either way for GDPR |
-| D4 | Which clients and platforms go first | List current clients and their active platforms | Pilot with 1 client, then roll out |
 | D5 | Languages beyond EL/EN | German, French, Italian for some villas? | AI-drafted, spot-checked |
 | D6 | Client portal branding | Agency brand or white-label per client | White-label later (Phase 2) |

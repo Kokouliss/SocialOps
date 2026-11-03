@@ -57,4 +57,5 @@ Out of MVP: CSV import, evergreen queues, Canva autofill, auto-reports, auto-Ree
 - `docs/decisions.md`: decision log.
 - `config/clients/example.yaml`: brand profile template.
 - `prompts/caption-draft.md`: caption drafting prompt.
+- `docs/pilot-setup.md`: one-time setup of the Meta, TikTok and Google apps, the server and the first client.
 - `.claude/commands/`: `/kickoff` (first session), `/next` (continue the roadmap).
