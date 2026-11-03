@@ -79,8 +79,9 @@ class PlanContent extends Command
     /** One Draft post with a caption variant per platform and language; a human sends it to review. */
     private function createDraft(Client $client, array $post): Post
     {
-        // shortcut: the planner gives a date only, so 10:00 is a placeholder hour the reviewer adjusts before approval
-        $date = CarbonImmutable::parse($post['date'])->setTime(10, 0);
+        // the planner gives a date only: the client's next free posting slot from that day, else 10:00 as a placeholder the reviewer adjusts
+        $day = CarbonImmutable::parse($post['date']);
+        $date = $client->nextFreeSlot($day->startOfDay()) ?? $day->setTime(10, 0);
         $trend = $post['trend_signal'] ? "Trend: {$post['trend_signal']}. " : '';
 
         $draft = $client->posts()->create([

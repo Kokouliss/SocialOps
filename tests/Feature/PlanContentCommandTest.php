@@ -9,7 +9,8 @@ use App\Planning\TrendResearcher;
 use App\Posts\PostState;
 
 it('creates Draft posts with captions per platform and language, plus a review sheet, publishing nothing', function () {
-    Client::factory()->create(['slug' => 'almyra', 'code' => 'ALMYRA']);
+    $client = Client::factory()->create(['slug' => 'almyra', 'code' => 'ALMYRA']);
+    $client->update(['profile' => ['slots' => ['wed 18:00', 'fri 10:00']] + $client->profile]); // 2027-05-12 is a Wednesday
     $post = ['date' => '2027-05-12', 'platforms' => ['instagram'], 'format' => 'reel', 'pillar' => 'food_drink', 'title' => 'Sunset cocktails',
         'angle' => 'Golden hour at the bar.', 'trend_signal' => 'Golden hour reels', 'why_now' => 'Trending this month.', 'asset_brief' => 'Shoot at 20:00.', 'caption_brief' => 'Soft CTA.'];
     $captions = ['el' => ['instagram' => 'Κοκτέιλ στο ηλιοβασίλεμα'], 'en' => ['instagram' => 'Sunset cocktails'], 'hashtags' => ['#chania'], 'alt_text' => ['el' => 'α', 'en' => 'a'], 'notes_for_reviewer' => ''];
@@ -19,14 +20,15 @@ it('creates Draft posts with captions per platform and language, plus a review s
     $this->mock(CaptionDrafter::class)->shouldReceive('draft')->twice()->andReturn($captions);
 
     $this->artisan('content:plan almyra --posts=2 --from=2027-05-10')
-        ->expectsOutputToContain('ALMYRA_20270512_IG_REEL_FOODDRINK_EL-EN_v2')
+        ->expectsOutputToContain('ALMYRA_20270514_IG_REEL_FOODDRINK_EL-EN_v1')
         ->expectsOutputToContain('Pillar place: planned 0, quota 1')
         ->assertSuccessful();
 
     expect(Post::count())->toBe(2);
     $draft = Post::where('name', 'ALMYRA_20270512_IG_REEL_FOODDRINK_EL-EN_v1')->firstOrFail();
     expect($draft->state)->toBe(PostState::Draft)
-        ->and($draft->scheduled_at->toDateString())->toBe('2027-05-12')
+        ->and($draft->scheduled_at->format('Y-m-d H:i'))->toBe('2027-05-12 18:00')
+        ->and(Post::where('name', 'ALMYRA_20270514_IG_REEL_FOODDRINK_EL-EN_v1')->value('scheduled_at')->format('Y-m-d H:i'))->toBe('2027-05-14 10:00') // the second post takes the next free slot
         ->and($draft->brief)->toContain('Trend: Golden hour reels')
         ->and($draft->variants->map(fn ($v) => [$v->platform, $v->lang, $v->caption, $v->alt_text, $v->hashtags])->all())->toBe([
             ['instagram', 'el', 'Κοκτέιλ στο ηλιοβασίλεμα', 'α', ['#chania']],
