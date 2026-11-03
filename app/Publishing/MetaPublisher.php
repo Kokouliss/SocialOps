@@ -185,6 +185,12 @@ class MetaPublisher implements Publisher
         $this->get("/{$account->external_id}", ['fields' => 'id', 'access_token' => $account->access_token]);
     }
 
+    /** Followers of the Instagram account or the Page today. */
+    public function followers(Account $account): int
+    {
+        return (int) ($this->get("/{$account->external_id}", ['fields' => 'followers_count', 'access_token' => $account->access_token])['followers_count'] ?? 0);
+    }
+
     /**
      * What the account itself published in the last days, with our post format for each. shortcut: first 100 per call, add paging when a client posts more than that in 30 days.
      *

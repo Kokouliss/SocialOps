@@ -40,7 +40,7 @@ class MonthlyReport
         ]);
     }
 
-    /** Markdown tables: every post with its metrics, totals per platform, the pillar mix against the profile, comments and reviews. */
+    /** Markdown tables: every post with its metrics, totals per platform, the pillar mix against the profile, the audience, comments and reviews. */
     public function numbers(Client $client, CarbonImmutable $month): string
     {
         $end = $month->endOfMonth();
@@ -76,6 +76,20 @@ class MonthlyReport
         foreach ($client->profile['pillars'] ?? [] as $pillar => $target) {
             $n = $byPillar[$pillar] ?? 0;
             $md .= "| {$pillar} | {$target} | ".($published->count() ? round($n / $published->count() * 100) : 0)." | {$n} |\n";
+        }
+
+        $md .= "\n### Audience\n\n| Platform | Followers at month end | Change in the month |\n|---|---|---|\n";
+        $rows = 0;
+        foreach ($client->accounts()->with('snapshots')->whereIn('platform', ['instagram', 'facebook'])->get() as $account) {
+            $last = $account->snapshots->where('taken_on', '<=', $end)->sortByDesc('taken_on')->first();
+            $before = $account->snapshots->where('taken_on', '<', $month)->sortByDesc('taken_on')->first() ?? $account->snapshots->where('taken_on', '<=', $end)->sortBy('taken_on')->first();
+            if ($last) {
+                $rows++;
+                $md .= "| {$account->platform} | {$last->followers} | ".($before && $before->isNot($last) ? sprintf('%+d', $last->followers - $before->followers) : '-')." |\n";
+            }
+        }
+        if (! $rows) {
+            $md .= "| (no follower counts yet) | | |\n";
         }
 
         $states = $posts->countBy(fn ($p) => $p->state->label());
