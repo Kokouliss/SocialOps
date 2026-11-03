@@ -37,6 +37,11 @@ hashtags:
   pool: ["#chaniabeach", "#cretesummer", "#beachbarcrete", "#greekislands"]
   max_per_post: 5
 
+research:               # steers the trend research and the planner
+  sources: []           # sites to search first, e.g. [cretalive.gr, chaniapost.eu]
+  excluded_domains: []  # never cite these, e.g. a competitor's site
+  excluded_topics: []   # never plan or caption these, e.g. [politics, alcohol prices]
+
 approval:
   policy: required      # none | optional | required | multi_level
   sla_hours: 48

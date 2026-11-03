@@ -6,10 +6,10 @@ use App\Planning\PlanRequest;
 use App\Planning\TrendResearcher;
 use Carbon\CarbonImmutable;
 
-function planRequest(int $count = 2): PlanRequest
+function planRequest(int $count = 2, array $profile = []): PlanRequest
 {
     return new PlanRequest(
-        profile: Client::factory()->create()->toProfileArray(),
+        profile: array_replace(Client::factory()->create()->toProfileArray(), $profile),
         count: $count,
         platforms: ['instagram', 'facebook'],
         from: CarbonImmutable::parse('2027-05-02'),
@@ -59,4 +59,13 @@ it('asks Claude for the trend brief with the web search tool', function () {
     $researcher = new TrendResearcher($claude);
 
     expect($researcher->brief(planRequest()))->toBe('# Trend brief: Almyra');
+});
+
+it('passes the client research rules to the trend search', function () {
+    $claude = fakeClaude('# Trend brief');
+    (new TrendResearcher($claude))->brief(planRequest(profile: ['research' => ['sources' => ['cretalive.gr'], 'excluded_domains' => ['spam.example'], 'excluded_topics' => ['politics']]]));
+
+    $body = json_decode((string) claudeRequests()[0]['request']->getBody(), true);
+    expect($body['tools'][0]['blocked_domains'])->toBe(['spam.example'])
+        ->and($body['messages'][0]['content'])->toContain('search these first: cretalive.gr')->toContain('Never cite: spam.example')->toContain('Never propose: politics');
 });

@@ -3,8 +3,10 @@
 use Anthropic\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Response;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Psr\Http\Message\RequestInterface;
 use Tests\TestCase;
 
 /*
@@ -67,7 +69,22 @@ function fakeClaude(string ...$texts): Client
         ],
     ])), $texts);
 
+    global $claudeRequests;
+    $claudeRequests = [];
     $handler = HandlerStack::create(new MockHandler($responses));
+    $handler->push(Middleware::history($claudeRequests));
 
     return new Client(apiKey: 'test', requestOptions: ['transporter' => new GuzzleHttp\Client(['handler' => $handler])]);
+}
+
+/**
+ * Every request the last fakeClaude() client sent, in order.
+ *
+ * @return list<array{request: RequestInterface}>
+ */
+function claudeRequests(): array
+{
+    global $claudeRequests;
+
+    return $claudeRequests;
 }

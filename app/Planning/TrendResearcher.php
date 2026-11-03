@@ -14,6 +14,7 @@ class TrendResearcher
 
     public function brief(PlanRequest $request): string
     {
+        $blocked = array_values(array_filter($request->profile['research']['excluded_domains'] ?? []));
         $message = $this->claude->messages->create(
             model: config('services.anthropic.model'),
             maxTokens: 16000,
@@ -24,6 +25,7 @@ class TrendResearcher
                 'maxUses' => self::MAX_SEARCHES,
                 // every client is in Crete, so bias results towards Greece
                 'userLocation' => ['type' => 'approximate', 'country' => 'GR', 'timezone' => 'Europe/Athens'],
+                ...($blocked ? ['blockedDomains' => $blocked] : []),
             ]],
         );
 

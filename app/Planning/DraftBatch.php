@@ -13,7 +13,8 @@ class DraftBatch
         private CaptionDrafter $captions,
     ) {}
 
-    public function run(PlanRequest $request, ?string $brief = null, ?callable $progress = null): array
+    /** @param  list<string>  $recent  titles of recent posts, so the planner does not repeat them */
+    public function run(PlanRequest $request, ?string $brief = null, ?callable $progress = null, array $recent = []): array
     {
         $progress ??= fn () => null;
 
@@ -23,7 +24,7 @@ class DraftBatch
         }
 
         $progress('Planning posts');
-        ['posts' => $posts, 'warnings' => $warnings] = $this->planner->plan($request, $brief);
+        ['posts' => $posts, 'warnings' => $warnings] = $this->planner->plan($request, $brief, $recent);
 
         $profile = $request->profile;
         foreach ($posts as $i => &$post) {

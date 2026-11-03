@@ -44,7 +44,7 @@ class PlanContent extends Command
             $brief = is_file($file) ? file_get_contents($file) : throw new RuntimeException("No brief file at {$file}");
         }
 
-        $result = $batch->run($request, $brief, fn (string $step) => $this->line($step));
+        $result = $batch->run($request, $brief, fn (string $step) => $this->line($step), $this->recentTopics($client));
 
         DB::transaction(function () use ($client, &$result) {
             foreach ($result['posts'] as &$post) {
@@ -66,6 +66,14 @@ class PlanContent extends Command
         $this->info(count($result['posts'])." Draft posts created. Review sheet: {$stem}.md on the ".config('filesystems.default').' disk. Review before anything moves to In Review.');
 
         return self::SUCCESS;
+    }
+
+    /** Titles and trend signals of the last 90 days of posts, so the planner does not repeat an angle or a signal. */
+    private function recentTopics(Client $client): array
+    {
+        return $client->posts()->where('scheduled_at', '>=', now()->subDays(90))->orderByDesc('scheduled_at')->limit(60)->pluck('brief')
+            ->map(fn (?string $brief) => strtok((string) $brief, "\n").(preg_match('/^Trend: ([^.]+)/m', (string) $brief, $m) ? " (trend: {$m[1]})" : ''))
+            ->filter()->values()->all();
     }
 
     /** One Draft post with a caption variant per platform and language; a human sends it to review. */

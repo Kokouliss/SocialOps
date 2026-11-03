@@ -13,7 +13,7 @@ use Symfony\Component\Yaml\Yaml;
 /** Parses and validates a brand profile written in the config/clients/example.yaml format. */
 final class ClientProfile
 {
-    public const SECTIONS = ['accounts', 'languages', 'extra_languages', 'voice', 'pillars', 'hashtags', 'approval', 'key_dates'];
+    public const SECTIONS = ['accounts', 'languages', 'extra_languages', 'voice', 'pillars', 'hashtags', 'research', 'approval', 'key_dates'];
 
     public const PLATFORMS = ['instagram', 'facebook', 'tiktok', 'google_business'];
 
@@ -26,7 +26,7 @@ final class ClientProfile
      */
     public static function parse(string $yaml): array
     {
-        $data = Arr::only(self::parseYaml($yaml), self::SECTIONS) + ['extra_languages' => [], 'key_dates' => []];
+        $data = Arr::only(self::parseYaml($yaml), self::SECTIONS) + ['extra_languages' => [], 'key_dates' => [], 'research' => ['sources' => [], 'excluded_domains' => [], 'excluded_topics' => []]];
 
         $validator = Validator::make($data, self::rules());
 
@@ -120,6 +120,13 @@ final class ClientProfile
             'hashtags.pool' => ['present', 'array'],
             'hashtags.pool.*' => ['string', 'starts_with:#'],
             'hashtags.max_per_post' => ['required', 'integer', 'min:0', 'max:30'],
+            'research' => ['present', 'array'],
+            'research.sources' => ['present', 'array'],
+            'research.sources.*' => ['string'],
+            'research.excluded_domains' => ['present', 'array'],
+            'research.excluded_domains.*' => ['string'],
+            'research.excluded_topics' => ['present', 'array'],
+            'research.excluded_topics.*' => ['string'],
             'approval' => ['required', 'array'],
             'approval.policy' => ['required', Rule::in(['none', 'optional', 'required', 'multi_level'])],
             'approval.sla_hours' => ['required', 'integer', 'min:1'],
