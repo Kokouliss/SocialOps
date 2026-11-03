@@ -39,7 +39,7 @@
                         @csrf
                         <input type="hidden" name="post_id" value="{{ $post->id }}">
                         <x-text-input name="name" type="text" class="block w-full" :value="old('name', $name)" placeholder="{{ __('Your name') }}" required />
-                        <textarea name="comment" rows="2" maxlength="2000" class="block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" placeholder="{{ __('Comment (needed when you ask for changes)') }}">{{ old('post_id') == $post->id ? old('comment') : '' }}</textarea>
+                        <textarea name="comment" rows="2" maxlength="2000" class="block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm" placeholder="{{ __('Comment (needed when you ask for changes)') }}">{{ old('post_id') == $post->id ? old('comment') : '' }}</textarea>
                         <div class="flex gap-2">
                             <button type="submit" name="decision" value="approved" class="flex-1 py-3 rounded-md bg-green-600 text-white font-semibold">{{ __('Approve') }}</button>
                             <button type="submit" name="decision" value="changes_requested" class="flex-1 py-3 rounded-md border border-orange-400 text-orange-700 font-semibold">{{ __('Request changes') }}</button>

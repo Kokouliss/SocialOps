@@ -16,7 +16,7 @@
     </div>
     <div>
         <x-input-label for="format" :value="__('Format')" />
-        <select id="format" name="format" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+        <select id="format" name="format" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm">
             @foreach (\App\Models\Post::FORMATS as $format)
                 <option value="{{ $format }}" @selected(old('format', $post->format) === $format)>{{ str_replace('_', ' ', $format) }}</option>
             @endforeach
@@ -25,7 +25,7 @@
     </div>
     <div>
         <x-input-label for="pillar" :value="__('Pillar')" />
-        <select id="pillar" name="pillar" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+        <select id="pillar" name="pillar" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm">
             <option value="">—</option>
             @foreach (array_keys($client->profile['pillars']) as $pillar)
                 <option value="{{ $pillar }}" @selected(old('pillar', $post->pillar) === $pillar)>{{ str_replace('_', ' ', $pillar) }}</option>
@@ -41,7 +41,7 @@
 </div>
 <div class="mt-6">
     <x-input-label for="brief" :value="__('Brief (what the post is about, for the drafter and the reviewer)')" />
-    <textarea id="brief" name="brief" rows="3" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old('brief', $post->brief) }}</textarea>
+    <textarea id="brief" name="brief" rows="3" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm">{{ old('brief', $post->brief) }}</textarea>
     <x-input-error class="mt-2" :messages="$errors->get('brief')" />
 </div>
 
@@ -115,7 +115,7 @@
                 @php($v = $variants->get("$platform.$lang"))
                 <div>
                     <x-input-label :value="strtoupper($lang)" />
-                    <textarea name="variants[{{ $platform }}][{{ $lang }}][caption]" rows="5" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm">{{ old("variants.$platform.$lang.caption", $v?->caption) }}</textarea>
+                    <textarea name="variants[{{ $platform }}][{{ $lang }}][caption]" rows="5" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">{{ old("variants.$platform.$lang.caption", $v?->caption) }}</textarea>
                     <x-input-error class="mt-1" :messages="$errors->get(\"variants.$platform.$lang.caption\")" />
                     @if ($platform !== 'google_business')
                         <x-text-input name="variants[{{ $platform }}][{{ $lang }}][hashtags]" type="text" class="mt-2 block w-full text-sm" placeholder="#chania #crete" :value="old(\"variants.$platform.$lang.hashtags\", implode(' ', $v?->hashtags ?? []))" />

@@ -52,7 +52,7 @@
                     <ul class="mt-3 divide-y divide-gray-100">
                         @foreach ($review->posts as $post)
                             <li class="py-2 flex flex-wrap items-baseline gap-3">
-                                <a href="{{ route('posts.edit', $post) }}" class="font-mono text-indigo-600 hover:underline">{{ $post->name }}</a>
+                                <a href="{{ route('posts.edit', $post) }}" class="font-mono text-brand-600 hover:underline">{{ $post->name }}</a>
                                 @if ($post->pivot->decision)
                                     <span class="{{ $post->pivot->decision === 'approved' ? 'text-green-700' : 'text-orange-700' }}">{{ __($post->pivot->decision === 'approved' ? 'Approved' : 'Changes requested') }} · {{ $post->pivot->decided_by }}</span>
                                     @if ($post->pivot->comment) <span class="text-gray-700">“{{ $post->pivot->comment }}”</span> @endif
