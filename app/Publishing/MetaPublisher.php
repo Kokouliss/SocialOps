@@ -147,6 +147,39 @@ class MetaPublisher implements Publisher
             array_filter($data, fn ($c) => ($c['from']['id'] ?? null) !== $account->external_id)));
     }
 
+    /**
+     * Lifetime metrics of one published post. Reach and views come from the insights edge, which not every media type
+     * supports, so they are null when Meta refuses; likes and comments always come from the post itself.
+     *
+     * @return array{reach: ?int, views: ?int, likes: ?int, comments: ?int, shares: ?int, saved: ?int}
+     */
+    public function insights(Account $account, string $mediaId): array
+    {
+        $token = ['access_token' => $account->access_token];
+        $out = array_fill_keys(['reach', 'views', 'likes', 'comments', 'shares', 'saved'], null);
+        if ($account->platform === 'instagram') {
+            $media = $this->get("/{$mediaId}", $token + ['fields' => 'like_count,comments_count']);
+            $out['likes'] = $media['like_count'] ?? null;
+            $out['comments'] = $media['comments_count'] ?? null;
+            $metrics = 'reach,views,shares,saved';
+        } else {
+            $post = $this->get("/{$mediaId}", $token + ['fields' => 'shares,likes.summary(true),comments.summary(true)']);
+            $out['likes'] = $post['likes']['summary']['total_count'] ?? null;
+            $out['comments'] = $post['comments']['summary']['total_count'] ?? null;
+            $out['shares'] = $post['shares']['count'] ?? null;
+            $metrics = 'post_impressions_unique';
+        }
+        try {
+            foreach ($this->get("/{$mediaId}/insights", $token + ['metric' => $metrics])['data'] ?? [] as $row) {
+                $out[$row['name'] === 'post_impressions_unique' ? 'reach' : $row['name']] = $row['values'][0]['value'] ?? null;
+            }
+        } catch (PublishFailed) {
+            // insights are not offered for every media type; the counts above still stand
+        }
+
+        return $out;
+    }
+
     /** A comment under the client's own post (the first comment: hashtags or a link); returns its id. */
     public function comment(Account $account, string $mediaId, string $text): string
     {

@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['kind', 'title', 'body', 'meta'])]
 class Report extends Model
 {
-    public const KINDS = ['trend_brief' => 'Trend brief', 'plan' => 'Content plan'];
+    public const KINDS = ['trend_brief' => 'Trend brief', 'plan' => 'Content plan', 'monthly' => 'Monthly report'];
 
     protected function casts(): array
     {
