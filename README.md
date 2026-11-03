@@ -23,7 +23,7 @@ php artisan migrate && npm install && npm run build
 php artisan staff:create "Your Name" you@agency.gr
 php artisan serve
 ```
-`php artisan test` runs the suite; `php artisan horizon` runs the queue.
+`php artisan test` runs the suite; `php artisan horizon` runs the queue; `php artisan schedule:work` runs the hourly approval reminders (cron in production).
 
 ## Folder map
 | Path | What |

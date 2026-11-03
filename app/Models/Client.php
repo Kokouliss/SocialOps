@@ -35,6 +35,11 @@ class Client extends Model
         return $this->hasMany(Post::class);
     }
 
+    public function reviews(): HasMany
+    {
+        return $this->hasMany(Review::class);
+    }
+
     /**
      * The brand profile in the shape of config/clients/example.yaml,
      * for the caption prompt and the publishing drivers.
