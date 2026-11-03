@@ -16,7 +16,7 @@ class TikTokPublisher implements Publisher
 {
     public const API = 'https://open.tiktokapis.com/v2';
 
-    public const SCOPES = 'user.info.basic,video.publish';
+    public const SCOPES = 'user.info.basic,video.publish,video.list';
 
     public const PRIVACY = ['PUBLIC_TO_EVERYONE', 'MUTUAL_FOLLOW_FRIENDS', 'FOLLOWER_OF_CREATOR', 'SELF_ONLY'];
 
@@ -93,6 +93,18 @@ class TikTokPublisher implements Publisher
             Sleep::for(5)->seconds();
         }
         throw new PublishFailed('TikTok is still processing the post, retrying later');
+    }
+
+    /** Views, likes, comments and shares of one video through the Display API (scope video.list); a publish id is resolved to the video first. */
+    public function insights(Account $account, string $id): array
+    {
+        $token = $this->freshToken($account);
+        if (str_starts_with($id, 'v_')) {
+            $id = $this->api($token, '/post/publish/status/fetch/', ['publish_id' => $id])['publicaly_available_post_id'][0] ?? throw new PublishFailed('TikTok: the post has no public id yet');
+        }
+        $video = $this->api($token, '/video/query/?fields=id,view_count,like_count,comment_count,share_count', ['filters' => ['video_ids' => [(string) $id]]])['videos'][0] ?? throw new PublishFailed("TikTok: video {$id} not found");
+
+        return ['reach' => null, 'views' => $video['view_count'] ?? null, 'likes' => $video['like_count'] ?? null, 'comments' => $video['comment_count'] ?? null, 'shares' => $video['share_count'] ?? null, 'saved' => null];
     }
 
     /** Access tokens last 24 h; the refresh token a year. */

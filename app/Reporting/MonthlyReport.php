@@ -9,7 +9,9 @@ use App\Models\Client;
 use App\Models\Report;
 use App\Planning\Prompt;
 use App\Posts\PostState;
+use App\Publishing\GbpPublisher;
 use Carbon\CarbonImmutable;
+use Throwable;
 
 /** One month of a client in numbers (built here, so no figure is invented) plus Claude's reading of them (prompts/monthly-report.md). */
 class MonthlyReport
@@ -99,6 +101,16 @@ class MonthlyReport
         $reviews = $comments->where('platform', 'google_business');
         $md .= "\n### Comments and reviews\n\n".$comments->where('platform', '!=', 'google_business')->count().' comments, '.$comments->whereNull('replied_at')->whereNull('hidden_at')->count().' still unanswered. '
             .$reviews->count().' Google reviews'.($reviews->count() ? ', average '.round($reviews->avg('rating'), 1).' stars' : '').".\n";
+
+        if ($gbp = $client->accounts()->where('platform', 'google_business')->first()) {
+            $md .= "\n### Google Business Profile (the listing, from the Performance API)\n\n";
+            try {
+                $p = app(GbpPublisher::class)->performance($gbp, $month, $end);
+                $md .= "| Views on Search and Maps | Website clicks | Calls | Direction requests |\n|---|---|---|---|\n| {$p['views']} | {$p['website_clicks']} | {$p['calls']} | {$p['directions']} |\n";
+            } catch (Throwable $e) { // the rest of the report stands without it
+                $md .= "(not read: {$e->getMessage()})\n";
+            }
+        }
 
         return $md;
     }
