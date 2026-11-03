@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::command('reviews:remind')->hourly();
 Schedule::command('posts:publish-due')->everyMinute();
+Schedule::command('accounts:check-tokens')->dailyAt('08:00');
