@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Account;
+use App\Models\FollowerSnapshot;
 use App\Models\Post;
 use App\Posts\PostState;
 use App\Publishing\MetaPublisher;
@@ -12,7 +14,7 @@ class FetchInsights extends Command
 {
     protected $signature = 'posts:insights';
 
-    protected $description = 'Read reach, views, likes, comments, shares and saves back from Instagram and Facebook for the last 30 days of published posts';
+    protected $description = 'Read reach, views, likes, comments, shares and saves back from Instagram and Facebook for the last 30 days of published posts, and today\'s follower counts';
 
     public function handle(MetaPublisher $meta): int
     {
@@ -32,7 +34,16 @@ class FetchInsights extends Command
             }
             $post->forceFill(['metrics' => $metrics ?: null])->save();
         }
-        $this->info("Read back {$posts->count()} posts.");
+        $counted = 0;
+        foreach (Account::with('client')->whereIn('platform', ['instagram', 'facebook'])->get() as $account) {
+            try {
+                FollowerSnapshot::updateOrCreate(['account_id' => $account->id, 'taken_on' => today()], ['followers' => $meta->followers($account)]);
+                $counted++;
+            } catch (PublishFailed $e) {
+                $this->warn("{$account->client->name} {$account->platform} followers: {$e->getMessage()}");
+            }
+        }
+        $this->info("Read back {$posts->count()} posts and {$counted} follower counts.");
 
         return self::SUCCESS;
     }
