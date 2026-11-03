@@ -53,6 +53,8 @@ approval:
       email: owner@example.com
       phone: "+30 69x xxx xxxx"     # for reminders
 
+saved_replies: []       # answers you give often, offered in the comment inbox, e.g. [{ label: Opening hours, text: "Ανοιχτά κάθε μέρα 10:00–02:00 / Open daily 10:00–02:00" }]
+
 key_dates:
   - { date: 2027-05-01, label: Season opening }
   - { date: 2027-08-15, label: Dekapentavgoustos party }
