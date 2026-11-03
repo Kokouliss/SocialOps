@@ -23,7 +23,7 @@ class ReplyDrafter
             model: config('services.anthropic.model'),
             maxTokens: 1000,
             messages: [['role' => 'user', 'content' => Prompt::render('comment-reply', Prompt::profileVars($profile) + [
-                'platform' => str_replace('_', ' ', $comment->platform),
+                'platform' => str_replace('_', ' ', $comment->platform).($comment->thread_id ? ' direct message' : ''),
                 'rating' => $comment->rating ? "{$comment->rating} of 5 stars (a Google review)" : 'none',
                 'post_caption' => $comment->post?->captionFor($comment->platform) ?? 'unknown',
                 'author' => $comment->author ?? 'unknown',

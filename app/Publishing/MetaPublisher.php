@@ -12,7 +12,7 @@ use Illuminate\Support\Sleep;
 /** Instagram and Facebook Pages through the Graph API with our own Meta app. One authorisation covers both. */
 class MetaPublisher implements Publisher
 {
-    public const SCOPES = 'pages_show_list,pages_manage_posts,pages_read_engagement,pages_read_user_content,pages_manage_engagement,instagram_basic,instagram_content_publish,instagram_manage_comments,instagram_manage_insights,business_management';
+    public const SCOPES = 'pages_show_list,pages_manage_posts,pages_read_engagement,pages_read_user_content,pages_manage_engagement,instagram_basic,instagram_content_publish,instagram_manage_comments,instagram_manage_insights,instagram_manage_messages,pages_messaging,business_management';
 
     public function authorizeUrl(string $state): string
     {
@@ -258,6 +258,35 @@ class MetaPublisher implements Publisher
         $edge = $account->platform === 'instagram' ? 'replies' : 'comments';
 
         return $this->post("/{$commentId}/{$edge}", ['access_token' => $account->access_token, 'message' => $text])['id'];
+    }
+
+    /**
+     * Direct messages of the last 30 days sent to the Page or the Instagram account, newest conversations first.
+     *
+     * @return list<array{id: string, thread_id: string, text: string, author: ?string, posted_at: string}>
+     */
+    public function messages(Account $account): array
+    {
+        $ig = $account->platform === 'instagram';
+        $query = ['access_token' => $account->access_token, 'fields' => 'messages.limit(10){id,message,from,created_time}', 'limit' => 20] + ($ig ? ['platform' => 'instagram'] : []);
+        $since = now()->subDays(30);
+        $rows = [];
+        foreach ($this->get("/{$account->external_id}/conversations", $query)['data'] ?? [] as $conversation) {
+            foreach ($conversation['messages']['data'] ?? [] as $m) {
+                if (($m['from']['id'] ?? null) === $account->external_id || $since->gt($m['created_time'])) {
+                    continue; // our own side of the conversation, or old
+                }
+                $rows[] = ['id' => $m['id'], 'thread_id' => $m['from']['id'], 'text' => $m['message'] ?? '(attachment)', 'author' => $m['from'][$ig ? 'username' : 'name'] ?? null, 'posted_at' => $m['created_time']];
+            }
+        }
+
+        return $rows;
+    }
+
+    /** Answer a direct message; Meta allows it within 24 hours of the person's last message. */
+    public function message(Account $account, string $recipientId, string $text): string
+    {
+        return $this->post("/{$account->external_id}/messages", ['access_token' => $account->access_token, 'recipient' => json_encode(['id' => $recipientId]), 'message' => json_encode(['text' => $text]), 'messaging_type' => 'RESPONSE'])['message_id'] ?? '';
     }
 
     public function hide(Account $account, string $commentId): void

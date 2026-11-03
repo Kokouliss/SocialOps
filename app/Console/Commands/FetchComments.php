@@ -17,7 +17,7 @@ class FetchComments extends Command
 {
     protected $signature = 'comments:fetch';
 
-    protected $description = 'Pull new Instagram and Facebook comments (last 30 days of posts) and Google Business Profile reviews into each client\'s inbox';
+    protected $description = 'Pull new Instagram and Facebook comments (last 30 days of posts), direct messages and Google Business Profile reviews into each client\'s inbox';
 
     public function handle(MetaPublisher $meta, GbpPublisher $gbp, CommentTriage $triage): int
     {
@@ -66,6 +66,13 @@ class FetchComments extends Command
             foreach ($meta->comments($account, $post->external_ids[$account->platform]) as $c) {
                 $rows[] = ['post_id' => $post->id, 'external_id' => $c['id'], 'author' => $c['author'], 'text' => $c['text'], 'posted_at' => $c['posted_at']];
             }
+        }
+        try {
+            foreach ($meta->messages($account) as $m) {
+                $rows[] = ['external_id' => $m['id'], 'thread_id' => $m['thread_id'], 'author' => $m['author'], 'text' => $m['text'], 'posted_at' => $m['posted_at']];
+            }
+        } catch (PublishFailed $e) { // messaging is a permission of its own; comments still arrive without it
+            $this->warn("{$account->client->name} {$account->platform} messages: {$e->getMessage()}");
         }
 
         return $rows;
