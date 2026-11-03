@@ -9,8 +9,8 @@ location: Chania, Crete
 accounts:               # connected via OAuth in the app; never store passwords
   instagram: "@almyra.chania"
   facebook: "Almyra Beach Lounge"
+  tiktok: "@almyra.chania"
   google_business: "Almyra Beach Lounge, Chania"
-  tiktok: null
 
 languages: [el, en]     # first = primary
 extra_languages: []     # e.g. [de] for a villa with German guests

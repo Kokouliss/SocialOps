@@ -11,10 +11,10 @@ Goal: cut time from every step: asset intake, captions, translation, approvals, 
 - Decisions taken so far and decisions still open: `docs/decisions.md`. **Ask the user about open decisions before writing code that depends on them.**
 
 ## Core idea
-Own the workflow, rent the publishing.
+Own the workflow and the publishing. No paid middleman.
 - We build: client/brand profiles, asset inbox, content calendar, AI bilingual captions, client approval portal, reporting.
-- We rent: publishing through a unified API (Zernio or Ayrshare) behind a `Publisher` adapter interface, so a direct Meta driver can replace it later.
-- Reason: platform approvals (Meta App Review, TikTok audit, LinkedIn CM API, YouTube audit) take weeks to months. Start them in parallel (Phase 0) but do not block on them.
+- We build the publishing too: our own Meta developer app (Instagram + Facebook via the Graph API), TikTok Content Posting API, Google Business Profile API, each a driver behind a `Publisher` adapter interface. No paid aggregator (Panos's call, D2).
+- Consequence: platform approvals (Meta App Review, TikTok audit, Google Business Profile access) are the critical path. Start Phase 0 today. Build and test every driver in dev mode with the agency's own test accounts while approvals run; client publishing goes live per platform as each approval lands.
 
 ## MVP scope (Phase 1)
 1. Client & brand profiles (accounts, voice, languages, pillars, hashtag bank, approval policy, approver contacts).
@@ -22,16 +22,16 @@ Own the workflow, rent the publishing.
 3. Content calendar with post state machine.
 4. AI drafting: Claude API, EL + EN captions, per-platform variants, alt text, hashtags.
 5. Client approval portal: signed expiring magic links, per-network previews, inline comments, approve on mobile, reminders.
-6. Publishing to Instagram, Facebook, Google Business Profile via aggregator.
+6. Publishing to Instagram, Facebook, TikTok and Google Business Profile through our own drivers. TikTok posts stay private (SELF_ONLY) until the audit passes; until then public TikTok posts go through Manual-Needed. No other platforms, now or later.
 7. Token health monitor.
 
-Out of MVP: TikTok, CSV import, evergreen queues, Canva autofill, auto-reports, auto-Reels, direct Meta driver, link-in-bio.
+Out of MVP: CSV import, evergreen queues, Canva autofill, auto-reports, auto-Reels, link-in-bio. LinkedIn, YouTube, Threads, Pinterest and X are not planned.
 
 ## Post state machine
 `Idea → Draft → In Review → Changes Requested → Approved (locked) → Scheduled → Published | Failed | Manual-Needed`
 - Approved posts are locked; editing one sends it back to In Review.
 - Approval auto-schedules the post.
-- Manual-Needed covers things no API can do (Instagram Story stickers, shopping tags, public TikTok before audit): notify a human to post in-app.
+- Manual-Needed covers things no API can do (Instagram Story stickers, shopping tags, public TikTok through our own app before its audit): notify a human to post in-app.
 
 ## Rules that must not be broken
 - Never store client passwords. Official OAuth only.

@@ -8,11 +8,11 @@ Internal system for planning, creating, approving and publishing social media co
 3. After that, use `/next` to continue with the next roadmap item.
 
 ## Do this now, outside the code (Phase 0)
-Platform approvals take weeks, so start them today:
+We publish through our own platform apps (no paid middleman), so nothing goes live on a platform until its approval passes. Approvals take weeks, so start them today:
 - [ ] Meta Business Verification for the agency's Business Manager
 - [ ] Meta developer app + App Review (Instagram and Facebook publishing permissions)
-- [ ] Google Business Profile API access request form
-- [ ] TikTok developer app + Content Posting API audit (needed for Phase 2)
+- [ ] Google Business Profile API access request form (required: we publish through the GBP API ourselves)
+- [ ] TikTok developer app + Content Posting API audit (required for public TikTok posts; private-only until it passes)
 - [ ] Sign Data Processing Agreements with each client (GDPR)
 
 ## Folder map
