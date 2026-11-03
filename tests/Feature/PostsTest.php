@@ -61,6 +61,7 @@ test('approval schedules a dated post, and editing a locked post sends it back t
     $this->actingAs($this->staff)->post("/posts/{$post->id}/transition", ['state' => 'approved'])
         ->assertRedirect("/posts/{$post->id}/edit");
     expect($post->refresh()->state)->toBe(PostState::Scheduled);
+    $this->actingAs($this->staff)->withSession(['notes' => 'check the Greek'])->get("/posts/{$post->id}/edit")->assertOk()->assertSee('check the Greek');
 
     $this->actingAs($this->staff)->post("/posts/{$post->id}/transition", ['state' => 'draft'])
         ->assertSessionHasErrors('state');

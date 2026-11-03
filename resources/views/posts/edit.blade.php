@@ -32,6 +32,7 @@
             @error('draft') <p class="text-sm text-red-600">{{ __('Drafting failed') }}: {{ $message }}</p> @enderror
             @if (session('notes'))
                 <p class="text-sm text-blue-800 bg-blue-50 rounded-md p-3">{{ __('Notes from the drafter, check before sending for review') }}: {{ session('notes') }}</p>
+            @endif
             @if ($post->publish_error)
                 <p class="text-sm text-red-800 bg-red-50 rounded-md p-3">{{ __('Publishing') }}: {{ $post->publish_error }}</p>
             @endif
