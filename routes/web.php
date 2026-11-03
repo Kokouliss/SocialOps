@@ -68,6 +68,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/posts/{post}/shorten', [PostController::class, 'shorten'])->name('posts.shorten');
     Route::post('/posts/{post}/transition', [PostController::class, 'transition'])->name('posts.transition');
     Route::patch('/posts/{post}/reschedule', [PostController::class, 'reschedule'])->name('posts.reschedule');
+    Route::post('/posts/{post}/notes', [PostController::class, 'note'])->name('posts.note');
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
     Route::get('/posts/{post}/export', [PostController::class, 'export'])->name('posts.export');
     Route::get('/posts/{post}/image/{lang}', [PostController::class, 'image'])->name('posts.image')->where('lang', '[a-z]{2}');
