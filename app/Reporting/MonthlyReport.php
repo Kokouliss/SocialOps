@@ -134,7 +134,7 @@ class MonthlyReport
 
         $comments = $client->comments()->whereBetween('posted_at', [$month, $end])->get();
         $reviews = $comments->where('platform', 'google_business');
-        $md .= "\n### Comments and reviews\n\n".$comments->where('platform', '!=', 'google_business')->count().' comments, '.$comments->whereNull('replied_at')->whereNull('hidden_at')->count().' still unanswered. '
+        $md .= "\n### Comments and reviews\n\n".$comments->where('platform', '!=', 'google_business')->whereNull('thread_id')->count().' comments, '.$comments->whereNotNull('thread_id')->count().' direct messages, '.$comments->whereNull('replied_at')->whereNull('hidden_at')->count().' still unanswered. '
             .$reviews->count().' Google reviews'.($reviews->count() ? ', average '.round($reviews->avg('rating'), 1).' stars' : '').".\n";
 
         if ($gbp = $client->accounts()->where('platform', 'google_business')->first()) {

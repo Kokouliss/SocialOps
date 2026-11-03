@@ -42,9 +42,11 @@ class CommentController extends Controller
     {
         $text = $request->validate(['reply' => ['required', 'string', 'max:2200']])['reply'];
         try {
-            $comment->platform === 'google_business'
-                ? $gbp->reply($comment->account, $comment->external_id, $text)
-                : $meta->reply($comment->account, $comment->external_id, $text);
+            match (true) {
+                $comment->platform === 'google_business' => $gbp->reply($comment->account, $comment->external_id, $text),
+                $comment->thread_id !== null => $meta->message($comment->account, $comment->thread_id, $text),
+                default => $meta->reply($comment->account, $comment->external_id, $text),
+            };
         } catch (PublishFailed $e) {
             return $this->back($comment)->withErrors(['comment' => $e->getMessage()]);
         }
@@ -56,6 +58,7 @@ class CommentController extends Controller
     public function hide(MetaPublisher $meta, Comment $comment): RedirectResponse
     {
         abort_if($comment->platform === 'google_business', 422, 'Google reviews cannot be hidden, only flagged in the Business Profile.');
+        abort_if($comment->thread_id !== null, 422, 'A direct message cannot be hidden.');
         try {
             $meta->hide($comment->account, $comment->external_id);
         } catch (PublishFailed $e) {

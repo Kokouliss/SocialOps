@@ -25,6 +25,7 @@ test('comments:fetch pulls new comments under published posts, skips the account
             ['id' => 'c1', 'text' => 'Τι ώρα ανοίγετε;', 'username' => 'maria', 'timestamp' => '2026-11-03T18:00:00+0000'],
             ['id' => 'c2', 'text' => 'Thanks all!', 'username' => 'almyra', 'timestamp' => '2026-11-03T18:05:00+0000'],
         ]]),
+        'graph.facebook.com/*/conversations*' => Http::response(['data' => []]),
         'hooks.slack.com/*' => Http::response('ok'),
     ]);
 
@@ -37,7 +38,7 @@ test('comments:fetch pulls new comments under published posts, skips the account
     $comment = Comment::first();
     expect($comment)->toMatchArray(['external_id' => 'c1', 'author' => 'maria', 'text' => 'Τι ώρα ανοίγετε;', 'platform' => 'instagram', 'post_id' => $this->post->id, 'client_id' => $this->client->id, 'sentiment' => 'neutral', 'intent' => 'question']);
     expect(json_decode((string) claudeRequests()[0]['request']->getBody(), true)['messages'][0]['content'])->toContain('1. (instagram) maria: Τι ώρα ανοίγετε;');
-    Http::assertSentCount(3); // two fetches, one Slack line
+    Http::assertSentCount(5); // two fetches of comments and of messages, one Slack line
     Http::assertSent(fn ($r) => str_contains($r->url(), 'hooks.slack.com') && str_contains($r['text'], 'Almyra: 1 new instagram comments to answer, 1 need attention'));
 });
 

@@ -61,7 +61,7 @@ test('the monthly report puts the real numbers under Claude\'s reading and lands
         ->toContain('| instagram | 1200 | 3000 | 80 | 6 | - | 15 |')
         ->toContain('| place | 25 | 100 | 1 |', '| offers | 20 | 0 | 0 |')
         ->toContain('2 posts planned: 1 Published, 1 Failed.')
-        ->toContain('0 comments, 1 still unanswered. 1 Google reviews, average 4 stars.')
+        ->toContain('0 comments, 0 direct messages, 1 still unanswered. 1 Google reviews, average 4 stars.')
         ->toContain('| instagram | 1100 | +100 |', '| facebook | 400 | - |')
         ->toContain("### Google Business Profile (the listing, from the Performance API)\n\n(not read: Google Business Performance: API not enabled)")
         ->not->toContain('2026-11-02');
