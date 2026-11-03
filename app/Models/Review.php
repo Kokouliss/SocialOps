@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Alerts\Slack;
 use App\Mail\ReviewMail;
 use App\Posts\PostState;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -79,9 +80,11 @@ class Review extends Model
 
         if ($this->pending()->doesntExist()) {
             $this->forceFill(['completed_at' => now()])->save();
+            $mail = new ReviewMail($this, 'completed');
             if ($this->creator) {
-                Mail::to($this->creator->email)->send(new ReviewMail($this, 'completed'));
+                Mail::to($this->creator->email)->send($mail);
             }
+            Slack::mailed($mail, route('clients.reviews', $this->client_id));
         }
     }
 }

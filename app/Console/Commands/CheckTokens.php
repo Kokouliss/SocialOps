@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Alerts\Slack;
 use App\Mail\TokenExpiring;
 use App\Models\Account;
 use Illuminate\Console\Command;
@@ -22,7 +23,8 @@ class CheckTokens extends Command
             ->where('token_expires_at', '<=', now()->addDays(self::ALERT_DAYS))->get();
 
         foreach ($due as $account) {
-            Mail::to($account->connector?->email ?? config('mail.from.address'))->send(new TokenExpiring($account));
+            Mail::to($account->connector?->email ?? config('mail.from.address'))->send($mail = new TokenExpiring($account));
+            Slack::mailed($mail, route('clients.accounts', $account->client_id));
             $account->forceFill(['token_alerted_at' => now()])->save();
             $this->info("{$account->client->name} {$account->platform}: token expires {$account->token_expires_at->diffForHumans()}, warned.");
         }

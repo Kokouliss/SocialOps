@@ -82,6 +82,7 @@ A subdomain of the agency domain is enough, for example `social.AGENCY.gr`; the 
    FILESYSTEM_DISK=local
    MAIL_MAILER=smtp MAIL_HOST=localhost MAIL_PORT=587 MAIL_USERNAME=social@AGENCY.gr MAIL_PASSWORD=… MAIL_FROM_ADDRESS=social@AGENCY.gr
    ANTHROPIC_API_KEY=… plus the platform ids from sections 1 to 3
+   SLACK_WEBHOOK_URL=… optional: staff alerts (post needs a human, approval answered or overdue, token expiring, plan finished) also go to a Slack channel; create it under the Slack app's Incoming Webhooks
    ```
    Plesk has no Redis, so the queue and cache use the database (Horizon is simply unused). Media stays on the server's disk behind signed links for the pilot; an EU S3-compatible bucket comes before more clients.
 8. First install, in `ROOT`:
