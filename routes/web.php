@@ -81,6 +81,7 @@ Route::middleware('auth')->group(function () {
 
 // Client-facing pages: no login, the signed link is the credential (GET and POST share the URL)
 Route::middleware('signed')->group(function () {
+    Route::get('/calendar/{client:slug}', [CalendarController::class, 'client'])->name('calendar.client');
     Route::get('/inbox/{client:slug}', [InboxController::class, 'show'])->name('inbox.show');
     Route::post('/inbox/{client:slug}', [InboxController::class, 'store'])->name('inbox.store');
     Route::get('/review/{review}', [PortalController::class, 'show'])->name('portal.show');

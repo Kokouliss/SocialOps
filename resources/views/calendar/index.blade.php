@@ -31,6 +31,12 @@
                 <p class="text-sm text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
             @error('state') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+            @if ($clientUrl)
+                <div class="bg-white p-4 shadow-sm sm:rounded-lg">
+                    <x-input-label for="client-url" :value="__('View-only link for the client (no login, valid :days days, this month and the next)', ['days' => \App\Http\Controllers\CalendarController::LINK_DAYS])" />
+                    <x-text-input id="client-url" type="text" class="mt-1 block w-full font-mono text-xs" :value="$clientUrl" readonly onclick="this.select()" />
+                </div>
+            @endif
 
             <div class="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200 text-xs">
                 @foreach (['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $dow)
