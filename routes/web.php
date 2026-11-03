@@ -32,6 +32,7 @@ Route::post('/refresh', function () {
 
 Route::middleware('auth')->group(function () {
     Route::resource('clients', ClientController::class)->except('show');
+    Route::post('/clients/{client}/plan', [ClientController::class, 'plan'])->name('clients.plan');
     Route::get('/clients/{client}/assets', [AssetController::class, 'index'])->name('clients.assets');
     Route::get('/assets/{asset}/download', [AssetController::class, 'download'])->name('assets.download');
     Route::delete('/assets/{asset}', [AssetController::class, 'destroy'])->name('assets.destroy');
