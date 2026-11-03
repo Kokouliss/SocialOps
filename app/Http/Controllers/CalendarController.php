@@ -23,20 +23,20 @@ class CalendarController extends Controller
         [$view, $date, $start, $end] = $this->range($request);
         $clientSlug = $request->input('client');
 
-        $posts = Post::with('client')
+        $posts = $request->user()->restrict(Post::with('client'))
             ->when($clientSlug, fn ($q) => $q->whereRelation('client', 'slug', $clientSlug))
             ->whereBetween('scheduled_at', [$start, $end])
             ->orderBy('scheduled_at')
             ->get()
             ->groupBy(fn (Post $p) => $p->scheduled_at->toDateString());
 
-        $unscheduled = Post::with('client')
+        $unscheduled = $request->user()->restrict(Post::with('client'))
             ->when($clientSlug, fn ($q) => $q->whereRelation('client', 'slug', $clientSlug))
             ->whereNull('scheduled_at')
             ->latest()
             ->get();
 
-        $clients = Client::orderBy('name')->get();
+        $clients = $request->user()->clients()->get();
         $client = $clients->firstWhere('slug', $clientSlug);
         $marks = array_map(fn (string $label) => [$label], Holidays::between($start, $end, Holidays::inCyprus($client?->location)));
         foreach ($client ? [$client] : $clients as $owner) {

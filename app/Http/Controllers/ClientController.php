@@ -16,9 +16,9 @@ use Symfony\Component\Yaml\Yaml;
 
 class ClientController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        return view('clients.index', ['clients' => Client::orderBy('name')->get()]);
+        return view('clients.index', ['clients' => $request->user()->clients()->get()]);
     }
 
     public function create(): View
