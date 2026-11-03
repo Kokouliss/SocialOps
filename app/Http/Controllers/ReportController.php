@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\GenerateListeningReport;
 use App\Jobs\GenerateMonthlyReport;
 use App\Models\Client;
 use App\Models\Report;
+use App\Reporting\ListeningReport;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -22,6 +24,14 @@ class ReportController extends Controller
     {
         $month = $request->validate(['month' => ['required', 'date_format:Y-m', 'before:'.now()->format('Y-m')]])['month'];
         GenerateMonthlyReport::dispatch($client, $month);
+
+        return redirect()->route('clients.reports', $client)->with('status', 'report-queued');
+    }
+
+    public function listening(Client $client): RedirectResponse
+    {
+        abort_unless(ListeningReport::watches($client), 422, 'Add hashtags_to_watch or competitors to the research section of the profile first.');
+        GenerateListeningReport::dispatch($client);
 
         return redirect()->route('clients.reports', $client)->with('status', 'report-queued');
     }
