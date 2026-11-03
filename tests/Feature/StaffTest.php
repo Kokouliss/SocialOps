@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Support\Facades\Artisan;
 
 $input = ['name' => 'Panos', 'email' => 'panos@example.com', 'password' => 'twelve-chars-long'];
 
@@ -28,4 +29,12 @@ test('staff can add and remove logins but not their own', function () use ($inpu
     $this->actingAs($me)->delete("/staff/{$me->id}")->assertStatus(422);
     $this->actingAs($me)->delete("/staff/{$other->id}")->assertRedirect('/staff');
     expect(User::count())->toBe(1);
+});
+
+test('the dashboard refresh button migrates and rebuilds the caches', function () {
+    $this->post('/refresh')->assertRedirect('/login');
+
+    Artisan::shouldReceive('call')->once()->with('migrate', ['--force' => true]);
+    Artisan::shouldReceive('call')->once()->with('optimize');
+    $this->actingAs(User::factory()->create())->post('/refresh')->assertRedirect('/dashboard')->assertSessionHas('status', 'app-refreshed');
 });
