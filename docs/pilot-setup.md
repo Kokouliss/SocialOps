@@ -59,25 +59,51 @@ GOOGLE_CLIENT_SECRET=…
 
 Already in hand. Only in `.env`. Rotate at https://console.anthropic.com/settings/keys if it was ever pasted anywhere.
 
-## 5. Server (decision D3: own hosting)
+## 5. Server (decision D3: Panos's Plesk server)
 
-The app needs a Linux server you can install software on (a VPS, not shared cPanel hosting): Ubuntu 24.04, 2 GB RAM is enough for the pilot.
+A subdomain of the agency domain is enough, for example `social.AGENCY.gr`; the app is internal and the links clients receive carry a signature, not a brand. Below, `SUB` is that subdomain and `ROOT` is its folder, `/var/www/vhosts/AGENCY.gr/SUB`.
 
-1. Install: nginx, PHP 8.3 with `php8.3-fpm php8.3-pgsql php8.3-redis php8.3-mbstring php8.3-xml php8.3-curl php8.3-gd php8.3-zip php8.3-intl`, Composer 2, Node 22, PostgreSQL 16, Redis 7, certbot.
-2. Create a Postgres database and user; point a DNS record `YOUR-DOMAIN` at the server; `certbot --nginx` for HTTPS.
-3. Deploy as the `www-data`-readable user:
+1. **Websites & Domains → Add Subdomain** `SUB`. Then **SSL/TLS Certificates → Install** a free Let's Encrypt certificate and, in **Hosting Settings**, tick *Permanent SEO-safe redirect from HTTP to HTTPS*.
+2. **Hosting Settings**: PHP version **8.3**, run as *FPM application served by nginx*; *Document root* `SUB/public` (set this after step 4 when the folder exists). If 8.3 is not offered, install it under Tools & Settings → Updates (admin).
+3. **Web Hosting Access**: *Access to the server over SSH* = `/bin/bash`. Everything below runs over SSH as that user, with Plesk's PHP: `alias php=/opt/plesk/php/8.3/bin/php` and `alias composer="php /usr/lib/plesk-9.0/composer.phar"` (`/usr/lib64/...` on AlmaLinux; if neither exists, download composer.phar from getcomposer.org).
+4. **Websites & Domains → Git → Add repository**: remote `git@github.com:Kokouliss/SocialOps.git`, branch `main`, deploy to `SUB`. Plesk shows a public key: add it on GitHub under the repo's Settings → Deploy keys (read-only). Click *Pull now*. In *Additional deployment actions* paste the update commands from step 10 so every pull redeploys.
+5. **Databases → Add Database**: MariaDB (Plesk's default) is fine, Postgres is not needed. Note the name, user and password.
+6. **Mail → Create mailbox** `social@AGENCY.gr` for the reminders and alerts.
+7. `.env` (in `ROOT`, copy from `.env.example`):
    ```
-   git clone https://github.com/Kokouliss/SocialOps /var/www/socialops && cd /var/www/socialops
-   composer install --no-dev --optimize-autoloader && npm ci && npm run build
-   cp .env.example .env && php artisan key:generate
+   APP_ENV=production
+   APP_DEBUG=false
+   APP_URL=https://SUB
+   DB_CONNECTION=mariadb
+   DB_HOST=localhost
+   DB_DATABASE=… DB_USERNAME=… DB_PASSWORD=…
+   QUEUE_CONNECTION=database
+   CACHE_STORE=database
+   FILESYSTEM_DISK=local
+   MAIL_MAILER=smtp MAIL_HOST=localhost MAIL_PORT=587 MAIL_USERNAME=social@AGENCY.gr MAIL_PASSWORD=… MAIL_FROM_ADDRESS=social@AGENCY.gr
+   ANTHROPIC_API_KEY=… plus the platform ids from sections 1 to 3
    ```
-   Edit `.env`: `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL=https://YOUR-DOMAIN`, the Postgres values, `MAIL_*` for a real mailbox (reminders, failure alerts; an SMTP mailbox at the hosting provider is fine), the platform ids above. For the pilot keep `FILESYSTEM_DISK=local` (media is served from the server through signed links); move to an EU S3-compatible bucket before adding more clients.
-4. `php artisan migrate --force && php artisan optimize`, then `php artisan staff:create "Your Name" you@agency.gr` for each staff member (there is no public registration).
-5. nginx server block for `/var/www/socialops/public` (the standard Laravel one from https://laravel.com/docs/deployment#nginx).
-6. Two background processes, both required for publishing:
-   - **Horizon** (queue): a systemd service running `php /var/www/socialops/artisan horizon`, restarted on deploy with `php artisan horizon:terminate`.
-   - **Scheduler**: crontab line `* * * * * cd /var/www/socialops && php artisan schedule:run >> /dev/null 2>&1`. It runs `posts:publish-due` every minute, `reviews:remind` hourly, `accounts:check-tokens` daily.
-7. Deploy updates with `git pull && composer install --no-dev && npm run build && php artisan migrate --force && php artisan optimize && php artisan horizon:terminate`.
+   Plesk has no Redis, so the queue and cache use the database (Horizon is simply unused). Media stays on the server's disk behind signed links for the pilot; an EU S3-compatible bucket comes before more clients.
+8. First install, in `ROOT`:
+   ```
+   composer install --no-dev --optimize-autoloader
+   php artisan key:generate && php artisan migrate --force && php artisan optimize
+   php artisan staff:create "Your Name" you@AGENCY.gr      # one per staff member, no public registration
+   ```
+   Front-end assets: if `node -v` works over SSH (Plesk's Node.js extension), run `npm ci && npm run build` there; otherwise run those two commands on your PC and upload the `public/build` folder with File Manager.
+9. **Scheduled Tasks → Add Task**, type *Run a command*, cron style `* * * * *` (every minute), two tasks:
+   ```
+   /opt/plesk/php/8.3/bin/php ROOT/artisan schedule:run
+   /opt/plesk/php/8.3/bin/php ROOT/artisan queue:work --stop-when-empty --max-time=55
+   ```
+   The first runs `posts:publish-due`, `reviews:remind` and `accounts:check-tokens`; the second publishes the queued posts.
+10. Updates: Git → *Pull now* (or push to `main` with auto-deploy on) followed by
+   ```
+   composer install --no-dev --optimize-autoloader && php artisan migrate --force && php artisan optimize
+   ```
+   plus `npm run build` or a new `public/build` upload when the front-end changed.
+
+Any other Linux server works the same with nginx + PHP-FPM, a database, cron for `schedule:run` and either the `queue:work` task above or Redis + `php artisan horizon` under systemd.
 
 ## 6. First client: Fuse Pharmacy (decision D4)
 
