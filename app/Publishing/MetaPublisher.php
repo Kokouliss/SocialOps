@@ -147,6 +147,12 @@ class MetaPublisher implements Publisher
             array_filter($data, fn ($c) => ($c['from']['id'] ?? null) !== $account->external_id)));
     }
 
+    /** A comment under the client's own post (the first comment: hashtags or a link); returns its id. */
+    public function comment(Account $account, string $mediaId, string $text): string
+    {
+        return $this->post("/{$mediaId}/comments", ['access_token' => $account->access_token, 'message' => $text])['id'];
+    }
+
     /** Reply under someone's comment; returns the reply's id. */
     public function reply(Account $account, string $commentId, string $text): string
     {

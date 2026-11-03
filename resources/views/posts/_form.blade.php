@@ -106,6 +106,10 @@
     </div>
 </fieldset>
 
+<h3 class="mt-8 font-semibold text-gray-800">{{ __('First comment') }} <span class="text-sm font-normal text-gray-500">{{ __('(Instagram and Facebook: posted under the post right after it goes out, for hashtags or a link; also in the ZIP and the CSV)') }}</span></h3>
+<textarea name="settings[first_comment]" rows="2" class="mt-2 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">{{ old('settings.first_comment', $post->settings['first_comment'] ?? '') }}</textarea>
+<x-input-error class="mt-1" :messages="$errors->get('settings.first_comment')" />
+
 @php($design = old('settings.design', $post->settings['design'] ?? []))
 <h3 class="mt-8 font-semibold text-gray-800">{{ __('Design text') }} <span class="text-sm font-normal text-gray-500">{{ __('(what goes on the graphic or in the video: headline, slide texts or Reel script; it travels with the ZIP and the Canva CSV)') }}</span></h3>
 <div class="mt-2 grid gap-4 md:grid-cols-{{ count($languages) }}">

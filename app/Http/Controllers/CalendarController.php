@@ -46,7 +46,7 @@ class CalendarController extends Controller
         [, $date, $start, $end] = $this->range($request);
         $langs = array_merge($client->profile['languages'], $client->profile['extra_languages'] ?? []);
         $out = fopen('php://temp', 'r+');
-        fputcsv($out, array_merge(['date', 'time', 'post', 'state', 'platform', 'format', 'pillar'], array_map(fn ($l) => "caption_$l", $langs), ['hashtags', 'alt_text'], array_map(fn ($l) => "design_$l", $langs), ['media']));
+        fputcsv($out, array_merge(['date', 'time', 'post', 'state', 'platform', 'format', 'pillar'], array_map(fn ($l) => "caption_$l", $langs), ['hashtags', 'alt_text'], array_map(fn ($l) => "design_$l", $langs), ['first_comment', 'media']));
         $posts = $client->posts()->with('variants', 'assets')->whereBetween('scheduled_at', [$start, $end])->orderBy('scheduled_at')->get();
         foreach ($posts as $post) {
             foreach ($post->platforms as $platform) {
@@ -56,7 +56,7 @@ class CalendarController extends Controller
                     array_map(fn ($l) => (string) $variants->get($l)?->caption, $langs),
                     [$variants->flatMap(fn ($v) => $v->hashtags ?? [])->map(fn ($t) => '#'.ltrim($t, '#'))->unique()->join(' '), (string) $post->altTextFor($platform)],
                     array_map(fn ($l) => (string) ($post->settings['design'][$l] ?? ''), $langs),
-                    [$post->assets->pluck('name')->join(', ')],
+                    [(string) ($post->settings['first_comment'] ?? ''), $post->assets->pluck('name')->join(', ')],
                 ));
             }
         }

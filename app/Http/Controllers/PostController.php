@@ -187,6 +187,9 @@ class PostController extends Controller
         foreach (array_filter($post->settings['design'] ?? []) as $lang => $design) {
             $text .= "\n== Design text ".strtoupper($lang)." ==\n{$design}\n";
         }
+        if ($first = $post->settings['first_comment'] ?? null) {
+            $text .= "\n== First comment ==\n{$first}\n";
+        }
         foreach ($post->variants->groupBy('platform') as $platform => $variants) {
             $text .= "\n== ".ucfirst(str_replace('_', ' ', $platform))." ==\n";
             foreach ($variants as $v) {

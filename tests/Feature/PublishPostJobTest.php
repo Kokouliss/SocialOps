@@ -78,3 +78,17 @@ test('a post with no connected account for a platform fails with a clear message
 
     (new PublishPost($post))->handle();
 })->throws(PublishFailed::class, 'No google_business account is connected');
+
+test('the first comment goes under the post right after it is published, and a failure is told to Slack without failing the post', function () {
+    Http::fake();
+    config(['services.slack.webhook_url' => 'https://hooks.slack.com/services/test']);
+    $post = Post::factory()->create(['client_id' => $this->client->id, 'state' => PostState::Scheduled, 'scheduled_at' => '2026-11-10 09:55', 'platforms' => ['instagram', 'facebook'], 'settings' => ['first_comment' => '#chania #crete']]);
+    $this->mock(MetaPublisher::class)->shouldReceive('publish')->twice()->andReturn('ig-1', 'fb-1')
+        ->getMock()->shouldReceive('comment')->once()->withArgs(fn ($account, $id, $text) => $account->platform === 'instagram' && $id === 'ig-1' && $text === '#chania #crete')->andReturn('c-1')
+        ->getMock()->shouldReceive('comment')->once()->withArgs(fn ($account, $id) => $account->platform === 'facebook' && $id === 'fb-1')->andThrow(new PublishFailed('Meta: comments closed'));
+
+    (new PublishPost($post))->handle();
+
+    expect($post->fresh()->state)->toBe(PostState::Published);
+    Http::assertSent(fn ($r) => str_contains($r->url(), 'hooks.slack.com') && str_contains($r['text'], 'first comment under '.$post->name.' on facebook failed: Meta: comments closed'));
+});
