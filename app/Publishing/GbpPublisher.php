@@ -12,6 +12,9 @@ class GbpPublisher implements Publisher
 {
     public const SCOPE = 'https://www.googleapis.com/auth/business.manage';
 
+    /** The button under a local post; every type but CALL needs a link. */
+    public const CTAS = ['LEARN_MORE' => 'Learn more', 'BOOK' => 'Book', 'ORDER' => 'Order online', 'SHOP' => 'Buy', 'SIGN_UP' => 'Sign up', 'CALL' => 'Call now'];
+
     public function authorizeUrl(string $state): string
     {
         return 'https://accounts.google.com/o/oauth2/v2/auth?'.http_build_query([
@@ -63,8 +66,11 @@ class GbpPublisher implements Publisher
         if ($first) {
             $body['media'] = [['mediaFormat' => 'PHOTO', 'sourceUrl' => $first->publicUrl()]];
         }
-        if ($settings['link'] ?? null) {
-            $body['callToAction'] = ['actionType' => 'LEARN_MORE', 'url' => $settings['link']];
+        $cta = $settings['cta'] ?? 'LEARN_MORE';
+        if ($cta === 'CALL') {
+            $body['callToAction'] = ['actionType' => 'CALL']; // Google dials the location's own number
+        } elseif ($settings['link'] ?? null) {
+            $body['callToAction'] = ['actionType' => $cta, 'url' => $settings['link']];
         }
         if ($type !== 'STANDARD') {
             // Google wants a title and dates for events and offers; the offer details are optional on top
@@ -106,6 +112,17 @@ class GbpPublisher implements Publisher
     {
         $response = Http::withToken($this->freshToken($account))->put("https://mybusiness.googleapis.com/v4/{$account->external_id}/reviews/{$reviewId}/reply", ['comment' => $text]);
         throw_unless($response->successful(), new PublishFailed('Google Business: '.($response->json('error.message') ?? $response->body())));
+    }
+
+    public function verify(Account $account): void
+    {
+        $this->get($this->freshToken($account), "https://mybusiness.googleapis.com/v4/{$account->external_id}/localPosts", ['pageSize' => 1]);
+    }
+
+    /** Google answers 200 before it reviews a post: LIVE, PROCESSING or REJECTED comes later. */
+    public function state(Account $account, string $name): string
+    {
+        return $this->get($this->freshToken($account), "https://mybusiness.googleapis.com/v4/{$name}")['state'] ?? 'PROCESSING';
     }
 
     public function withdraw(Account $account, string $externalId): void

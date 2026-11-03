@@ -180,6 +180,11 @@ class MetaPublisher implements Publisher
         return $out;
     }
 
+    public function verify(Account $account): void
+    {
+        $this->get("/{$account->external_id}", ['fields' => 'id', 'access_token' => $account->access_token]);
+    }
+
     public function withdraw(Account $account, string $externalId): void
     {
         throw_if($account->platform === 'instagram', new ManualNeeded('Instagram has no API to delete a post. Delete it in the Instagram app.'));

@@ -119,6 +119,13 @@ test('Google Business: an event post carries title, dates, photo and link with a
         && $r['event'] === ['title' => 'Opening party', 'schedule' => ['startDate' => ['year' => 2027, 'month' => 5, 'day' => 1], 'endDate' => ['year' => 2027, 'month' => 5, 'day' => 2]]]
         && $r['callToAction'] === ['actionType' => 'LEARN_MORE', 'url' => 'https://almyra.gr/party'] && str_contains($r['media'][0]['sourceUrl'], 'photo.jpg'));
 
+    $this->post->update(['settings' => ['gbp' => ['title' => 'Opening party', 'start' => '2027-05-01', 'link' => 'https://almyra.gr/party', 'cta' => 'BOOK']]]);
+    (new GbpPublisher)->publish($this->post->fresh(), $account->fresh());
+    Http::assertSent(fn ($r) => str_ends_with($r->url(), '/localPosts') && $r['callToAction'] === ['actionType' => 'BOOK', 'url' => 'https://almyra.gr/party']);
+    $this->post->update(['settings' => ['gbp' => ['title' => 'Opening party', 'start' => '2027-05-01', 'cta' => 'CALL']]]);
+    (new GbpPublisher)->publish($this->post->fresh(), $account->fresh());
+    Http::assertSent(fn ($r) => str_ends_with($r->url(), '/localPosts') && $r['callToAction'] === ['actionType' => 'CALL']);
+
     $this->post->assets()->sync([$this->video->id]);
     expect(fn () => (new GbpPublisher)->publish($this->post->fresh(), $account->fresh()))->toThrow(ManualNeeded::class, 'photos only');
 });
