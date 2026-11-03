@@ -11,7 +11,6 @@ use App\Posts\PostState;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
 class PlanContent extends Command
@@ -52,9 +51,10 @@ class PlanContent extends Command
             }
         });
 
-        $stem = 'plans/'.$profile['slug'].'/'.now()->format('Ymd-Hi');
-        Storage::put("{$stem}.json", json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-        Storage::put("{$stem}.md", $this->reviewSheet($result));
+        if ($brief === null) {
+            $client->reports()->create(['kind' => 'trend_brief', 'title' => 'Trend brief '.now()->toDateString(), 'body' => $result['trend_brief']]);
+        }
+        $sheet = $client->reports()->create(['kind' => 'plan', 'title' => "Content batch {$result['window']['start']} to {$result['window']['end']}", 'body' => $this->reviewSheet($result), 'meta' => $result]);
 
         $this->table(
             ['Date', 'Platforms', 'Format', 'Pillar', 'Trend signal', 'Name'],
@@ -63,7 +63,7 @@ class PlanContent extends Command
         foreach ($result['warnings'] as $warning) {
             $this->warn($warning);
         }
-        $this->info(count($result['posts'])." Draft posts created. Review sheet: {$stem}.md on the ".config('filesystems.default').' disk. Review before anything moves to In Review.');
+        $this->info(count($result['posts']).' Draft posts created. Review sheet: '.route('reports.show', $sheet).'. Review before anything moves to In Review.');
 
         return self::SUCCESS;
     }
