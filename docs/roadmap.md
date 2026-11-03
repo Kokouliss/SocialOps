@@ -16,7 +16,7 @@ Exit: all current clients run one full month through the system.
 - [x] Project scaffold (Laravel 13, Pest, Horizon, CI) and auth for agency staff (login only, `php artisan staff:create`)
 - [ ] EU-region storage bucket (depends on D3)
 - [ ] Meta app in dev mode, TikTok sandbox app, GBP test listing, agency test accounts, so every driver is tested before approvals land
-- [ ] **Clients & brand profiles:** CRUD; fields from `config/clients/example.yaml`; per-client isolation
+- [x] **Clients & brand profiles:** CRUD; fields from `config/clients/example.yaml`; per-client isolation (every client-owned table carries `client_id`; `php artisan clients:import` loads YAML profiles)
 - [ ] **Asset inbox:** per-client no-login upload link (signed); auto-naming `CLIENT_YYYYMMDD_PLATFORM_FORMAT_PILLAR_LANG_v#`; tags (pillar, season, people/consent, UGC permission)
 - [ ] **Posts & calendar:** post model with state machine (see CLAUDE.md); month/week views per client and all clients; drag-and-drop reschedule
 - [ ] **AI drafting:** Claude API call using `prompts/caption-draft.md` + brand profile + last approved captions as examples; outputs EL/EN, per-platform variants, alt text, hashtags; human edits before review
