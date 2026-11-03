@@ -51,6 +51,7 @@ test('the monthly report puts the real numbers under Claude\'s reading and lands
     $ig = $this->client->accounts->firstWhere('platform', 'instagram');
     $ig->snapshots()->createMany([['taken_on' => '2026-09-30', 'followers' => 1000], ['taken_on' => '2026-10-15', 'followers' => 1050], ['taken_on' => '2026-10-31', 'followers' => 1100], ['taken_on' => '2026-11-02', 'followers' => 1300]]);
     $this->client->accounts->firstWhere('platform', 'facebook')->snapshots()->create(['taken_on' => '2026-10-20', 'followers' => 400]);
+    Http::fake(['oauth2.googleapis.com/token' => Http::response(['access_token' => 'g', 'expires_in' => 3600]), 'businessprofileperformance.googleapis.com/*' => Http::response(['error' => ['message' => 'API not enabled']], 403)]);
 
     $report = (new MonthlyReport(fakeClaude("## Summary\n- Reach grew on Instagram.\n\n## What worked\n\n## What to change\n\n## Next month\n")))->generate($this->client, CarbonImmutable::parse('2026-10-01'));
 
@@ -62,6 +63,7 @@ test('the monthly report puts the real numbers under Claude\'s reading and lands
         ->toContain('2 posts planned: 1 Published, 1 Failed.')
         ->toContain('0 comments, 1 still unanswered. 1 Google reviews, average 4 stars.')
         ->toContain('| instagram | 1100 | +100 |', '| facebook | 400 | - |')
+        ->toContain("### Google Business Profile (the listing, from the Performance API)\n\n(not read: Google Business Performance: API not enabled)")
         ->not->toContain('2026-11-02');
     $prompt = json_decode((string) claudeRequests()[0]['request']->getBody(), true)['messages'][0]['content'];
     expect($prompt)->toContain('for October 2026', '| instagram | 1200 |')
@@ -84,4 +86,33 @@ test('reports:monthly and the Reports page button queue the report job for a pas
     $this->mock(MonthlyReport::class)->shouldReceive('generate')->once()->andReturn($this->client->reports()->create(['kind' => 'monthly', 'title' => 'Monthly report September 2026', 'body' => 'x']));
     (new GenerateMonthlyReport($this->client, '2026-09'))->handle(app(MonthlyReport::class));
     Http::assertSent(fn ($r) => str_contains($r['text'], 'Monthly report September 2026 is ready') && str_contains($r['text'], '/reports/'.Report::latest('id')->value('id')));
+});
+
+test('TikTok numbers come from the Display API and the Google Business Profile month goes under the report numbers', function () {
+    $this->client->accounts()->create(['platform' => 'tiktok', 'external_id' => 'tt-open-id', 'name' => '@almyra', 'access_token' => 't', 'refresh_token' => 'r', 'token_expires_at' => now()->addDay()]);
+    $this->post->forceFill(['external_ids' => ['tiktok' => 'v_pub_url~v2.1']])->save();
+    Http::fake([
+        'open.tiktokapis.com/v2/post/publish/status/fetch/' => Http::response(['data' => ['status' => 'PUBLISH_COMPLETE', 'publicaly_available_post_id' => [7123]]]),
+        'open.tiktokapis.com/v2/video/query/*' => Http::response(['data' => ['videos' => [['id' => '7123', 'view_count' => 900, 'like_count' => 40, 'comment_count' => 3, 'share_count' => 5]]]]),
+        'graph.facebook.com/*' => Http::response(['error' => ['message' => 'nope']], 400),
+    ]);
+
+    $this->artisan('posts:insights')->assertSuccessful();
+    expect($this->post->fresh()->metrics['tiktok'])->toMatchArray(['views' => 900, 'likes' => 40, 'comments' => 3, 'shares' => 5, 'reach' => null, 'saved' => null]);
+    Http::assertSent(fn ($r) => str_contains($r->url(), '/video/query/?fields=id,view_count') && $r['filters'] === ['video_ids' => ['7123']]);
+
+    $this->client->accounts()->create(['platform' => 'google_business', 'external_id' => 'accounts/1/locations/2', 'name' => 'Almyra', 'access_token' => 'g', 'token_expires_at' => now()->addHour()]);
+    Http::fake(['businessprofileperformance.googleapis.com/v1/locations/2:fetchMultiDailyMetricsTimeSeries*' => Http::response(['multiDailyMetricTimeSeries' => [['dailyMetricTimeSeries' => [
+        ['dailyMetric' => 'BUSINESS_IMPRESSIONS_DESKTOP_MAPS', 'timeSeries' => ['datedValues' => [['value' => '10'], ['value' => '5']]]],
+        ['dailyMetric' => 'BUSINESS_IMPRESSIONS_MOBILE_SEARCH', 'timeSeries' => ['datedValues' => [['value' => '100']]]],
+        ['dailyMetric' => 'WEBSITE_CLICKS', 'timeSeries' => ['datedValues' => [['value' => '12'], ['date' => []]]]],
+        ['dailyMetric' => 'CALL_CLICKS', 'timeSeries' => ['datedValues' => [['value' => '3']]]],
+        ['dailyMetric' => 'BUSINESS_DIRECTION_REQUESTS', 'timeSeries' => ['datedValues' => []]],
+    ]]]])]);
+
+    $numbers = (new MonthlyReport(fakeClaude('x')))->numbers($this->client, CarbonImmutable::parse('2026-10-01'));
+    expect($numbers)->toContain("| Views on Search and Maps | Website clicks | Calls | Direction requests |\n|---|---|---|---|\n| 115 | 12 | 3 | 0 |");
+    Http::assertSent(fn ($r) => str_contains($r->url(), 'locations/2:fetchMultiDailyMetricsTimeSeries?dailyMetrics=BUSINESS_IMPRESSIONS_DESKTOP_MAPS&')
+        && str_contains($r->url(), 'dailyRange.startDate.year=2026&dailyRange.startDate.month=10&dailyRange.startDate.day=1&dailyRange.endDate.year=2026&dailyRange.endDate.month=10&dailyRange.endDate.day=31')
+        && $r->hasHeader('Authorization', 'Bearer g'));
 });

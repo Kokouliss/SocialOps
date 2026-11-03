@@ -5,7 +5,9 @@ namespace App\Publishing;
 use App\Models\Account;
 use App\Models\Post;
 use Carbon\Carbon;
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 /** Google Business Profile local posts (update, event, offer) through our own Google Cloud project. */
 class GbpPublisher implements Publisher
@@ -112,6 +114,32 @@ class GbpPublisher implements Publisher
     {
         $response = Http::withToken($this->freshToken($account))->put("https://mybusiness.googleapis.com/v4/{$account->external_id}/reviews/{$reviewId}/reply", ['comment' => $text]);
         throw_unless($response->successful(), new PublishFailed('Google Business: '.($response->json('error.message') ?? $response->body())));
+    }
+
+    /** Business Profile Performance API: how the listing itself did between two dates (per location, not per post; Google reports with a few days' delay). */
+    public function performance(Account $account, CarbonInterface $from, CarbonInterface $to): array
+    {
+        $metrics = ['BUSINESS_IMPRESSIONS_DESKTOP_MAPS', 'BUSINESS_IMPRESSIONS_DESKTOP_SEARCH', 'BUSINESS_IMPRESSIONS_MOBILE_MAPS', 'BUSINESS_IMPRESSIONS_MOBILE_SEARCH', 'WEBSITE_CLICKS', 'CALL_CLICKS', 'BUSINESS_DIRECTION_REQUESTS'];
+        $query = implode('&', array_map(fn ($m) => "dailyMetrics={$m}", $metrics));
+        foreach (['startDate' => $from, 'endDate' => $to] as $key => $d) {
+            $query .= "&dailyRange.{$key}.year={$d->year}&dailyRange.{$key}.month={$d->month}&dailyRange.{$key}.day={$d->day}";
+        }
+        $location = 'locations/'.Str::after($account->external_id, '/locations/');
+        $response = Http::withToken($this->freshToken($account))->get("https://businessprofileperformance.googleapis.com/v1/{$location}:fetchMultiDailyMetricsTimeSeries", $query);
+        throw_unless($response->successful(), new PublishFailed('Google Business Performance: '.($response->json('error.message') ?? $response->body())));
+        $sums = [];
+        foreach ($response->json('multiDailyMetricTimeSeries') ?? [] as $group) {
+            foreach ($group['dailyMetricTimeSeries'] ?? [] as $series) {
+                $sums[$series['dailyMetric']] = array_sum(array_map(fn ($v) => (int) ($v['value'] ?? 0), $series['timeSeries']['datedValues'] ?? []));
+            }
+        }
+
+        return [
+            'views' => array_sum(array_intersect_key($sums, array_flip(array_slice($metrics, 0, 4)))),
+            'website_clicks' => $sums['WEBSITE_CLICKS'] ?? 0,
+            'calls' => $sums['CALL_CLICKS'] ?? 0,
+            'directions' => $sums['BUSINESS_DIRECTION_REQUESTS'] ?? 0,
+        ];
     }
 
     public function verify(Account $account): void

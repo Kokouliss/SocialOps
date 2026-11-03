@@ -33,6 +33,7 @@ Out of MVP: CSV import, evergreen queues, Canva autofill, auto-reports, auto-Ree
 - Approval auto-schedules the post.
 - A post with `settings.repeat` (weekly or monthly) spawns its next occurrence as a Draft right after it is published (`Post::spawnRepeat()`); the Draft goes through approval again.
 - Code: `App\Posts\PostState` (enum with the transitions), `Post::transitionTo()`; captions live in `post_variants` per platform and language; `Post::captionFor()` builds the published text (languages, then the profile's `signatures.<platform>` line, then the hashtags).
+- Numbers: `posts:insights` (daily) reads reach, views, likes, comments, shares and saves per platform into `posts.metrics` from Instagram, Facebook and TikTok (Display API, scope `video.list`); the monthly report adds the Google Business Profile month live (Performance API: views on Search and Maps, website clicks, calls, direction requests; per location, not per post).
 - Manual-Needed covers things no API can do (Instagram Story stickers, shopping tags, public TikTok through our own app before its audit): notify a human to post in-app.
 
 ## Rules that must not be broken
