@@ -81,6 +81,12 @@ class Client extends Model
         return null;
     }
 
+    /** Fill {{phone}}-style placeholders from the profile's fields; an unknown one stays as written. */
+    public function substitute(?string $text): string
+    {
+        return preg_replace_callback('/\{\{\s*([a-z0-9_]+)\s*\}\}/i', fn ($m) => (string) ($this->profile['fields'][strtolower($m[1])] ?? $m[0]), (string) $text);
+    }
+
     public function toProfileArray(): array
     {
         return [

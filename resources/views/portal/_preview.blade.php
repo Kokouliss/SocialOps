@@ -10,7 +10,7 @@
     </div>
     @foreach ($post->variants->where('platform', $platform) as $variant)
         @if ($platform === 'facebook' || $platform === 'google_business')
-            <div class="px-3 pb-2 whitespace-pre-line"><span class="text-xs uppercase opacity-60 mr-1">{{ $variant->lang }}</span>{{ $variant->caption }}</div>
+            <div class="px-3 pb-2 whitespace-pre-line"><span class="text-xs uppercase opacity-60 mr-1">{{ $variant->lang }}</span>{{ $review->client->substitute($variant->caption) }}</div>
         @endif
     @endforeach
     @if (($platform === 'facebook' || $platform === 'google_business') && $post->signatureFor($platform))
@@ -30,7 +30,7 @@
     @endif
     @foreach ($post->variants->where('platform', $platform) as $variant)
         @if ($platform === 'instagram' || $platform === 'tiktok')
-            <div class="px-3 py-2 whitespace-pre-line"><span class="text-xs uppercase opacity-60 mr-1">{{ $variant->lang }}</span><span class="font-semibold mr-1">{{ $review->client->name }}</span>{{ $variant->caption }}
+            <div class="px-3 py-2 whitespace-pre-line"><span class="text-xs uppercase opacity-60 mr-1">{{ $variant->lang }}</span><span class="font-semibold mr-1">{{ $review->client->name }}</span>{{ $review->client->substitute($variant->caption) }}
                 @if ($loop->last && $post->signatureFor($platform)) <span class="block opacity-80">{{ $post->signatureFor($platform) }}</span> @endif
                 @if ($variant->hashtags) <span class="{{ $vertical ? 'text-blue-300' : 'text-blue-800' }}">{{ collect($variant->hashtags)->map(fn ($h) => '#'.ltrim($h, '#'))->join(' ') }}</span> @endif
             </div>

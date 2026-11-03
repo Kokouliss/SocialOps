@@ -133,7 +133,7 @@
 
 <h3 class="mt-8 font-semibold text-gray-800">{{ __('Captions') }} <span class="text-sm font-normal text-gray-500">{{ __('(only the ticked platforms are saved; Greek is reviewed by a human before approval)') }}</span></h3>
 @foreach (\App\Models\Post::PLATFORMS as $platform)
-    <fieldset class="mt-4 border rounded-md p-4" data-platform="{{ $platform }}" data-max="{{ \App\Http\Requests\PostRequest::CAPTION_MAX[$platform] }}" data-signature="{{ trim($client->profile['signatures'][$platform] ?? '') }}">
+    <fieldset class="mt-4 border rounded-md p-4" data-platform="{{ $platform }}" data-max="{{ \App\Http\Requests\PostRequest::CAPTION_MAX[$platform] }}" data-signature="{{ trim($client->profile['signatures'][$platform] ?? '') }}" data-fields="{{ json_encode((object) ($client->profile['fields'] ?? [])) }}">
         <legend class="px-1 text-sm font-medium">{{ str_replace('_', ' ', $platform) }} <span class="count text-gray-400" title="{{ __('Characters of the published text: every language, then the hashtags') }}"></span>
             @if ($post->exists)
                 <button type="button" class="shorten ml-2 text-xs text-brand-600 hover:underline" data-url="{{ route('posts.shorten', $post) }}">{{ __('Shorten with Claude') }}</button>
@@ -162,10 +162,11 @@
     // Live count of the text that will be published per platform (languages joined by blank lines, the profile's signature, then the hashtags), and the Shorten button.
     // shortcut: JS counts UTF-16 units, so an emoji counts 2 where the server counts 1; the server's count decides at publish time
     document.querySelectorAll('fieldset[data-max]').forEach(set => {
-        const max = +set.dataset.max, count = set.querySelector('.count');
+        const max = +set.dataset.max, count = set.querySelector('.count'), fields = JSON.parse(set.dataset.fields || '{}');
+        const fill = s => s.replace(/\{\{\s*([a-z0-9_]+)\s*\}\}/gi, (m, k) => fields[k.toLowerCase()] ?? m);
         const tags = () => [...new Set([...set.querySelectorAll('input[name$="[hashtags]"]')].flatMap(i => i.value.trim().split(/\s+/).filter(Boolean)).map(t => '#' + t.replace(/^#/, '')))].join(' ');
         const update = () => {
-            const n = [...[...set.querySelectorAll('textarea')].map(t => t.value.trim()), set.dataset.signature, tags()].filter(Boolean).join('\n\n').length;
+            const n = fill([...[...set.querySelectorAll('textarea')].map(t => t.value.trim()), set.dataset.signature, tags()].filter(Boolean).join('\n\n')).length;
             count.textContent = `${n} / ${max}`;
             count.classList.toggle('text-red-600', n > max);
         };

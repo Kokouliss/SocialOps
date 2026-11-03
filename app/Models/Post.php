@@ -73,7 +73,7 @@ class Post extends Model
     /** The platform's signature line from the profile (bookings phone, site), empty when there is none. */
     public function signatureFor(string $platform): string
     {
-        return trim((string) ($this->client->profile['signatures'][$platform] ?? ''));
+        return trim($this->client->substitute((string) ($this->client->profile['signatures'][$platform] ?? '')));
     }
 
     /** The text that goes to the platform: every language of the profile in order, the platform's signature, then the hashtags once. */
@@ -82,7 +82,10 @@ class Post extends Model
         $languages = array_merge($this->client->profile['languages'], $this->client->profile['extra_languages'] ?? []);
         $variants = $this->variants->where('platform', $platform)->keyBy('lang');
         $hashtags = $variants->flatMap(fn (PostVariant $v) => $v->hashtags ?? [])->map(fn ($t) => '#'.ltrim($t, '#'))->unique()->join(' ');
-        $caption = collect($languages)->map(fn ($lang) => trim((string) $variants->get($lang)?->caption))->push($this->signatureFor($platform))->push($hashtags)->filter()->join("\n\n");
+        $caption = $this->client->substitute(collect($languages)->map(fn ($lang) => trim((string) $variants->get($lang)?->caption))->push($this->signatureFor($platform))->push($hashtags)->filter()->join("\n\n"));
+        if (preg_match('/\{\{\s*[a-z0-9_]+\s*\}\}/i', $caption, $m)) {
+            throw new PublishFailed(ucfirst($platform)." caption has the placeholder {$m[0]}, which is not in the profile's fields");
+        }
         $max = PostRequest::CAPTION_MAX[$platform];
         throw_if(mb_strlen($caption) > $max, new PublishFailed(ucfirst($platform).' caption is '.mb_strlen($caption)." characters with both languages, over {$max}"));
 

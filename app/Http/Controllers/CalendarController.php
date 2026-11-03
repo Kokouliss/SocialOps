@@ -82,10 +82,10 @@ class CalendarController extends Controller
                 $variants = $post->variants->where('platform', $platform)->keyBy('lang');
                 fputcsv($out, array_merge(
                     [$post->scheduled_at->toDateString(), $post->scheduled_at->format('H:i'), $post->name, $post->state->label(), $platform, $post->format, $post->pillar],
-                    array_map(fn ($l) => (string) $variants->get($l)?->caption, $langs),
+                    array_map(fn ($l) => $client->substitute((string) $variants->get($l)?->caption), $langs),
                     [$variants->flatMap(fn ($v) => $v->hashtags ?? [])->map(fn ($t) => '#'.ltrim($t, '#'))->unique()->join(' '), (string) $post->altTextFor($platform)],
                     array_map(fn ($l) => (string) ($post->settings['design'][$l] ?? ''), $langs),
-                    [(string) ($post->settings['first_comment'] ?? ''), $post->assets->pluck('name')->join(', ')],
+                    [$client->substitute((string) ($post->settings['first_comment'] ?? '')), $post->assets->pluck('name')->join(', ')],
                 ));
             }
         }
