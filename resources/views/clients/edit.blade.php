@@ -49,6 +49,17 @@
                     </form>
                 @endif
             </div>
+
+            <div class="bg-white p-6 shadow-sm sm:rounded-lg mt-6">
+                <h3 class="font-semibold text-lg text-gray-800">{{ __('Import posts from a spreadsheet') }}</h3>
+                <p class="mt-1 text-sm text-gray-500">{{ __('One row per post, the same columns as the calendar\'s CSV export. Every row becomes a Draft on the calendar; if any row is wrong, nothing is imported and the errors are listed here.') }} <a href="{{ route('posts.import.template', $client) }}" class="text-brand-600 hover:underline">{{ __('Download the template') }}</a></p>
+                <form method="POST" action="{{ route('posts.import', $client) }}" enctype="multipart/form-data" class="mt-4 flex flex-wrap items-center gap-3">
+                    @csrf
+                    <input type="file" name="csv" accept=".csv,text/csv" required class="text-sm" />
+                    <x-primary-button>{{ __('Import') }}</x-primary-button>
+                </form>
+                <x-input-error class="mt-2" :messages="$errors->get('csv')" />
+            </div>
         </div>
     </div>
 </x-app-layout>

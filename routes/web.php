@@ -69,6 +69,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/posts/{post}/export', [PostController::class, 'export'])->name('posts.export');
     Route::get('/posts/{post}/image/{lang}', [PostController::class, 'image'])->name('posts.image')->where('lang', '[a-z]{2}');
     Route::get('/clients/{client}/posts/export.csv', [CalendarController::class, 'csv'])->name('posts.csv');
+    Route::get('/clients/{client}/posts/import.csv', [PostController::class, 'importTemplate'])->name('posts.import.template');
+    Route::post('/clients/{client}/posts/import', [PostController::class, 'import'])->name('posts.import');
     Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
     Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
     Route::delete('/staff/{user}', [StaffController::class, 'destroy'])->name('staff.destroy');
