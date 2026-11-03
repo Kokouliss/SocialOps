@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Engagement\ReplyDrafter;
 use App\Models\Client;
 use App\Models\Comment;
+use App\Publishing\GbpPublisher;
 use App\Publishing\MetaPublisher;
 use App\Publishing\PublishFailed;
 use Illuminate\Http\RedirectResponse;
@@ -36,11 +37,13 @@ class CommentController extends Controller
         return $this->back($comment)->with('status', $draft['notes'] ? 'Claude: '.$draft['notes'] : 'draft-ready');
     }
 
-    public function reply(Request $request, MetaPublisher $meta, Comment $comment): RedirectResponse
+    public function reply(Request $request, MetaPublisher $meta, GbpPublisher $gbp, Comment $comment): RedirectResponse
     {
         $text = $request->validate(['reply' => ['required', 'string', 'max:2200']])['reply'];
         try {
-            $meta->reply($comment->account, $comment->external_id, $text);
+            $comment->platform === 'google_business'
+                ? $gbp->reply($comment->account, $comment->external_id, $text)
+                : $meta->reply($comment->account, $comment->external_id, $text);
         } catch (PublishFailed $e) {
             return $this->back($comment)->withErrors(['comment' => $e->getMessage()]);
         }
@@ -51,6 +54,7 @@ class CommentController extends Controller
 
     public function hide(MetaPublisher $meta, Comment $comment): RedirectResponse
     {
+        abort_if($comment->platform === 'google_business', 422, 'Google reviews cannot be hidden, only flagged in the Business Profile.');
         try {
             $meta->hide($comment->account, $comment->external_id);
         } catch (PublishFailed $e) {
