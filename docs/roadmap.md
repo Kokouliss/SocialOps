@@ -13,7 +13,8 @@ Tick items as they finish. Effort numbers are estimates for 1–2 developers; re
 Exit: all current clients run one full month through the system.
 
 - [ ] Resolve open decisions D1–D4 in `decisions.md`
-- [ ] Project scaffold, auth for agency staff, EU-region storage bucket
+- [x] Project scaffold (Laravel 13, Pest, Horizon, CI) and auth for agency staff (login only, `php artisan staff:create`)
+- [ ] EU-region storage bucket (depends on D3)
 - [ ] Meta app in dev mode, TikTok sandbox app, GBP test listing, agency test accounts, so every driver is tested before approvals land
 - [ ] **Clients & brand profiles:** CRUD; fields from `config/clients/example.yaml`; per-client isolation
 - [ ] **Asset inbox:** per-client no-login upload link (signed); auto-naming `CLIENT_YYYYMMDD_PLATFORM_FORMAT_PILLAR_LANG_v#`; tags (pillar, season, people/consent, UGC permission)

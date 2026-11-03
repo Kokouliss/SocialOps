@@ -7,7 +7,7 @@ Goal: cut time from every step: asset intake, captions, translation, approvals, 
 
 ## Status
 - Research done (November 2026): `docs/research.md`. Read it before proposing architecture or features.
-- No code yet. Next step is Phase 1 (MVP) in `docs/roadmap.md`.
+- Scaffold done (Laravel 13, PHP 8.3, Pest, Breeze auth for staff, Horizon). Next: the first unticked Phase 1 item in `docs/roadmap.md`.
 - Decisions taken so far and decisions still open: `docs/decisions.md`. **Ask the user about open decisions before writing code that depends on them.**
 
 ## Core idea
@@ -40,6 +40,9 @@ Out of MVP: CSV import, evergreen queues, Canva autofill, auto-reports, auto-Ree
 - Greek captions get human review (gender agreement, idioms).
 - Client data and media in EU-region storage. Log UGC repost permission and consent for people in assets.
 - Each client is isolated: accounts, media, users, data.
+
+## Dev setup
+`composer install && cp .env.example .env && php artisan key:generate && php artisan migrate && npm install && npm run build`. Create a staff login with `php artisan staff:create "Name" email` (no public registration). Run `php artisan test` and `vendor/bin/pint --test` before every commit; CI runs both.
 
 ## Conventions
 - Asset/post naming: `CLIENT_YYYYMMDD_PLATFORM_FORMAT_PILLAR_LANG_v#`, e.g. `ALMYRA_20270512_IG_REEL_FOOD_EL-EN_v2`. Enforced automatically on upload.
