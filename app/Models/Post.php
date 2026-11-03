@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Http\Requests\PostRequest;
 use App\Posts\InvalidTransition;
+use App\Posts\PostNamer;
 use App\Posts\PostState;
 use App\Publishing\PublishFailed;
 use Database\Factories\PostFactory;
@@ -111,6 +112,31 @@ class Post extends Model
     }
 
     /** Content went back to review after a change to a locked post (used by the composer for variants). */
+    /** A post set to repeat: its next occurrence as a new Draft a week or a month later, same content, captions and assets. It goes through approval again. */
+    public function spawnRepeat(): ?Post
+    {
+        $repeat = $this->settings['repeat'] ?? null;
+        if (! $repeat || ! $this->scheduled_at) {
+            return null;
+        }
+        $date = $repeat === 'weekly' ? $this->scheduled_at->copy()->addWeek() : $this->scheduled_at->copy()->addMonthNoOverflow();
+        $next = $this->client->posts()->create([
+            'name' => PostNamer::name($this->client, $this->platforms, $this->format, $this->pillar, $date),
+            'state' => PostState::Draft,
+            'platforms' => $this->platforms,
+            'format' => $this->format,
+            'pillar' => $this->pillar,
+            'brief' => $this->brief,
+            'settings' => $this->settings,
+            'scheduled_at' => $date,
+            'created_by' => $this->created_by,
+        ]);
+        $next->variants()->createMany($this->variants->map(fn (PostVariant $v) => $v->only(['platform', 'lang', 'caption', 'alt_text', 'hashtags']))->all());
+        $next->assets()->sync($this->assets->mapWithKeys(fn (Asset $a) => [$a->id => ['position' => $a->pivot->position]])->all());
+
+        return $next;
+    }
+
     public function reopenForReview(): void
     {
         if ($this->state->isLocked() && $this->state !== PostState::Published) {

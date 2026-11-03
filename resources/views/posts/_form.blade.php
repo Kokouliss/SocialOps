@@ -37,6 +37,12 @@
         <x-input-label for="scheduled_at" :value="__('Scheduled for')" />
         <x-text-input id="scheduled_at" name="scheduled_at" type="datetime-local" class="mt-1 block w-full" :value="old('scheduled_at', $post->scheduled_at?->format('Y-m-d\TH:i'))" />
         <x-input-error class="mt-2" :messages="$errors->get('scheduled_at')" />
+        <select name="settings[repeat]" class="mt-2 block w-full border-gray-300 rounded-md shadow-sm text-sm" title="{{ __('After it is published, the next occurrence is drafted and goes through approval again') }}">
+            <option value="">{{ __('Does not repeat') }}</option>
+            @foreach (['weekly', 'monthly'] as $repeat)
+                <option value="{{ $repeat }}" @selected(old('settings.repeat', $post->settings['repeat'] ?? '') === $repeat)>{{ __('Repeats '.$repeat) }}</option>
+            @endforeach
+        </select>
     </div>
 </div>
 <div class="mt-6">
