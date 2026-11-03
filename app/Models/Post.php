@@ -28,6 +28,9 @@ class Post extends Model
     /** Changing any of these on a locked post sends it back to review. */
     public const CONTENT_FIELDS = ['platforms', 'format', 'pillar', 'brief', 'settings'];
 
+    /** Instagram's limit on collab invites per post. */
+    public const MAX_COLLABORATORS = 3;
+
     protected function casts(): array
     {
         return [
@@ -87,6 +90,18 @@ class Post extends Model
         throw_if(mb_strlen($caption) > $max, new PublishFailed(ucfirst($platform).' caption is '.mb_strlen($caption)." characters with both languages, over {$max}"));
 
         return $caption;
+    }
+
+    /** Instagram usernames typed as "@a, @b" or one per line, without the @ and without duplicates. */
+    public static function handles(?string $text): array
+    {
+        return array_values(array_unique(array_map(fn ($h) => ltrim($h, '@'), preg_split('/[\s,]+/', (string) $text, -1, PREG_SPLIT_NO_EMPTY))));
+    }
+
+    /** The accounts invited as collaborators on the Instagram post (feed, carousel, Reel). */
+    public function collaborators(): array
+    {
+        return self::handles($this->settings['instagram']['collaborators'] ?? null);
     }
 
     public function altTextFor(string $platform): ?string

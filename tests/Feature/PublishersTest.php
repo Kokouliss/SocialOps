@@ -4,6 +4,7 @@ use App\Models\Account;
 use App\Models\Asset;
 use App\Models\Client;
 use App\Models\Post;
+use App\Models\User;
 use App\Publishing\GbpPublisher;
 use App\Publishing\ManualNeeded;
 use App\Publishing\MetaPublisher;
@@ -128,4 +129,28 @@ test('Google Business: an event post carries title, dates, photo and link with a
 
     $this->post->assets()->sync([$this->video->id]);
     expect(fn () => (new GbpPublisher)->publish($this->post->fresh(), $account->fresh()))->toThrow(ManualNeeded::class, 'photos only');
+});
+
+test('Instagram: collaborators go on the container for feed posts, never on a Story, and at most three are accepted', function () {
+    $this->post->update(['settings' => ['instagram' => ['collaborators' => '@hotel, chef @hotel']]]);
+    $this->post->assets()->attach($this->photo);
+    Http::fake([
+        'graph.facebook.com/*/instagram-id/content_publishing_limit*' => Http::response(['data' => [['quota_usage' => 3, 'config' => ['quota_total' => 100]]]]),
+        'graph.facebook.com/*/instagram-id/media' => Http::response(['id' => 'container1']),
+        'graph.facebook.com/*/container1*' => Http::response(['status_code' => 'FINISHED']),
+        'graph.facebook.com/*/instagram-id/media_publish' => Http::response(['id' => 'ig-post-1']),
+    ]);
+    (new MetaPublisher)->publish($this->post, account($this->client, 'instagram'));
+    Http::assertSent(fn ($r) => str_ends_with($r->url(), '/instagram-id/media') && ($r['collaborators'] ?? null) === '["hotel","chef"]');
+
+    $this->post->update(['format' => 'story']);
+    (new MetaPublisher)->publish($this->post, Account::first());
+    Http::assertSent(fn ($r) => str_ends_with($r->url(), '/instagram-id/media') && ($r['media_type'] ?? null) === 'STORIES' && ! isset($r['collaborators']));
+
+    $staff = User::factory()->create();
+    $data = ['platforms' => ['instagram'], 'format' => 'feed', 'pillar' => array_key_first($this->client->profile['pillars']), 'settings' => ['instagram' => ['collaborators' => '@a @b @c @d']]];
+    $this->actingAs($staff)->post(route('posts.store', $this->client), $data)->assertSessionHasErrors('settings.instagram.collaborators');
+    $this->actingAs($staff)->post(route('posts.store', $this->client), ['format' => 'story', 'settings' => ['instagram' => ['collaborators' => '@a']]] + $data)->assertSessionHasErrors('settings.instagram.collaborators');
+    $this->actingAs($staff)->post(route('posts.store', $this->client), ['settings' => ['instagram' => ['collaborators' => '@a, @b']]] + $data)->assertSessionHasNoErrors();
+    expect(Post::latest('id')->first()->collaborators())->toBe(['a', 'b']);
 });

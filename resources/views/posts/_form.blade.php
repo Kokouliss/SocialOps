@@ -61,6 +61,13 @@
     </div>
 @endif
 
+<fieldset class="mt-6 border rounded-md p-4 text-sm">
+    <legend class="px-1 text-sm font-medium">Instagram</legend>
+    <x-input-label for="ig-collab" :value="__('Collab invite: up to 3 Instagram usernames, feed, carousel and Reel only (they accept in the app, then the post shows on both profiles)')" />
+    <x-text-input id="ig-collab" name="settings[instagram][collaborators]" type="text" class="mt-1 block w-full" placeholder="@hotel, @chef" :value="old('settings.instagram.collaborators', $post->settings['instagram']['collaborators'] ?? '')" />
+    <x-input-error class="mt-1" :messages="$errors->get('settings.instagram.collaborators')" />
+</fieldset>
+
 @php($tiktok = $client->accounts->firstWhere('platform', 'tiktok'))
 @php($tt = old('settings.tiktok', $post->settings['tiktok'] ?? []))
 <fieldset class="mt-6 border rounded-md p-4 text-sm">

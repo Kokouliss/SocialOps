@@ -52,6 +52,7 @@ class PostRequest extends FormRequest
             'settings.gbp.coupon' => ['nullable', 'string', 'max:58'],
             'settings.design.*' => ['nullable', 'string', 'max:5000'],
             'settings.first_comment' => ['nullable', 'string', 'max:2200'],
+            'settings.instagram.collaborators' => ['nullable', 'string', 'max:120'],
             'settings.repeat' => ['nullable', Rule::in(['weekly', 'monthly'])],
             'assets' => ['sometimes', 'array'],
             'assets.*' => [Rule::exists('assets', 'id')->where('client_id', $client->id)],
@@ -68,6 +69,13 @@ class PostRequest extends FormRequest
             // TikTok's terms: the creator agrees to the posting terms on every post our app makes
             if (in_array('tiktok', (array) $this->input('platforms')) && ! $this->boolean('settings.tiktok.consent')) {
                 $validator->errors()->add('settings.tiktok.consent', 'Confirm the TikTok posting terms for this post.');
+            }
+            $collaborators = Post::handles($this->input('settings.instagram.collaborators'));
+            if (count($collaborators) > Post::MAX_COLLABORATORS) {
+                $validator->errors()->add('settings.instagram.collaborators', 'Instagram allows '.Post::MAX_COLLABORATORS.' collaborators per post.');
+            }
+            if ($collaborators && $this->input('format') === 'story') {
+                $validator->errors()->add('settings.instagram.collaborators', 'Instagram Stories cannot have collaborators.');
             }
             foreach ((array) $this->input('variants') as $platform => $langs) {
                 foreach ((array) $langs as $lang => $fields) {

@@ -65,11 +65,13 @@ class MetaPublisher implements Publisher
         $assets = $post->assets;
         throw_if($assets->isEmpty(), new PublishFailed('Instagram needs a photo or video'));
         $single = $assets[0];
+        // a collab invite goes on the container; the invited accounts accept it in the app
+        $collab = $post->collaborators() ? ['collaborators' => json_encode($post->collaborators())] : [];
         $container = match (true) {
-            $post->format === 'carousel' => $this->post("$user/media", $token + ['media_type' => 'CAROUSEL', 'caption' => $caption, 'children' => $assets->map(fn (Asset $a) => $this->post("$user/media", $token + self::source($a) + ['is_carousel_item' => 'true'])['id'])->join(',')]),
+            $post->format === 'carousel' => $this->post("$user/media", $token + $collab + ['media_type' => 'CAROUSEL', 'caption' => $caption, 'children' => $assets->map(fn (Asset $a) => $this->post("$user/media", $token + self::source($a) + ['is_carousel_item' => 'true'])['id'])->join(',')]),
             $post->format === 'story' => $this->post("$user/media", $token + ['media_type' => 'STORIES'] + self::source($single, false)),
-            $single->kind === 'video' => $this->post("$user/media", $token + ['media_type' => 'REELS', 'video_url' => $single->publicUrl(), 'caption' => $caption, 'share_to_feed' => $post->format === 'reel' ? 'true' : 'false']),
-            default => $this->post("$user/media", $token + ['image_url' => $single->publicUrl(), 'caption' => $caption, 'alt_text' => $post->altTextFor('instagram')]),
+            $single->kind === 'video' => $this->post("$user/media", $token + $collab + ['media_type' => 'REELS', 'video_url' => $single->publicUrl(), 'caption' => $caption, 'share_to_feed' => $post->format === 'reel' ? 'true' : 'false']),
+            default => $this->post("$user/media", $token + $collab + ['image_url' => $single->publicUrl(), 'caption' => $caption, 'alt_text' => $post->altTextFor('instagram')]),
         };
 
         // videos are processed asynchronously; publishing before FINISHED fails
