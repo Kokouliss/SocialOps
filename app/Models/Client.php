@@ -6,6 +6,7 @@ use Database\Factories\ClientFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * A client account. Every other client-owned table (accounts, assets, posts)
@@ -22,6 +23,11 @@ class Client extends Model
     protected function casts(): array
     {
         return ['profile' => 'array'];
+    }
+
+    public function assets(): HasMany
+    {
+        return $this->hasMany(Asset::class);
     }
 
     /**
