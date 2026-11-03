@@ -106,6 +106,17 @@
     </div>
 </fieldset>
 
+@php($design = old('settings.design', $post->settings['design'] ?? []))
+<h3 class="mt-8 font-semibold text-gray-800">{{ __('Design text') }} <span class="text-sm font-normal text-gray-500">{{ __('(what goes on the graphic or in the video: headline, slide texts or Reel script; it travels with the ZIP and the Canva CSV)') }}</span></h3>
+<div class="mt-2 grid gap-4 md:grid-cols-{{ count($languages) }}">
+    @foreach ($languages as $lang)
+        <div>
+            <x-input-label :value="strtoupper($lang)" />
+            <textarea name="settings[design][{{ $lang }}]" rows="4" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">{{ $design[$lang] ?? '' }}</textarea>
+        </div>
+    @endforeach
+</div>
+
 <h3 class="mt-8 font-semibold text-gray-800">{{ __('Captions') }} <span class="text-sm font-normal text-gray-500">{{ __('(only the ticked platforms are saved; Greek is reviewed by a human before approval)') }}</span></h3>
 @foreach (\App\Models\Post::PLATFORMS as $platform)
     <fieldset class="mt-4 border rounded-md p-4">

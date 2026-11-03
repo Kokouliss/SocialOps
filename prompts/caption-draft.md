@@ -39,9 +39,11 @@ Return JSON only:
   "en": { "instagram": "", "facebook": "", "tiktok": "", "google_business": "" },
   "hashtags": [],
   "alt_text": { "el": "", "en": "" },
+  "design": { "el": "", "en": "" },
   "notes_for_reviewer": ""
 }
 ```
+- `design` is the text that goes on the graphic or in the video, per language, for the designer (plain text, one line per element). feed: a headline of at most 6 words and one supporting line. carousel: 5 to 7 numbered slides, one line each, slide 1 is the hook. reel / tiktok_video: the hook for the first 2 seconds, then the on-screen text lines, then a short voiceover script. story: one sticker line and a call to action. gbp_*: leave empty.
 - Only include platforms listed in this post.
 - Instagram: max 2,200 characters; hook in the first line. Facebook: may be slightly longer and more informative. TikTok: short and casual, hashtags inside the caption, max 2,200 characters. Google Business Profile: plain, factual, max 1,500 characters, no hashtags.
 - Hashtags: up to {{hashtags.max_per_post}}, always include {{hashtags.always}}, pick the rest from {{hashtags.pool}}.

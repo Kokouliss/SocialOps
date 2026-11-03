@@ -13,6 +13,7 @@ function draftReply(): array
         'en' => ['instagram' => 'Sunset cocktails', 'google_business' => 'Open late'],
         'hashtags' => ['#chania', '#crete'],
         'alt_text' => ['el' => 'Μπαρ στο ηλιοβασίλεμα', 'en' => 'Bar at sunset'],
+        'design' => ['el' => 'Ηλιοβασίλεμα, κάθε βράδυ', 'en' => 'Sunset, every evening'],
         'notes_for_reviewer' => 'Check the opening hours',
     ];
 }
@@ -42,6 +43,7 @@ test('Claude drafts the captions into the post with the client\'s approved capti
         ->and($variants['instagram.en']->hashtags)->toBe(['#chania', '#crete'])
         ->and($variants['instagram.en']->alt_text)->toBe('Bar at sunset')
         ->and($variants['google_business.en']->hashtags)->toBe([])
+        ->and($this->post->fresh()->settings['design']['en'])->toBe('Sunset, every evening')
         ->and($this->post->fresh()->state)->toBe(PostState::Draft);
 
     $this->actingAs($this->user)->get(route('posts.edit', $this->post))->assertSee('Ηλιοβασίλεμα με κοκτέιλ')->assertSee('Draft captions with Claude');

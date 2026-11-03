@@ -82,6 +82,7 @@ class PlanContent extends Command
             'format' => $post['format'],
             'pillar' => $post['pillar'],
             'brief' => "{$post['title']}\n{$post['angle']}\n{$trend}Why now: {$post['why_now']}\nAsset: {$post['asset_brief']}",
+            'settings' => isset($post['captions']['design']) ? ['design' => $post['captions']['design']] : null,
             'scheduled_at' => $date,
         ]);
 
