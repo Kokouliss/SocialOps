@@ -3,10 +3,14 @@
 namespace App\Console\Commands;
 
 use App\Models\Client;
+use App\Models\Post;
 use App\Planning\DraftBatch;
 use App\Planning\PlanRequest;
+use App\Posts\PostNamer;
+use App\Posts\PostState;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
@@ -20,11 +24,12 @@ class PlanContent extends Command
         {--days=14 : Length of the publishing window in days}
         {--brief= : Use this trend brief file (for example a /last30days report) instead of researching}';
 
-    protected $description = 'Research current trends and draft a batch of posts for a client, ready for human review';
+    protected $description = 'Research current trends and draft a batch of posts for a client as Draft posts on the calendar, ready for human review';
 
     public function handle(DraftBatch $batch): int
     {
-        $profile = Client::where('slug', $this->argument('client'))->firstOrFail()->toProfileArray();
+        $client = Client::where('slug', $this->argument('client'))->firstOrFail();
+        $profile = $client->toProfileArray();
         $from = CarbonImmutable::parse($this->option('from') ?? 'tomorrow');
         $request = new PlanRequest(
             profile: $profile,
@@ -41,6 +46,12 @@ class PlanContent extends Command
 
         $result = $batch->run($request, $brief, fn (string $step) => $this->line($step));
 
+        DB::transaction(function () use ($client, &$result) {
+            foreach ($result['posts'] as &$post) {
+                $post['name'] = $this->createDraft($client, $post)->name;
+            }
+        });
+
         $stem = 'plans/'.$profile['slug'].'/'.now()->format('Ymd-Hi');
         Storage::put("{$stem}.json", json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         Storage::put("{$stem}.md", $this->reviewSheet($result));
@@ -52,9 +63,38 @@ class PlanContent extends Command
         foreach ($result['warnings'] as $warning) {
             $this->warn($warning);
         }
-        $this->info("Saved {$stem}.md and .json on the ".config('filesystems.default').' disk. Review before anything moves to In Review.');
+        $this->info(count($result['posts'])." Draft posts created. Review sheet: {$stem}.md on the ".config('filesystems.default').' disk. Review before anything moves to In Review.');
 
         return self::SUCCESS;
+    }
+
+    /** One Draft post with a caption variant per platform and language; a human sends it to review. */
+    private function createDraft(Client $client, array $post): Post
+    {
+        // shortcut: the planner gives a date only, so 10:00 is a placeholder hour the reviewer adjusts before approval
+        $date = CarbonImmutable::parse($post['date'])->setTime(10, 0);
+        $trend = $post['trend_signal'] ? "Trend: {$post['trend_signal']}. " : '';
+
+        $draft = $client->posts()->create([
+            'name' => PostNamer::name($client, $post['platforms'], $post['format'], $post['pillar'], $date),
+            'state' => PostState::Draft,
+            'platforms' => $post['platforms'],
+            'format' => $post['format'],
+            'pillar' => $post['pillar'],
+            'brief' => "{$post['title']}\n{$post['angle']}\n{$trend}Why now: {$post['why_now']}\nAsset: {$post['asset_brief']}",
+            'scheduled_at' => $date,
+        ]);
+
+        $captions = $post['captions'];
+        $draft->variants()->createMany(collect($post['platforms'])->crossJoin(['el', 'en'])->map(fn ($pair) => [
+            'platform' => $pair[0],
+            'lang' => $pair[1],
+            'caption' => $captions[$pair[1]][$pair[0]],
+            'alt_text' => $captions['alt_text'][$pair[1]],
+            'hashtags' => $captions['hashtags'],
+        ])->all());
+
+        return $draft;
     }
 
     private function reviewSheet(array $result): string
