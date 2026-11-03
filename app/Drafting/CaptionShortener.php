@@ -23,7 +23,9 @@ class CaptionShortener
     {
         $max = PostRequest::CAPTION_MAX[$platform];
         $tagLine = implode(' ', array_map(fn (string $t) => '#'.ltrim($t, '#'), $hashtags));
-        $overhead = fn (int $parts) => 2 * ($parts - 1) + ($tagLine === '' ? 0 : mb_strlen($tagLine) + 2); // the blank lines between the parts, plus the hashtag line
+        $signature = trim((string) ($profile['signatures'][$platform] ?? ''));
+        // the blank lines between the parts, plus the signature and hashtag lines (Post::captionFor() adds both)
+        $overhead = fn (int $parts) => 2 * ($parts - 1) + ($signature === '' ? 0 : mb_strlen($signature) + 2) + ($tagLine === '' ? 0 : mb_strlen($tagLine) + 2);
         $langs = array_keys($captions);
 
         $message = $this->claude->messages->create(
@@ -34,6 +36,7 @@ class CaptionShortener
                 'captions' => implode("\n\n", array_map(fn (string $lang, string $text) => "### {$lang}\n{$text}", $langs, $captions)),
                 'max' => $max,
                 'hashtags_length' => mb_strlen($tagLine),
+                'signature_length' => mb_strlen($signature),
                 'budget' => $max - $overhead(count($captions)),
             ])]],
             outputConfig: ['format' => ['type' => 'json_schema', 'schema' => [

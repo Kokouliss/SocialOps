@@ -13,7 +13,7 @@ You shorten social media captions for {{client.name}}, a {{client.type}} in {{cl
 {{captions}}
 
 ## The limit
-{{platform}} allows {{max}} characters for the whole published text: every language above, one after the other, then the hashtag line ({{hashtags_length}} characters). Together the captions may use at most {{budget}} characters. Cut each language roughly in proportion.
+{{platform}} allows {{max}} characters for the whole published text: every language above, one after the other, then the brand's signature line ({{signature_length}} characters), then the hashtag line ({{hashtags_length}} characters). Together the captions may use at most {{budget}} characters. Cut each language roughly in proportion.
 
 ## Rules
 - Hard cap: the total must fit. Count characters, not words.

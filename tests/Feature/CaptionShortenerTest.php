@@ -20,6 +20,10 @@ it('asks Claude for captions that fit the platform with the hashtags, and record
     expect($short)->toBe(['el' => 'Κοκτέιλ στο ηλιοβασίλεμα', 'en' => 'Sunset cocktails'])
         ->and($prompt)->toContain('### el', '### en', 'allows 2200 characters', '(14 characters)', 'at most 2182 characters') // 2200 - 14 hashtags - 2 - 2
         ->and(ClaudeCall::first()->purpose)->toBe('shorten');
+
+    $drafter = new CaptionShortener(fakeClaude(json_encode(['el' => 'α', 'en' => 'a'])));
+    $drafter->shorten(['signatures' => ['instagram' => 'Bookings: +30 28210 00000']] + $this->profile, 'instagram', $this->long, ['chania']);
+    expect(json_decode((string) claudeRequests()[0]['request']->getBody(), true)['messages'][0]['content'])->toContain('signature line (25 characters)', 'at most 2162 characters'); // 2200 - 25 - 2 - 7 - 2 - 2
 });
 
 it('refuses a reply that is still over the limit', function () {
@@ -28,8 +32,9 @@ it('refuses a reply that is still over the limit', function () {
 
 test('the post form counts the published text per platform and the shorten button returns the new captions as JSON', function () {
     $post = Post::factory()->create(['platforms' => ['instagram']]);
+    $post->client->update(['profile' => ['signatures' => ['facebook' => 'Call us']] + $post->client->profile]);
     $me = User::factory()->create();
-    $this->actingAs($me)->get(route('posts.edit', $post))->assertOk()->assertSee('data-max="2200"', false)->assertSee('Shorten with Claude')->assertSee(route('posts.shorten', $post));
+    $this->actingAs($me)->get(route('posts.edit', $post))->assertOk()->assertSee('data-max="2200"', false)->assertSee('data-platform="facebook" data-max="63206" data-signature="Call us"', false)->assertSee('Shorten with Claude')->assertSee(route('posts.shorten', $post));
     $this->actingAs($me)->get(route('posts.create', $post->client))->assertOk()->assertSee('data-max="1500"', false)->assertDontSee('Shorten with Claude');
 
     $this->mock(CaptionShortener::class)->shouldReceive('shorten')->once()
