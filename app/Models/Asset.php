@@ -27,6 +27,22 @@ class Asset extends Model
         return $this->belongsTo(Client::class);
     }
 
+    /** The image as a JPEG no wider than $max on its long edge, for Claude to look at; null for videos and files GD cannot read. */
+    public function preview(int $max = 1568): ?string
+    {
+        $bytes = $this->kind === 'image' ? Storage::disk($this->disk)->get($this->path) : null;
+        if (! $bytes || ! $img = @imagecreatefromstring($bytes)) {
+            return null;
+        }
+        if (($scale = $max / max(imagesx($img), imagesy($img))) < 1) {
+            $img = imagescale($img, (int) round(imagesx($img) * $scale), (int) round(imagesy($img) * $scale));
+        }
+        ob_start();
+        imagejpeg($img, null, 80);
+
+        return ob_get_clean();
+    }
+
     /** A URL the platforms can fetch the file from: a 2-hour signed URL, or the disk's plain URL when it cannot sign one. */
     public function publicUrl(): string
     {

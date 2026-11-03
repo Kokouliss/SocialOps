@@ -39,3 +39,20 @@ it('rejects a reply that leaves a platform without a caption', function () {
 it('rejects an Instagram caption over 2,200 characters', function () {
     (new CaptionDrafter(fakeClaude(captionReply(['en' => ['instagram' => str_repeat('a', 2201)]]))))->draft($this->profile, $this->post);
 })->throws(RuntimeException::class, 'over 2200');
+
+it('sends the photo to Claude as an image block before the prompt', function () {
+    $image = imagecreatetruecolor(8, 8);
+    ob_start();
+    imagejpeg($image);
+    $drafter = new CaptionDrafter(fakeClaude(captionReply()));
+
+    $drafter->draft($this->profile, $this->post, [], $jpeg = ob_get_clean());
+
+    $content = json_decode((string) claudeRequests()[0]['request']->getBody(), true)['messages'][0]['content'];
+    expect($content[0])->toBe(['type' => 'image', 'source' => ['type' => 'base64', 'media_type' => 'image/jpeg', 'data' => base64_encode($jpeg)]])
+        ->and($content[1]['text'])->toContain('Photo: attached above');
+
+    $drafter = new CaptionDrafter(fakeClaude(captionReply()));
+    $drafter->draft($this->profile, $this->post);
+    expect(json_decode((string) claudeRequests()[0]['request']->getBody(), true)['messages'][0]['content'])->toContain('Photo: none');
+});

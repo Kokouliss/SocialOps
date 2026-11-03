@@ -53,6 +53,7 @@ approval:
       email: owner@example.com
       phone: "+30 69x xxx xxxx"     # for reminders
 
+slots: []               # weekly posting slots, e.g. [mon 10:00, wed 18:00, fri 10:00]: "Next free slot" on the post form, the planner and the low-queue warning use them
 signatures: {}          # a line added under every caption of that platform at publish time, e.g. { facebook: "Κρατήσεις / Bookings: +30 28210 00000", google_business: "almyra.gr" }
 
 key_dates:

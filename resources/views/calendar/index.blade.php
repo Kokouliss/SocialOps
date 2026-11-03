@@ -45,6 +45,9 @@
                                 <a href="{{ route('posts.create', [$clients->firstWhere('slug', $clientSlug), 'date' => $key]) }}" class="text-gray-400 hover:text-gray-700" title="{{ __('New post') }}">+</a>
                             @endif
                         </div>
+                        @foreach ($marks[$key] ?? [] as $mark)
+                            <div class="truncate text-amber-700" title="{{ $mark }}">{{ $mark }}</div>
+                        @endforeach
                         @foreach ($posts->get($key, []) as $post)
                             @include('calendar._chip', ['post' => $post])
                         @endforeach

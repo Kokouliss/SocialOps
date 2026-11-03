@@ -8,7 +8,7 @@ it('fills the caption prompt from the example profile and leaves no placeholder 
 
     $text = Prompt::render('caption-draft', Prompt::profileVars($profile) + [
         'examples' => 'none yet',
-        'post' => ['platforms' => ['instagram', 'facebook'], 'format' => 'reel', 'pillar' => 'food_drink', 'brief' => 'Sunset cocktails', 'asset_description' => 'Clip of the bar at sunset'],
+        'post' => ['platforms' => ['instagram', 'facebook'], 'format' => 'reel', 'pillar' => 'food_drink', 'brief' => 'Sunset cocktails', 'asset_description' => 'Clip of the bar at sunset', 'photo' => 'none'],
     ]);
 
     expect($text)
@@ -23,7 +23,7 @@ it('fills the caption prompt from the example profile and leaves no placeholder 
 
 it('renders the trend and plan prompts with key dates as bullet lines', function () {
     $profile = Client::factory()->create()->toProfileArray();
-    $vars = Prompt::profileVars($profile) + ['today' => '2027-05-01', 'window' => ['start' => '2027-05-02', 'end' => '2027-05-15'], 'platforms' => ['instagram'], 'count' => 3];
+    $vars = Prompt::profileVars($profile) + ['today' => '2027-05-01', 'window' => ['start' => '2027-05-02', 'end' => '2027-05-15'], 'platforms' => ['instagram'], 'count' => 3, 'holidays' => ['2027-05-02 Πάσχα (Orthodox Easter)']];
 
     expect(Prompt::render('trend-research', $vars + ['max_searches' => 12]))
         ->toContain('- date: 2027-05-01, label: Season opening')

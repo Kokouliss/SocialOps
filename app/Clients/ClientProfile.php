@@ -13,7 +13,7 @@ use Symfony\Component\Yaml\Yaml;
 /** Parses and validates a brand profile written in the config/clients/example.yaml format. */
 final class ClientProfile
 {
-    public const SECTIONS = ['accounts', 'languages', 'extra_languages', 'voice', 'pillars', 'hashtags', 'research', 'approval', 'signatures', 'key_dates'];
+    public const SECTIONS = ['accounts', 'languages', 'extra_languages', 'voice', 'pillars', 'hashtags', 'research', 'approval', 'slots', 'signatures', 'key_dates'];
 
     public const PLATFORMS = ['instagram', 'facebook', 'tiktok', 'google_business'];
 
@@ -26,7 +26,7 @@ final class ClientProfile
      */
     public static function parse(string $yaml): array
     {
-        $data = Arr::only(self::parseYaml($yaml), self::SECTIONS) + ['extra_languages' => [], 'signatures' => [], 'key_dates' => [], 'research' => ['sources' => [], 'excluded_domains' => [], 'excluded_topics' => []]];
+        $data = Arr::only(self::parseYaml($yaml), self::SECTIONS) + ['extra_languages' => [], 'slots' => [], 'key_dates' => [], 'research' => ['sources' => [], 'excluded_domains' => [], 'excluded_topics' => []]];
 
         $validator = Validator::make($data, self::rules());
 
@@ -139,6 +139,8 @@ final class ClientProfile
             'approval.approvers.*.name' => ['required', 'string'],
             'approval.approvers.*.email' => ['required', 'email'],
             'approval.approvers.*.phone' => ['nullable', 'string'],
+            'slots' => ['present', 'array', 'max:21'],
+            'slots.*' => ['string', 'regex:/^(mon|tue|wed|thu|fri|sat|sun) ([01]\d|2[0-3]):[0-5]\d$/i'],
             'signatures' => ['present', 'array:'.implode(',', self::PLATFORMS)],
             'signatures.*' => ['nullable', 'string', 'max:300'],
             'key_dates' => ['present', 'array'],
