@@ -42,6 +42,7 @@ class PlanRequest
             'window' => ['start' => $this->from->toDateString(), 'end' => $this->to->toDateString()],
             'platforms' => $this->platforms,
             'count' => $this->count,
+            'holidays' => Holidays::lines($this->from, $this->to, Holidays::inCyprus($this->profile['location'] ?? null)),
         ];
     }
 }

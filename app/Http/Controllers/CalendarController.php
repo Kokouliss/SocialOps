@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\Post;
+use App\Planning\Holidays;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
@@ -29,13 +30,26 @@ class CalendarController extends Controller
             ->latest()
             ->get();
 
+        $clients = Client::orderBy('name')->get();
+        $client = $clients->firstWhere('slug', $clientSlug);
+        $marks = array_map(fn (string $label) => [$label], Holidays::between($start, $end, Holidays::inCyprus($client?->location)));
+        foreach ($client ? [$client] : $clients as $owner) {
+            foreach ($owner->profile['key_dates'] ?? [] as $keyDate) {
+                $day = Carbon::parse($keyDate['date'])->toDateString();
+                if ($day >= $start->toDateString() && $day <= $end->toDateString()) {
+                    $marks[$day][] = ($client ? '' : $owner->code.': ').$keyDate['label'];
+                }
+            }
+        }
+
         return view('calendar.index', [
+            'marks' => $marks,
             'view' => $view,
             'date' => $date,
             'days' => collect(Carbon::parse($start)->toPeriod($end, '1 day')),
             'posts' => $posts,
             'unscheduled' => $unscheduled,
-            'clients' => Client::orderBy('name')->get(),
+            'clients' => $clients,
             'clientSlug' => $clientSlug,
         ]);
     }
