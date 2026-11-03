@@ -86,6 +86,12 @@ class Post extends Model
         return $this->variants->where('platform', $platform)->whereNotNull('alt_text')->first()?->alt_text;
     }
 
+    /** Every review batch this post was part of, with the approver's decision and comment on the pivot. */
+    public function reviews(): BelongsToMany
+    {
+        return $this->belongsToMany(Review::class)->withPivot(Review::PIVOT)->latest('reviews.created_at');
+    }
+
     /** Move to the next state; approval with a date on the calendar schedules the post at once. */
     public function transitionTo(PostState $to): void
     {
