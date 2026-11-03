@@ -126,14 +126,18 @@
 
 <h3 class="mt-8 font-semibold text-gray-800">{{ __('Captions') }} <span class="text-sm font-normal text-gray-500">{{ __('(only the ticked platforms are saved; Greek is reviewed by a human before approval)') }}</span></h3>
 @foreach (\App\Models\Post::PLATFORMS as $platform)
-    <fieldset class="mt-4 border rounded-md p-4">
-        <legend class="px-1 text-sm font-medium">{{ str_replace('_', ' ', $platform) }} <span class="text-gray-400">({{ __('max :n characters', ['n' => \App\Http\Requests\PostRequest::CAPTION_MAX[$platform]]) }})</span></legend>
+    <fieldset class="mt-4 border rounded-md p-4" data-platform="{{ $platform }}" data-max="{{ \App\Http\Requests\PostRequest::CAPTION_MAX[$platform] }}">
+        <legend class="px-1 text-sm font-medium">{{ str_replace('_', ' ', $platform) }} <span class="count text-gray-400" title="{{ __('Characters of the published text: every language, then the hashtags') }}"></span>
+            @if ($post->exists)
+                <button type="button" class="shorten ml-2 text-xs text-brand-600 hover:underline" data-url="{{ route('posts.shorten', $post) }}">{{ __('Shorten with Claude') }}</button>
+            @endif
+        </legend>
         <div class="grid gap-4 md:grid-cols-{{ count($languages) }}">
             @foreach ($languages as $lang)
                 @php($v = $variants->get("$platform.$lang"))
                 <div>
                     <x-input-label :value="strtoupper($lang)" />
-                    <textarea name="variants[{{ $platform }}][{{ $lang }}][caption]" rows="5" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">{{ old("variants.$platform.$lang.caption", $v?->caption) }}</textarea>
+                    <textarea name="variants[{{ $platform }}][{{ $lang }}][caption]" data-lang="{{ $lang }}" rows="5" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">{{ old("variants.$platform.$lang.caption", $v?->caption) }}</textarea>
                     <x-input-error class="mt-1" :messages="$errors->get(\"variants.$platform.$lang.caption\")" />
                     @if ($platform !== 'google_business')
                         <x-text-input name="variants[{{ $platform }}][{{ $lang }}][hashtags]" type="text" class="mt-2 block w-full text-sm" placeholder="#chania #crete" :value="old(\"variants.$platform.$lang.hashtags\", implode(' ', $v?->hashtags ?? []))" />
@@ -146,6 +150,40 @@
         </div>
     </fieldset>
 @endforeach
+
+<script>
+    // Live count of the text that will be published per platform (languages joined by blank lines, then the hashtags), and the Shorten button.
+    // shortcut: JS counts UTF-16 units, so an emoji counts 2 where the server counts 1; the server's count decides at publish time
+    document.querySelectorAll('fieldset[data-max]').forEach(set => {
+        const max = +set.dataset.max, count = set.querySelector('.count');
+        const tags = () => [...new Set([...set.querySelectorAll('input[name$="[hashtags]"]')].flatMap(i => i.value.trim().split(/\s+/).filter(Boolean)).map(t => '#' + t.replace(/^#/, '')))].join(' ');
+        const update = () => {
+            const n = [...[...set.querySelectorAll('textarea')].map(t => t.value.trim()), tags()].filter(Boolean).join('\n\n').length;
+            count.textContent = `${n} / ${max}`;
+            count.classList.toggle('text-red-600', n > max);
+        };
+        set.addEventListener('input', update);
+        update();
+        set.querySelector('.shorten')?.addEventListener('click', async ({ target: button }) => {
+            button.disabled = true;
+            const captions = {};
+            set.querySelectorAll('textarea').forEach(t => captions[t.dataset.lang] = t.value);
+            const res = await fetch(button.dataset.url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+                body: JSON.stringify({ platform: set.dataset.platform, captions, hashtags: tags() }),
+            });
+            const json = await res.json();
+            if (res.ok) {
+                set.querySelectorAll('textarea').forEach(t => { if (json[t.dataset.lang] !== undefined) t.value = json[t.dataset.lang]; });
+                update();
+            } else {
+                alert(json.error || json.message);
+            }
+            button.disabled = false;
+        });
+    });
+</script>
 
 <div class="mt-6 flex items-center gap-4">
     <x-primary-button>{{ __('Save') }}</x-primary-button>
