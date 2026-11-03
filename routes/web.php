@@ -36,6 +36,8 @@ Route::middleware('auth')->group(function () {
     Route::resource('clients', ClientController::class)->except('show');
     Route::post('/clients/{client}/plan', [ClientController::class, 'plan'])->name('clients.plan');
     Route::get('/clients/{client}/assets', [AssetController::class, 'index'])->name('clients.assets');
+    Route::get('/clients/{client}/grid', [ClientController::class, 'grid'])->name('clients.grid');
+    Route::get('/assets/{asset}/thumb', [AssetController::class, 'thumb'])->name('assets.thumb');
     Route::get('/assets/{asset}/download', [AssetController::class, 'download'])->name('assets.download');
     Route::delete('/assets/{asset}', [AssetController::class, 'destroy'])->name('assets.destroy');
     Route::get('/clients/{client}/reviews', [ReviewController::class, 'index'])->name('clients.reviews');
