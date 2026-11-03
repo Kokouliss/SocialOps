@@ -12,7 +12,7 @@ use Illuminate\Support\Sleep;
 /** Instagram and Facebook Pages through the Graph API with our own Meta app. One authorisation covers both. */
 class MetaPublisher implements Publisher
 {
-    public const SCOPES = 'pages_show_list,pages_manage_posts,pages_read_engagement,pages_read_user_content,pages_manage_engagement,instagram_basic,instagram_content_publish,instagram_manage_comments,business_management';
+    public const SCOPES = 'pages_show_list,pages_manage_posts,pages_read_engagement,pages_read_user_content,pages_manage_engagement,instagram_basic,instagram_content_publish,instagram_manage_comments,instagram_manage_insights,business_management';
 
     public function authorizeUrl(string $state): string
     {
@@ -184,6 +184,32 @@ class MetaPublisher implements Publisher
     {
         throw_if($account->platform === 'instagram', new ManualNeeded('Instagram has no API to delete a post. Delete it in the Instagram app.'));
         $this->check(Http::withQueryParameters(['access_token' => $account->access_token])->delete($this->graph()."/{$externalId}"));
+    }
+
+    /**
+     * The top posts under a hashtag through the Hashtag Search API. Instagram allows 30 distinct hashtags per account per rolling week.
+     *
+     * @return list<array{id: string, caption?: string, like_count?: int, comments_count?: int, media_type?: string, permalink?: string, timestamp?: string}>
+     */
+    public function hashtagTopMedia(Account $account, string $tag, int $limit = 25): array
+    {
+        $token = ['access_token' => $account->access_token, 'user_id' => $account->external_id];
+        $id = $this->get('/ig_hashtag_search', $token + ['q' => ltrim($tag, '#')])['data'][0]['id'] ?? throw new PublishFailed("Instagram knows no hashtag #{$tag}");
+
+        return $this->get("/{$id}/top_media", $token + ['fields' => 'id,caption,like_count,comments_count,media_type,permalink,timestamp', 'limit' => $limit])['data'] ?? [];
+    }
+
+    /**
+     * A public business or creator account's counts and recent posts through Business Discovery.
+     *
+     * @return array{username?: string, followers_count?: int, media_count?: int, media?: array{data: list<array>}}
+     */
+    public function businessDiscovery(Account $account, string $username, int $limit = 10): array
+    {
+        $username = ltrim($username, '@');
+        $fields = "business_discovery.username({$username}){username,followers_count,media_count,media.limit({$limit}){caption,like_count,comments_count,media_type,permalink,timestamp}}";
+
+        return $this->get("/{$account->external_id}", ['access_token' => $account->access_token, 'fields' => $fields])['business_discovery'] ?? [];
     }
 
     /** A comment under the client's own post (the first comment: hashtags or a link); returns its id. */

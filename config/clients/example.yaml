@@ -41,6 +41,8 @@ research:               # steers the trend research and the planner
   sources: []           # sites to search first, e.g. [cretalive.gr, chaniapost.eu]
   excluded_domains: []  # never cite these, e.g. a competitor's site
   excluded_topics: []   # never plan or caption these, e.g. [politics, alcohol prices]
+  hashtags_to_watch: [] # weekly listening report, max 30 (Instagram's limit per account and week), e.g. [chaniabeach, cretefood]
+  competitors: []       # public Instagram business accounts to watch, e.g: ["@otherbeachbar"]
 
 approval:
   policy: required      # none | optional | required | multi_level
