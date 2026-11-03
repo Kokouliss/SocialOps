@@ -5,6 +5,7 @@ use App\Models\Client;
 use App\Models\Post;
 use App\Models\User;
 use App\Posts\PostState;
+use Illuminate\Support\Facades\Storage;
 
 function postInput(array $overrides = []): array
 {
@@ -120,8 +121,30 @@ test('the calendar shows posts by month and client and reschedules by drag and d
     expect(Post::count())->toBe(3);
 });
 
+test('a post exports as a ZIP of media and captions, and a client month as a CSV', function () {
+    Storage::fake('local');
+    Storage::disk('local')->put('clients/test/inbox/photo.jpg', 'jpg-bytes');
+    $post = Post::factory()->for($this->client)->create(['platforms' => ['instagram'], 'scheduled_at' => '2026-11-20 09:00']);
+    $post->variants()->create(['platform' => 'instagram', 'lang' => 'el', 'caption' => 'Γεια, "Χανιά"', 'hashtags' => ['chania']]);
+    $post->variants()->create(['platform' => 'instagram', 'lang' => 'en', 'caption' => 'Hello', 'hashtags' => ['#crete'], 'alt_text' => 'A deck']);
+    $post->assets()->attach(Asset::factory()->for($this->client)->create(['name' => 'ALMYRA_photo.jpg']), ['position' => 0]);
+
+    $zipPath = $this->actingAs($this->staff)->get("/posts/{$post->id}/export")->assertDownload("{$post->name}.zip")->baseResponse->getFile()->getPathname();
+    $zip = new ZipArchive;
+    $zip->open($zipPath);
+    expect($zip->getFromName('ALMYRA_photo.jpg'))->toBe('jpg-bytes')
+        ->and($zip->getFromName('captions.txt'))->toContain('== Instagram ==', "[EL]\nΓεια", '#chania', 'Alt text: A deck');
+
+    $csv = $this->actingAs($this->staff)->get("/clients/{$this->client->id}/posts/export.csv?date=2026-11-01")->assertOk()->assertHeader('Content-Type', 'text/csv; charset=UTF-8')->getContent();
+    expect($csv)->toStartWith("\xEF\xBB\xBFdate,time,post,state,platform,format,pillar,caption_el,caption_en,hashtags,alt_text,media\n")
+        ->and($csv)->toContain('2026-11-20,09:00,'.$post->name.',Draft,instagram,', ',"Γεια, ""Χανιά""",Hello,"#chania #crete","A deck",ALMYRA_photo.jpg');
+    expect($this->actingAs($this->staff)->get("/clients/{$this->client->id}/posts/export.csv?date=2026-12-01")->getContent())->not->toContain($post->name);
+});
+
 test('guests cannot reach the calendar or posts', function () {
     $post = Post::factory()->for($this->client)->create();
     $this->get('/calendar')->assertRedirect('/login');
     $this->get("/posts/{$post->id}/edit")->assertRedirect('/login');
+    $this->get("/posts/{$post->id}/export")->assertRedirect('/login');
+    $this->get("/clients/{$this->client->id}/posts/export.csv")->assertRedirect('/login');
 });

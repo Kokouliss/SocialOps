@@ -51,6 +51,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/posts/{post}/transition', [PostController::class, 'transition'])->name('posts.transition');
     Route::patch('/posts/{post}/reschedule', [PostController::class, 'reschedule'])->name('posts.reschedule');
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+    Route::get('/posts/{post}/export', [PostController::class, 'export'])->name('posts.export');
+    Route::get('/clients/{client}/posts/export.csv', [CalendarController::class, 'csv'])->name('posts.csv');
     Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
     Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
     Route::delete('/staff/{user}', [StaffController::class, 'destroy'])->name('staff.destroy');
