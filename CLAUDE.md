@@ -7,7 +7,7 @@ Goal: cut time from every step: asset intake, captions, translation, approvals, 
 
 ## Status
 - Research done (November 2026): `docs/research.md`. Read it before proposing architecture or features.
-- Scaffold, clients CRUD and asset inbox done. Next: the first unticked Phase 1 item in `docs/roadmap.md`.
+- Scaffold, clients CRUD, asset inbox, posts and calendar done. Next: the first unticked Phase 1 item in `docs/roadmap.md`.
 - Decisions taken so far and decisions still open: `docs/decisions.md`. **Ask the user about open decisions before writing code that depends on them.**
 
 ## Core idea
@@ -31,6 +31,7 @@ Out of MVP: CSV import, evergreen queues, Canva autofill, auto-reports, auto-Ree
 `Idea → Draft → In Review → Changes Requested → Approved (locked) → Scheduled → Published | Failed | Manual-Needed`
 - Approved posts are locked; editing one sends it back to In Review.
 - Approval auto-schedules the post.
+- Code: `App\Posts\PostState` (enum with the transitions), `Post::transitionTo()`; captions live in `post_variants` per platform and language.
 - Manual-Needed covers things no API can do (Instagram Story stickers, shopping tags, public TikTok through our own app before its audit): notify a human to post in-app.
 
 ## Rules that must not be broken
