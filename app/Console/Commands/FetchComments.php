@@ -11,6 +11,8 @@ use App\Publishing\GbpPublisher;
 use App\Publishing\MetaPublisher;
 use App\Publishing\PublishFailed;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Throwable;
 
 class FetchComments extends Command
@@ -47,13 +49,41 @@ class FetchComments extends Command
                     $this->warn("{$account->client->name} {$account->platform}: triage failed, {$e->getMessage()}");
                 }
                 $attention = $new->filter(fn (Comment $c) => $c->fresh()->needsAttention())->count();
+                $auto = $account->platform === 'google_business' ? 0 : $this->autoReply($meta, $account, $new);
                 $what = $account->platform === 'google_business' ? 'Google reviews' : str_replace('_', ' ', $account->platform).' comments';
-                $this->info("{$account->client->name} {$account->platform}: {$new->count()} new, {$attention} need attention.");
-                Slack::send(__(':client: :n new :what to answer, :a need attention', ['client' => $account->client->name, 'n' => $new->count(), 'what' => $what, 'a' => $attention])."\n".route('clients.comments', $account->client_id));
+                $autoNote = $auto ? __(', :auto answered automatically', ['auto' => $auto]) : '';
+                $this->info("{$account->client->name} {$account->platform}: {$new->count()} new, {$attention} need attention{$autoNote}.");
+                Slack::send(__(':client: :n new :what to answer, :a need attention', ['client' => $account->client->name, 'n' => $new->count(), 'what' => $what, 'a' => $attention]).$autoNote."\n".route('clients.comments', $account->client_id));
             }
         }
 
         return self::SUCCESS;
+    }
+
+    /**
+     * A new comment that contains one of a saved reply's keywords gets that reply at once (the first matching saved reply, once).
+     * Only comments the triage tagged and that need no human: a complaint about the opening hours must not get the opening hours.
+     */
+    private function autoReply(MetaPublisher $meta, Account $account, Collection $new): int
+    {
+        $rules = collect($account->client->profile['saved_replies'] ?? [])->filter(fn ($r) => ! empty($r['keywords']));
+        $sent = 0;
+        foreach ($rules->isEmpty() ? [] : $new as $comment) {
+            $comment->refresh();
+            $reply = $comment->intent === null || $comment->needsAttention() ? null : $rules->first(fn ($r) => Str::contains($comment->text, $r['keywords'], true));
+            if (! $reply) {
+                continue;
+            }
+            try {
+                $meta->reply($account, $comment->external_id, $reply['text']);
+                $comment->update(['reply' => $reply['text'], 'replied_at' => now()]);
+                $sent++;
+            } catch (PublishFailed $e) {
+                $this->warn("{$account->client->name} {$account->platform}: auto-reply to {$comment->author} failed, {$e->getMessage()}");
+            }
+        }
+
+        return $sent;
     }
 
     /** @return list<array> comment rows under the last 30 days of published posts */
