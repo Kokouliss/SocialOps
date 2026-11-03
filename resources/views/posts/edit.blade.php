@@ -28,6 +28,9 @@
             @if ($post->state->isLocked())
                 <p class="text-sm text-yellow-800 bg-yellow-50 rounded-md p-3">{{ $post->state === \App\Posts\PostState::Published ? __('This post is published and can no longer be edited.') : __('This post is approved and locked. Saving a change sends it back to review.') }}</p>
             @endif
+            @foreach ($post->reviews()->wherePivotNotNull('comment')->get() as $review)
+                <p class="text-sm text-orange-800 bg-orange-50 rounded-md p-3"><span class="font-semibold">{{ $review->pivot->decided_by }}</span> ({{ $review->pivot->decided_at }}): {{ $review->pivot->comment }}</p>
+            @endforeach
             @if ($post->state !== \App\Posts\PostState::Published)
                 <form method="POST" action="{{ route('posts.update', $post) }}" class="bg-white p-6 shadow-sm sm:rounded-lg">
                     @method('PATCH')
