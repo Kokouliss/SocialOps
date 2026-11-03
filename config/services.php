@@ -17,6 +17,8 @@ return [
     'anthropic' => [
         'key' => env('ANTHROPIC_API_KEY'),
         'model' => env('ANTHROPIC_MODEL', 'claude-opus-5-5'),
+        // USD per million tokens, for the cost column on the Jobs page; leave empty to show tokens only
+        'price_per_mtok' => ['input' => env('ANTHROPIC_PRICE_INPUT'), 'output' => env('ANTHROPIC_PRICE_OUTPUT')],
     ],
 
     // our own platform apps (Phase 0): create them in each developer portal and paste the ids here

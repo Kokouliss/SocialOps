@@ -1,6 +1,7 @@
 <?php
 
 use App\Drafting\CaptionDrafter;
+use App\Models\ClaudeCall;
 use App\Models\Client;
 
 beforeEach(function () {
@@ -28,6 +29,7 @@ it('returns the caption JSON for exactly the post platforms, reviewer notes incl
     expect($captions['el']['instagram'])->toBe('Ηλιοβασίλεμα με κοκτέιλ')
         ->and($captions['notes_for_reviewer'])->toBe('Check the opening hours')
         ->and(array_keys($captions['en']))->toBe(['instagram', 'facebook']);
+    expect(ClaudeCall::first())->toMatchArray(['purpose' => 'caption', 'model' => 'claude-opus-5-5', 'input_tokens' => 1, 'output_tokens' => 1]);
 });
 
 it('rejects a reply that leaves a platform without a caption', function () {

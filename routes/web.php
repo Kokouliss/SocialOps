@@ -5,6 +5,7 @@ use App\Http\Controllers\AssetController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\InboxController;
+use App\Http\Controllers\JobController;
 use App\Http\Controllers\PortalController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
@@ -48,6 +49,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy');
     Route::get('/oauth/{provider}/callback', [AccountController::class, 'callback'])->name('oauth.callback');
     Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar');
+    Route::get('/jobs', [JobController::class, 'index'])->name('jobs.index');
+    Route::post('/jobs/{uuid}/retry', [JobController::class, 'retry'])->name('jobs.retry');
+    Route::delete('/jobs/{uuid}', [JobController::class, 'forget'])->name('jobs.forget');
     Route::get('/clients/{client}/posts/create', [PostController::class, 'create'])->name('posts.create');
     Route::post('/clients/{client}/posts', [PostController::class, 'store'])->name('posts.store');
     Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');

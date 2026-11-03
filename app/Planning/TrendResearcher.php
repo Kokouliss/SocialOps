@@ -4,6 +4,7 @@ namespace App\Planning;
 
 use Anthropic\Client;
 use App\Drafting\Reply;
+use App\Models\ClaudeCall;
 
 /** Asks Claude, with its web search tool, for the Markdown trend brief described in prompts/trend-research.md. */
 class TrendResearcher
@@ -28,6 +29,8 @@ class TrendResearcher
                 ...($blocked ? ['blockedDomains' => $blocked] : []),
             ]],
         );
+
+        ClaudeCall::record($message, 'trend_brief', $request->profile['slug']);
 
         return Reply::text($message);
     }

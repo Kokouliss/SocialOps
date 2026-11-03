@@ -3,6 +3,7 @@
 namespace App\Drafting;
 
 use Anthropic\Client;
+use App\Models\ClaudeCall;
 use App\Planning\Prompt;
 use RuntimeException;
 
@@ -33,6 +34,7 @@ class CaptionDrafter
             outputConfig: ['format' => ['type' => 'json_schema', 'schema' => self::schema($post['platforms'])]],
         );
 
+        ClaudeCall::record($message, 'caption', $profile['slug'] ?? null);
         $captions = Reply::json($message);
 
         foreach (['el', 'en'] as $lang) {

@@ -4,6 +4,7 @@ namespace App\Planning;
 
 use Anthropic\Client;
 use App\Drafting\Reply;
+use App\Models\ClaudeCall;
 use Carbon\CarbonImmutable;
 use RuntimeException;
 
@@ -33,6 +34,7 @@ class ContentPlanner
             outputConfig: ['format' => ['type' => 'json_schema', 'schema' => self::schema($request->platforms, array_keys($quota))]],
         );
 
+        ClaudeCall::record($message, 'plan', $request->profile['slug']);
         $posts = Reply::json($message)['posts'];
 
         return ['posts' => $posts, 'warnings' => self::check($posts, $request, $quota)];
