@@ -8,10 +8,16 @@ use App\Planning\Holidays;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\URL;
 use Illuminate\View\View;
 
 class CalendarController extends Controller
 {
+    public const LINK_DAYS = 30;
+
+    /** What a client is told about a post's state on their view-only calendar. */
+    public const CLIENT_STATES = ['idea' => 'Planned', 'draft' => 'Planned', 'in_review' => 'Waiting for your approval', 'changes_requested' => 'Being reworked', 'approved' => 'Scheduled', 'scheduled' => 'Scheduled', 'published' => 'Published', 'failed' => 'Delayed', 'manual_needed' => 'Delayed', 'withdrawn' => 'Withdrawn'];
+
     public function index(Request $request): View
     {
         [$view, $date, $start, $end] = $this->range($request);
@@ -51,7 +57,16 @@ class CalendarController extends Controller
             'unscheduled' => $unscheduled,
             'clients' => $clients,
             'clientSlug' => $clientSlug,
+            'clientUrl' => $client ? URL::temporarySignedRoute('calendar.client', now()->addDays(self::LINK_DAYS), ['client' => $client->slug]) : null,
         ]);
+    }
+
+    /** The client's own posts behind a signed link, this month and the next, read only. */
+    public function client(Client $client): View
+    {
+        $posts = $client->posts()->with('variants')->whereBetween('scheduled_at', [now()->startOfMonth(), now()->addMonth()->endOfMonth()])->orderBy('scheduled_at')->get();
+
+        return view('calendar.client', ['client' => $client, 'days' => $posts->groupBy(fn (Post $p) => $p->scheduled_at->toDateString()), 'lang' => $client->profile['languages'][0]]);
     }
 
     /** The posts the calendar shows for one client, one row per post and platform, as a UTF-8 CSV for Canva Bulk Create or a spreadsheet. */
