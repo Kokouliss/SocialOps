@@ -11,6 +11,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\StaffController;
 use App\Models\User;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect(User::count() ? '/dashboard' : '/setup'));
@@ -20,6 +21,14 @@ Route::post('/setup', [StaffController::class, 'finishSetup'])->name('setup.stor
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+// After a git pull on the server: run new migrations and rebuild the caches, instead of SSH.
+Route::post('/refresh', function () {
+    Artisan::call('migrate', ['--force' => true]);
+    Artisan::call('optimize');
+
+    return redirect()->route('dashboard')->with('status', 'app-refreshed');
+})->middleware('auth')->name('refresh');
 
 Route::middleware('auth')->group(function () {
     Route::resource('clients', ClientController::class)->except('show');
