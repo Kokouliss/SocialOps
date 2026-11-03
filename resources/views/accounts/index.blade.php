@@ -42,6 +42,11 @@
                 @endforeach
             </div>
             <p class="text-xs text-gray-500">{{ __('Connecting opens the platform\'s own login; we never see or store a password. The profile under "accounts" in the brand profile is only the handle for reference.') }}</p>
+
+            <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+                <x-input-label for="connect-url" :value="__('Link for the client to connect their own accounts (no login, valid :days days; they log in at the platform themselves)', ['days' => \App\Http\Controllers\AccountController::LINK_DAYS])" />
+                <x-text-input id="connect-url" type="text" class="mt-1 block w-full font-mono text-xs" :value="$connectUrl" readonly onclick="this.select()" />
+            </div>
         </div>
     </div>
 </x-app-layout>
