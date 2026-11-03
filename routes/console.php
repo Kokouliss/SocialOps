@@ -12,3 +12,5 @@ Schedule::command('reviews:remind')->hourly();
 Schedule::command('posts:publish-due')->everyMinute();
 Schedule::command('accounts:check-tokens')->dailyAt('08:00');
 Schedule::command('comments:fetch')->hourly();
+Schedule::command('posts:insights')->dailyAt('06:00');
+Schedule::command('reports:monthly')->monthlyOn(1, '07:00');

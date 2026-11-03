@@ -34,6 +34,7 @@ class Post extends Model
             'platforms' => 'array',
             'settings' => 'array',
             'external_ids' => 'array',
+            'metrics' => 'array',
             'scheduled_at' => 'datetime',
             'published_at' => 'datetime',
         ];

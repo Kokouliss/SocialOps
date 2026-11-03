@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/clients/{client}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
     Route::get('/clients/{client}/accounts', [AccountController::class, 'index'])->name('clients.accounts');
     Route::get('/clients/{client}/reports', [ReportController::class, 'index'])->name('clients.reports');
+    Route::post('/clients/{client}/reports/monthly', [ReportController::class, 'monthly'])->name('reports.monthly');
     Route::get('/clients/{client}/comments', [CommentController::class, 'index'])->name('clients.comments');
     Route::post('/comments/{comment}/draft', [CommentController::class, 'draft'])->name('comments.draft');
     Route::post('/comments/{comment}/reply', [CommentController::class, 'reply'])->name('comments.reply');
