@@ -23,7 +23,7 @@ Own the workflow and the publishing. No paid middleman.
 4. AI drafting: Claude API, EL + EN captions, per-platform variants, alt text, hashtags.
 5. Client approval portal: signed expiring magic links, per-network previews, inline comments, approve on mobile, reminders.
 6. Publishing to Instagram, Facebook, TikTok and Google Business Profile through our own drivers. TikTok posts stay private (SELF_ONLY) until the audit passes; until then public TikTok posts go through Manual-Needed. No other platforms, now or later.
-7. Token health monitor.
+7. Token health monitor, plus `posts:preflight` (hourly: every account with a post due in the next 24 hours answers one cheap API call, or Slack hears about it once a day) and `posts:reconcile` (hourly: Google Business Profile posts of the last 24 hours are read back; a REJECTED one loses its id, gets the reason on the post and a Slack line).
 
 Out of MVP: CSV import, evergreen queues, Canva autofill, auto-reports, auto-Reels, link-in-bio. LinkedIn, YouTube, Threads, Pinterest and X are not planned.
 

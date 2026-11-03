@@ -104,7 +104,14 @@
         <div><x-input-label for="gbp-title" :value="__('Title')" /><x-text-input id="gbp-title" name="settings[gbp][title]" type="text" maxlength="58" class="mt-1 block w-full" :value="$gbp['title'] ?? ''" /><x-input-error class="mt-1" :messages="$errors->get('settings.gbp.title')" /></div>
         <div><x-input-label for="gbp-start" :value="__('Starts')" /><x-text-input id="gbp-start" name="settings[gbp][start]" type="date" class="mt-1 block w-full" :value="$gbp['start'] ?? ''" /></div>
         <div><x-input-label for="gbp-end" :value="__('Ends')" /><x-text-input id="gbp-end" name="settings[gbp][end]" type="date" class="mt-1 block w-full" :value="$gbp['end'] ?? ''" /><x-input-error class="mt-1" :messages="$errors->get('settings.gbp.end')" /></div>
-        <div><x-input-label for="gbp-link" :value="__('Learn more link')" /><x-text-input id="gbp-link" name="settings[gbp][link]" type="url" class="mt-1 block w-full" :value="$gbp['link'] ?? ''" /><x-input-error class="mt-1" :messages="$errors->get('settings.gbp.link')" /></div>
+        <div><x-input-label for="gbp-cta" :value="__('Button')" />
+            <select id="gbp-cta" name="settings[gbp][cta]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+                @foreach (\App\Publishing\GbpPublisher::CTAS as $cta => $label)
+                    <option value="{{ $cta }}" @selected(($gbp['cta'] ?? 'LEARN_MORE') === $cta)>{{ __($label) }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div><x-input-label for="gbp-link" :value="__('Button link (Call needs none)')" /><x-text-input id="gbp-link" name="settings[gbp][link]" type="url" class="mt-1 block w-full" :value="$gbp['link'] ?? ''" /><x-input-error class="mt-1" :messages="$errors->get('settings.gbp.link')" /></div>
         <div><x-input-label for="gbp-coupon" :value="__('Coupon code (offers)')" /><x-text-input id="gbp-coupon" name="settings[gbp][coupon]" type="text" class="mt-1 block w-full" :value="$gbp['coupon'] ?? ''" /></div>
     </div>
 </fieldset>
@@ -126,7 +133,7 @@
 
 <h3 class="mt-8 font-semibold text-gray-800">{{ __('Captions') }} <span class="text-sm font-normal text-gray-500">{{ __('(only the ticked platforms are saved; Greek is reviewed by a human before approval)') }}</span></h3>
 @foreach (\App\Models\Post::PLATFORMS as $platform)
-    <fieldset class="mt-4 border rounded-md p-4" data-platform="{{ $platform }}" data-max="{{ \App\Http\Requests\PostRequest::CAPTION_MAX[$platform] }}">
+    <fieldset class="mt-4 border rounded-md p-4" data-platform="{{ $platform }}" data-max="{{ \App\Http\Requests\PostRequest::CAPTION_MAX[$platform] }}" data-signature="{{ trim($client->profile['signatures'][$platform] ?? '') }}">
         <legend class="px-1 text-sm font-medium">{{ str_replace('_', ' ', $platform) }} <span class="count text-gray-400" title="{{ __('Characters of the published text: every language, then the hashtags') }}"></span>
             @if ($post->exists)
                 <button type="button" class="shorten ml-2 text-xs text-brand-600 hover:underline" data-url="{{ route('posts.shorten', $post) }}">{{ __('Shorten with Claude') }}</button>
@@ -152,13 +159,13 @@
 @endforeach
 
 <script>
-    // Live count of the text that will be published per platform (languages joined by blank lines, then the hashtags), and the Shorten button.
+    // Live count of the text that will be published per platform (languages joined by blank lines, the profile's signature, then the hashtags), and the Shorten button.
     // shortcut: JS counts UTF-16 units, so an emoji counts 2 where the server counts 1; the server's count decides at publish time
     document.querySelectorAll('fieldset[data-max]').forEach(set => {
         const max = +set.dataset.max, count = set.querySelector('.count');
         const tags = () => [...new Set([...set.querySelectorAll('input[name$="[hashtags]"]')].flatMap(i => i.value.trim().split(/\s+/).filter(Boolean)).map(t => '#' + t.replace(/^#/, '')))].join(' ');
         const update = () => {
-            const n = [...[...set.querySelectorAll('textarea')].map(t => t.value.trim()), tags()].filter(Boolean).join('\n\n').length;
+            const n = [...[...set.querySelectorAll('textarea')].map(t => t.value.trim()), set.dataset.signature, tags()].filter(Boolean).join('\n\n').length;
             count.textContent = `${n} / ${max}`;
             count.classList.toggle('text-red-600', n > max);
         };

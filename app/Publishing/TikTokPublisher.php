@@ -96,6 +96,11 @@ class TikTokPublisher implements Publisher
     }
 
     /** Access tokens last 24 h; the refresh token a year. */
+    public function verify(Account $account): void
+    {
+        $this->creatorInfo($this->freshToken($account));
+    }
+
     public function withdraw(Account $account, string $externalId): void
     {
         throw new ManualNeeded('TikTok has no API to delete a video. Delete it in the TikTok app.');

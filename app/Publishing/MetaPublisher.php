@@ -180,6 +180,11 @@ class MetaPublisher implements Publisher
         return $out;
     }
 
+    public function verify(Account $account): void
+    {
+        $this->get("/{$account->external_id}", ['fields' => 'id', 'access_token' => $account->access_token]);
+    }
+
     /** Followers of the Instagram account or the Page today. */
     public function followers(Account $account): int
     {

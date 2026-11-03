@@ -27,6 +27,13 @@ interface Publisher
     public function publish(Post $post, Account $account): string;
 
     /**
+     * One cheap call that fails the way publishing would: a dead token, a revoked page, a disconnected location.
+     *
+     * @throws PublishFailed
+     */
+    public function verify(Account $account): void;
+
+    /**
      * Take a published post down again.
      *
      * @throws PublishFailed when the platform refused
