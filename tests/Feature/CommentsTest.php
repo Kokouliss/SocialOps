@@ -1,0 +1,63 @@
+<?php
+
+use App\Engagement\ReplyDrafter;
+use App\Models\ClaudeCall;
+use App\Models\Client;
+use App\Models\Comment;
+use App\Models\Post;
+use App\Models\User;
+use App\Posts\PostState;
+use Illuminate\Support\Facades\Http;
+
+beforeEach(function () {
+    $this->staff = User::factory()->create();
+    $this->client = Client::factory()->create(['name' => 'Almyra']);
+    $this->account = $this->client->accounts()->create(['platform' => 'instagram', 'external_id' => 'ig-user', 'name' => '@almyra', 'access_token' => 'tok']);
+    $this->post = Post::factory()->create(['client_id' => $this->client->id, 'state' => PostState::Published, 'scheduled_at' => now()->subDays(2), 'platforms' => ['instagram'], 'external_ids' => ['instagram' => 'media-1']]);
+    $this->post->variants()->create(['platform' => 'instagram', 'lang' => 'en', 'caption' => 'Sunset cocktails', 'hashtags' => []]);
+});
+
+test('comments:fetch pulls new comments under published posts, skips the account\'s own, never duplicates, and tells Slack', function () {
+    config(['services.slack.webhook_url' => 'https://hooks.slack.com/services/t']);
+    Http::fake([
+        'graph.facebook.com/*/media-1/comments*' => Http::response(['data' => [
+            ['id' => 'c1', 'text' => 'Τι ώρα ανοίγετε;', 'username' => 'maria', 'timestamp' => '2026-11-03T18:00:00+0000'],
+            ['id' => 'c2', 'text' => 'Thanks all!', 'username' => 'almyra', 'timestamp' => '2026-11-03T18:05:00+0000'],
+        ]]),
+        'hooks.slack.com/*' => Http::response('ok'),
+    ]);
+
+    $this->artisan('comments:fetch')->expectsOutputToContain('Almyra instagram: 1 new.')->assertSuccessful();
+    $this->artisan('comments:fetch')->assertSuccessful();
+
+    expect(Comment::count())->toBe(1);
+    $comment = Comment::first();
+    expect($comment)->toMatchArray(['external_id' => 'c1', 'author' => 'maria', 'text' => 'Τι ώρα ανοίγετε;', 'platform' => 'instagram', 'post_id' => $this->post->id, 'client_id' => $this->client->id]);
+    Http::assertSentCount(3); // two fetches, one Slack line
+    Http::assertSent(fn ($r) => str_contains($r->url(), 'hooks.slack.com') && str_contains($r['text'], 'Almyra: 1 new instagram comments'));
+});
+
+test('a staff member drafts a reply with Claude, edits it, sends it, or hides the comment', function () {
+    $comment = $this->client->comments()->create(['account_id' => $this->account->id, 'post_id' => $this->post->id, 'platform' => 'instagram', 'external_id' => 'c1', 'author' => 'maria', 'text' => 'Τι ώρα ανοίγετε;', 'posted_at' => now()]);
+    $spam = $this->client->comments()->create(['account_id' => $this->account->id, 'post_id' => $this->post->id, 'platform' => 'instagram', 'external_id' => 'c9', 'author' => 'bot', 'text' => 'FREE FOLLOWERS', 'posted_at' => now()]);
+
+    $this->get("/clients/{$this->client->id}/comments")->assertRedirect('/login');
+    $this->actingAs($this->staff)->get("/clients/{$this->client->id}/comments")->assertOk()->assertSee('Τι ώρα ανοίγετε;')->assertSee('maria')->assertSee($this->post->name);
+
+    $this->instance(ReplyDrafter::class, new ReplyDrafter(fakeClaude(json_encode(['reply' => 'Καλημέρα Μαρία! Καθημερινά 10:00 με 00:00.', 'notes' => 'Hours taken from the profile facts.']))));
+    $this->actingAs($this->staff)->post("/comments/{$comment->id}/draft")->assertRedirect("/clients/{$this->client->id}/comments#comment-{$comment->id}")->assertSessionHas('status', 'Claude: Hours taken from the profile facts.');
+    expect($comment->fresh()->reply)->toBe('Καλημέρα Μαρία! Καθημερινά 10:00 με 00:00.')
+        ->and(ClaudeCall::where('purpose', 'reply')->where('client_id', $this->client->id)->count())->toBe(1);
+    $prompt = json_decode((string) claudeRequests()[0]['request']->getBody(), true)['messages'][0]['content'];
+    expect($prompt)->toContain('Sunset cocktails', 'Τι ώρα ανοίγετε;', 'by maria');
+
+    Http::fake(['graph.facebook.com/*' => Http::response(['id' => 'r1'])]);
+    $this->actingAs($this->staff)->post("/comments/{$comment->id}/reply", ['reply' => 'Καλημέρα! 10:00 με 00:00.'])->assertSessionHas('status', 'reply-sent');
+    Http::assertSent(fn ($r) => str_ends_with($r->url(), '/c1/replies') && $r['message'] === 'Καλημέρα! 10:00 με 00:00.' && $r['access_token'] === 'tok');
+    expect($comment->fresh())->toMatchArray(['reply' => 'Καλημέρα! 10:00 με 00:00.'])->and($comment->fresh()->replied_at)->not->toBeNull();
+
+    $this->actingAs($this->staff)->post("/comments/{$spam->id}/hide")->assertSessionHas('status', 'comment-hidden');
+    Http::assertSent(fn ($r) => str_ends_with($r->url(), '/c9') && $r['hide'] === 'true');
+    expect($spam->fresh()->hidden_at)->not->toBeNull();
+    $this->actingAs($this->staff)->get("/clients/{$this->client->id}/comments")->assertOk()->assertSee('Nothing to answer')->assertSee('hidden');
+});

@@ -36,6 +36,7 @@
                                     <a href="{{ route('clients.reviews', $client) }}" class="text-brand-600 hover:underline mr-3">{{ __('Approvals') }}</a>
                                     <a href="{{ route('clients.accounts', $client) }}" class="text-brand-600 hover:underline mr-3">{{ __('Accounts') }}</a>
                                     <a href="{{ route('clients.reports', $client) }}" class="text-brand-600 hover:underline mr-3">{{ __('Reports') }}</a>
+                                    <a href="{{ route('clients.comments', $client) }}" class="text-brand-600 hover:underline mr-3">{{ __('Comments') }}</a>
                                     <a href="{{ route('clients.edit', $client) }}" class="text-brand-600 hover:underline">{{ __('Edit') }}</a>
                                     <form method="POST" action="{{ route('clients.destroy', $client) }}" class="inline ml-3" onsubmit="return confirm('{{ __('Delete this client and everything it owns?') }}')">
                                         @csrf
