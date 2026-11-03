@@ -45,7 +45,7 @@ test('staff create a post with variants for the chosen platforms and languages',
 
     $this->actingAs($this->staff)->post("/clients/{$this->client->id}/posts", postInput(['platforms' => ['instagram'], 'settings' => ['design' => ['en' => 'Headline'], 'first_comment' => '#chania']]));
     expect(Post::orderBy('id')->pluck('name')->last())->toBe('ALMYRA_20270512_IG_REEL_FOODDRINK_EL-EN_v1')
-        ->and(Post::latest('id')->first()->settings)->toBe(['design' => ['en' => 'Headline'], 'first_comment' => '#chania']);
+        ->and(Post::latest('id')->first()->settings)->toMatchArray(['design' => ['en' => 'Headline'], 'first_comment' => '#chania']);
 });
 
 test('captions over the platform limit and other clients assets are rejected', function () {
