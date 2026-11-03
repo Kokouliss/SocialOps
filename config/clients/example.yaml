@@ -1,0 +1,51 @@
+# Client brand profile template. Copy to <slug>.yaml per client.
+# Fictional example client; replace every value.
+slug: almyra
+code: ALMYRA            # used in asset/post names
+name: Almyra Beach Lounge
+type: beach_bar         # villa | hotel | beach_bar | restaurant | brand
+location: Chania, Crete
+
+accounts:               # connected via OAuth in the app; never store passwords
+  instagram: "@almyra.chania"
+  facebook: "Almyra Beach Lounge"
+  google_business: "Almyra Beach Lounge, Chania"
+  tiktok: null
+
+languages: [el, en]     # first = primary
+extra_languages: []     # e.g. [de] for a villa with German guests
+
+voice:
+  tone: relaxed, warm, confident; premium without sounding formal
+  person: we            # we | the venue name
+  emoji: max 1 per caption, never in the first line
+  cta_style: soft (book a sunbed, link in bio); never "Don't miss out!"
+  banned_phrases: []    # client-specific, added on top of agency defaults in prompts/caption-draft.md
+  facts:                # repeated factual info must stay consistent
+    - Open daily 10:00 to midnight, May to October
+    - Sunbed booking by phone or Instagram DM
+
+pillars:                # 4–5 per client with target share of posts
+  place: 25
+  food_drink: 25
+  people: 15
+  guests_ugc: 15
+  offers: 20
+
+hashtags:
+  always: ["#chania", "#crete"]
+  pool: ["#chaniabeach", "#cretesummer", "#beachbarcrete", "#greekislands"]
+  max_per_post: 5
+
+approval:
+  policy: required      # none | optional | required | multi_level
+  sla_hours: 48
+  auto_approve_on_timeout: false   # only allowed when policy is optional
+  approvers:
+    - name: Owner Name
+      email: owner@example.com
+      phone: "+30 69x xxx xxxx"     # for reminders
+
+key_dates:
+  - { date: 2027-05-01, label: Season opening }
+  - { date: 2027-08-15, label: Dekapentavgoustos party }
