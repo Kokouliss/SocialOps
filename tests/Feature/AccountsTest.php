@@ -5,6 +5,7 @@ use App\Models\Post;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\URL;
 
 beforeEach(function () {
     config(['services.meta.app_id' => 'app', 'services.meta.app_secret' => 'secret']);
@@ -49,4 +50,25 @@ test('a post for TikTok needs the creator\'s consent to the posting terms, and t
         ->assertSessionHasNoErrors()->assertRedirect();
 
     expect(Post::sole()->settings['tiktok']['privacy_level'])->toBe('SELF_ONLY');
+});
+
+test('a client connects their own accounts through the signed link, without a login', function () {
+    $page = URL::temporarySignedRoute('connect.show', now()->addDay(), ['client' => $this->client->slug]);
+
+    $this->get(route('connect.show', $this->client))->assertForbidden(); // unsigned
+    $start = $this->get($page)->assertOk()->assertSee('Facebook / Instagram')->assertSee('not connected')->assertDontSee('Disconnect')
+        ->viewData('links')['meta'];
+    $this->get($start)->assertRedirectContains('https://www.facebook.com/');
+
+    Http::fake([
+        'graph.facebook.com/*/oauth/access_token*' => Http::response(['access_token' => 'user-token']),
+        'graph.facebook.com/*/me/accounts*' => Http::response(['data' => [['id' => 'page1', 'name' => 'Almyra Beach Lounge', 'access_token' => 'page-token', 'instagram_business_account' => ['id' => 'ig1', 'username' => 'almyra.chania']]]]),
+    ]);
+    $this->get(route('oauth.callback', ['provider' => 'meta', 'code' => 'c', 'state' => session('oauth.state')]))->assertOk()->assertSee('Almyra Beach Lounge')->assertDontSee('Dashboard');
+    $this->post(route('accounts.attach', $this->client), ['picked' => [0, 1]])->assertRedirectContains('/connect/'.$this->client->slug)->assertSessionHas('status', 'account-connected');
+
+    $accounts = $this->client->accounts()->orderBy('platform')->get();
+    expect($accounts->pluck('platform')->all())->toBe(['facebook', 'instagram'])->and($accounts[0]->connected_by)->toBeNull();
+    $this->get($page)->assertOk()->assertSee('@almyra.chania')->assertSee('Reconnect');
+    $this->actingAs($this->user)->get(route('clients.accounts', $this->client))->assertOk()->assertSee('/connect/'.$this->client->slug); // staff see the link to send (actingAs sticks, so last)
 });
