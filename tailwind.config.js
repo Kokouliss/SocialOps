@@ -12,7 +12,13 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['"Inter Tight"', ...defaultTheme.fontFamily.sans],
+            },
+            // inglelandi.com: orange #FF4D1D / #E12D00 on #212121, light surfaces #F5F5F5
+            colors: {
+                brand: { 50: '#FFF3EE', 100: '#FFE4DB', 200: '#FFC7B5', 300: '#FFA088', 400: '#FF7A55', 500: '#FF4D1D', 600: '#E12D00', 700: '#B82500', 800: '#8F1D00', 900: '#661500' },
+                ink: '#212121',
+                paper: '#F5F5F5',
             },
         },
     },

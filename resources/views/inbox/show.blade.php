@@ -29,7 +29,7 @@
         </div>
         <div>
             <x-input-label for="pillar" :value="__('What is it about?')" />
-            <select id="pillar" name="pillar" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
+            <select id="pillar" name="pillar" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm">
                 <option value="">{{ __('Not sure') }}</option>
                 @foreach (array_keys($client->profile['pillars']) as $pillar)
                     <option value="{{ $pillar }}" @selected(old('pillar') === $pillar)>{{ ucfirst(str_replace('_', ' ', $pillar)) }}</option>
@@ -50,7 +50,7 @@
         </label>
         <div>
             <x-input-label for="note" :value="__('Anything we should know? (optional)')" />
-            <textarea id="note" name="note" rows="2" maxlength="500" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">{{ old('note') }}</textarea>
+            <textarea id="note" name="note" rows="2" maxlength="500" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm">{{ old('note') }}</textarea>
         </div>
         <x-primary-button class="w-full justify-center">{{ __('Send') }}</x-primary-button>
     </form>

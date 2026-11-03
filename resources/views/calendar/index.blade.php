@@ -20,7 +20,7 @@
             <a class="px-2 py-1 border rounded {{ $view === 'week' ? 'bg-gray-800 text-white' : '' }}" href="{{ route('calendar', ['view' => 'week', 'client' => $clientSlug, 'date' => $date->toDateString()]) }}">{{ __('Week') }}</a>
             @if ($clientSlug)
                 <a class="px-2 py-1 border rounded" href="{{ route('posts.csv', [$clients->firstWhere('slug', $clientSlug), 'view' => $view, 'date' => $date->toDateString()]) }}" title="{{ __('The posts shown, one row per platform, for Canva Bulk Create or a spreadsheet') }}">{{ __('Export CSV') }}</a>
-                <a class="ml-auto inline-flex items-center px-4 py-2 bg-gray-800 rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700" href="{{ route('posts.create', $clients->firstWhere('slug', $clientSlug)) }}">{{ __('New post') }}</a>
+                <a class="ml-auto inline-flex items-center px-4 py-2 bg-brand-500 rounded-full font-semibold text-xs text-white uppercase tracking-widest hover:bg-brand-600" href="{{ route('posts.create', $clients->firstWhere('slug', $clientSlug)) }}">{{ __('New post') }}</a>
             @endif
         </div>
     </x-slot>
@@ -40,7 +40,7 @@
                     @php($key = $day->toDateString())
                     <div class="day bg-white min-h-24 p-1 {{ $day->month !== $date->month && $view === 'month' ? 'text-gray-400' : '' }}" data-date="{{ $key }}">
                         <div class="flex justify-between">
-                            <span class="{{ $day->isToday() ? 'font-bold text-indigo-600' : '' }}">{{ $day->day }}</span>
+                            <span class="{{ $day->isToday() ? 'font-bold text-brand-600' : '' }}">{{ $day->day }}</span>
                             @if ($clientSlug)
                                 <a href="{{ route('posts.create', [$clients->firstWhere('slug', $clientSlug), 'date' => $key]) }}" class="text-gray-400 hover:text-gray-700" title="{{ __('New post') }}">+</a>
                             @endif
@@ -70,8 +70,8 @@
         });
         document.querySelectorAll('.day[data-date]').forEach(day => {
             if (!day.dataset.date) return;
-            day.addEventListener('dragover', e => { e.preventDefault(); day.classList.add('bg-indigo-50'); });
-            day.addEventListener('dragleave', () => day.classList.remove('bg-indigo-50'));
+            day.addEventListener('dragover', e => { e.preventDefault(); day.classList.add('bg-brand-50'); });
+            day.addEventListener('dragleave', () => day.classList.remove('bg-brand-50'));
             day.addEventListener('drop', async e => {
                 e.preventDefault();
                 const id = e.dataTransfer.getData('text/plain');

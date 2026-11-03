@@ -40,7 +40,7 @@
                                 </td>
                                 <td class="px-6 py-3 whitespace-nowrap">{{ $asset->created_at->format('Y-m-d H:i') }}</td>
                                 <td class="px-6 py-3 text-right whitespace-nowrap">
-                                    <a href="{{ route('assets.download', $asset) }}" class="text-indigo-600 hover:underline">{{ __('Download') }}</a>
+                                    <a href="{{ route('assets.download', $asset) }}" class="text-brand-600 hover:underline">{{ __('Download') }}</a>
                                     <form method="POST" action="{{ route('assets.destroy', $asset) }}" class="inline ml-3" onsubmit="return confirm('{{ __('Delete this file?') }}')">
                                         @csrf
                                         @method('DELETE')
