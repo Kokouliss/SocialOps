@@ -6,6 +6,9 @@
     <div class="flex items-center gap-2 px-3 py-2">
         <span class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold text-gray-700">{{ mb_substr($review->client->name, 0, 1) }}</span>
         <span class="font-semibold">{{ $review->client->name }}</span>
+        @if ($platform === 'instagram' && $post->collaborators())
+            <span class="text-xs opacity-60">{{ __('with') }} {{ collect($post->collaborators())->map(fn ($h) => "@$h")->join(', ') }}</span>
+        @endif
         <span class="ml-auto text-xs opacity-60">{{ $labels[$platform] }}</span>
     </div>
     @foreach ($post->variants->where('platform', $platform) as $variant)
