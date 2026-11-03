@@ -33,6 +33,7 @@
                                 <td class="px-6 py-3">{{ $client->profile['approval']['policy'] }}</td>
                                 <td class="px-6 py-3 text-right whitespace-nowrap">
                                     <a href="{{ route('clients.assets', $client) }}" class="text-brand-600 hover:underline mr-3">{{ __('Assets') }}</a>
+                                    <a href="{{ route('clients.grid', $client) }}" class="text-brand-600 hover:underline mr-3">{{ __('Grid') }}</a>
                                     <a href="{{ route('clients.reviews', $client) }}" class="text-brand-600 hover:underline mr-3">{{ __('Approvals') }}</a>
                                     <a href="{{ route('clients.accounts', $client) }}" class="text-brand-600 hover:underline mr-3">{{ __('Accounts') }}</a>
                                     <a href="{{ route('clients.reports', $client) }}" class="text-brand-600 hover:underline mr-3">{{ __('Reports') }}</a>

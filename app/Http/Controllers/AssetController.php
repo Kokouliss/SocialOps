@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Asset;
 use App\Models\Client;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\View\View;
@@ -21,6 +22,12 @@ class AssetController extends Controller
             'assets' => $client->assets()->latest()->get(),
             'inboxUrl' => URL::temporarySignedRoute('inbox.show', now()->addDays(self::LINK_DAYS), ['client' => $client->slug]),
         ]);
+    }
+
+    /** A small JPEG of an image asset for the grid and lists; 404 for videos. */
+    public function thumb(Asset $asset): Response
+    {
+        return response($asset->preview(600) ?? abort(404), 200, ['Content-Type' => 'image/jpeg', 'Cache-Control' => 'private, max-age=86400']);
     }
 
     public function download(Asset $asset): StreamedResponse

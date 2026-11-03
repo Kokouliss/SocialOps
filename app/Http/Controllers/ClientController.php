@@ -7,6 +7,7 @@ use App\Http\Requests\ClientRequest;
 use App\Jobs\PlanContentBatch;
 use App\Models\Client;
 use App\Planning\PlanRequest;
+use App\Posts\PostState;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -35,6 +36,21 @@ class ClientController extends Controller
     public function edit(Client $client): View
     {
         return view('clients.edit', ['client' => $client, 'profileYaml' => Yaml::dump($client->profile, 4), 'accounts' => PlanRequest::accounts($client->toProfileArray())]);
+    }
+
+    /** The Instagram grid as it will look: feed, carousel and Reel posts with a date, newest first, three across, with the first asset. */
+    public function grid(Client $client): View
+    {
+        $posts = $client->posts()->with('assets')
+            ->whereJsonContains('platforms', 'instagram')
+            ->whereIn('format', ['feed', 'carousel', 'reel'])
+            ->whereNotIn('state', [PostState::Idea, PostState::Withdrawn])
+            ->whereNotNull('scheduled_at')
+            ->orderByDesc('scheduled_at')
+            ->limit(30)
+            ->get();
+
+        return view('clients.grid', ['client' => $client, 'posts' => $posts]);
     }
 
     /** "Plan with Claude": queue a content:plan run; the Drafts land on the calendar and the outcome is mailed. */
