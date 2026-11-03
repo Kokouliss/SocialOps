@@ -1,10 +1,13 @@
 <?php
 
 use App\Drafting\CaptionDrafter;
+use App\Models\Asset;
 use App\Models\Client;
 use App\Models\Post;
 use App\Models\User;
 use App\Posts\PostState;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 function draftReply(): array
 {
@@ -66,4 +69,20 @@ test('a bad reply from Claude is shown on the form instead of a crash', function
     $this->actingAs($this->user)->from(route('posts.edit', $this->post))->post(route('posts.draft', $this->post))
         ->assertRedirect(route('posts.edit', $this->post))->assertSessionHasErrors(['draft' => 'Claude returned no el caption for instagram']);
     expect($this->post->variants()->count())->toBe(0);
+});
+
+test('the first photo goes to Claude scaled down, videos do not', function () {
+    Storage::fake(config('filesystems.default'));
+    $wide = UploadedFile::fake()->image('wide.jpg', 3136, 1000);
+    $photo = Asset::factory()->create(['client_id' => $this->client->id, 'disk' => config('filesystems.default'), 'path' => 'clients/x/wide.jpg', 'kind' => 'image']);
+    Storage::disk($photo->disk)->put($photo->path, $wide->getContent());
+    $clip = Asset::factory()->create(['client_id' => $this->client->id, 'disk' => config('filesystems.default'), 'path' => 'clients/x/clip.mov', 'kind' => 'video', 'mime' => 'video/quicktime']);
+    $this->post->assets()->sync([$clip->id => ['position' => 0], $photo->id => ['position' => 1]]);
+
+    $this->mock(CaptionDrafter::class)->shouldReceive('draft')->once()
+        ->withArgs(fn ($profile, $post, $examples, $image) => is_string($image) && getimagesizefromstring($image)[0] === 1568 && getimagesizefromstring($image)[1] === 500)
+        ->andReturn(draftReply());
+
+    $this->actingAs($this->user)->post(route('posts.draft', $this->post))->assertRedirect();
+    expect($clip->preview())->toBeNull();
 });

@@ -31,6 +31,7 @@ You write social media captions for {{client.name}}, a {{client.type}} in {{clie
 - Pillar: {{post.pillar}}
 - Brief: {{post.brief}}
 - Asset description: {{post.asset_description}}
+- Photo: {{post.photo}} (when attached, say what is really in it: the alt text describes the picture, the captions stay true to it)
 
 ## Output
 Return JSON only:

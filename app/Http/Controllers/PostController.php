@@ -85,7 +85,7 @@ class PostController extends Controller
                 'pillar' => $post->pillar ?? 'misc',
                 'brief' => (string) $post->brief,
                 'asset_description' => $post->assets->map(fn ($a) => "{$a->kind} {$a->name}".($a->note ? ": {$a->note}" : ''))->join('; ') ?: 'not chosen yet',
-            ], $examples);
+            ], $examples, $post->assets->firstWhere('kind', 'image')?->preview());
         } catch (\Exception $e) { // a malformed reply or an API error is shown on the form, not as a 500
             return back()->withErrors(['draft' => $e->getMessage()]);
         }

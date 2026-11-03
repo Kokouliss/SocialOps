@@ -8,7 +8,7 @@ it('fills the caption prompt from the example profile and leaves no placeholder 
 
     $text = Prompt::render('caption-draft', Prompt::profileVars($profile) + [
         'examples' => 'none yet',
-        'post' => ['platforms' => ['instagram', 'facebook'], 'format' => 'reel', 'pillar' => 'food_drink', 'brief' => 'Sunset cocktails', 'asset_description' => 'Clip of the bar at sunset'],
+        'post' => ['platforms' => ['instagram', 'facebook'], 'format' => 'reel', 'pillar' => 'food_drink', 'brief' => 'Sunset cocktails', 'asset_description' => 'Clip of the bar at sunset', 'photo' => 'none'],
     ]);
 
     expect($text)
