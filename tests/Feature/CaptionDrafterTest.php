@@ -15,6 +15,7 @@ function captionReply(array $overrides = []): string
         'en' => ['instagram' => 'Sunset cocktails', 'facebook' => 'Sunset'],
         'hashtags' => ['#chania', '#crete'],
         'alt_text' => ['el' => 'Μπαρ στο ηλιοβασίλεμα', 'en' => 'Bar at sunset'],
+        'design' => ['el' => 'Τίτλος', 'en' => 'Headline'],
         'notes_for_reviewer' => 'Check the opening hours',
     ], $overrides), JSON_UNESCAPED_UNICODE);
 }

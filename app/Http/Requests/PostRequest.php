@@ -48,6 +48,7 @@ class PostRequest extends FormRequest
             'settings.gbp.end' => ['nullable', 'date', 'after_or_equal:settings.gbp.start'],
             'settings.gbp.link' => ['nullable', 'url', 'max:2000'],
             'settings.gbp.coupon' => ['nullable', 'string', 'max:58'],
+            'settings.design.*' => ['nullable', 'string', 'max:5000'],
             'assets' => ['sometimes', 'array'],
             'assets.*' => [Rule::exists('assets', 'id')->where('client_id', $client->id)],
             'variants' => ['sometimes', 'array'],

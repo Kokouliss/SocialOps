@@ -8,7 +8,7 @@ use RuntimeException;
 
 /**
  * Fills prompts/caption-draft.md for one post and returns its JSON: el/en captions per platform,
- * hashtags, alt_text, notes_for_reviewer. Drafts only; a human reviews (Greek especially) and approves.
+ * hashtags, alt_text, design (text for the graphic or video), notes_for_reviewer. Drafts only; a human reviews (Greek especially) and approves.
  */
 class CaptionDrafter
 {
@@ -67,9 +67,10 @@ class CaptionDrafter
                 'en' => $perPlatform,
                 'hashtags' => ['type' => 'array', 'items' => $string],
                 'alt_text' => ['type' => 'object', 'properties' => ['el' => $string, 'en' => $string], 'required' => ['el', 'en'], 'additionalProperties' => false],
+                'design' => ['type' => 'object', 'properties' => ['el' => $string, 'en' => $string], 'required' => ['el', 'en'], 'additionalProperties' => false],
                 'notes_for_reviewer' => $string,
             ],
-            'required' => ['el', 'en', 'hashtags', 'alt_text', 'notes_for_reviewer'],
+            'required' => ['el', 'en', 'hashtags', 'alt_text', 'design', 'notes_for_reviewer'],
             'additionalProperties' => false,
         ];
     }

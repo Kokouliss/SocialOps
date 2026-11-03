@@ -43,8 +43,9 @@ test('staff create a post with variants for the chosen platforms and languages',
         ->and($post->variants->firstWhere('lang', 'en')->hashtags)->toBe(['#chania', '#crete'])
         ->and($post->variants->pluck('platform')->unique()->values()->all())->toBe(['instagram', 'facebook']);
 
-    $this->actingAs($this->staff)->post("/clients/{$this->client->id}/posts", postInput(['platforms' => ['instagram']]));
-    expect(Post::orderBy('id')->pluck('name')->last())->toBe('ALMYRA_20270512_IG_REEL_FOODDRINK_EL-EN_v1');
+    $this->actingAs($this->staff)->post("/clients/{$this->client->id}/posts", postInput(['platforms' => ['instagram'], 'settings' => ['design' => ['en' => 'Headline']]]));
+    expect(Post::orderBy('id')->pluck('name')->last())->toBe('ALMYRA_20270512_IG_REEL_FOODDRINK_EL-EN_v1')
+        ->and(Post::latest('id')->first()->settings['design']['en'])->toBe('Headline');
 });
 
 test('captions over the platform limit and other clients assets are rejected', function () {
@@ -124,7 +125,7 @@ test('the calendar shows posts by month and client and reschedules by drag and d
 test('a post exports as a ZIP of media and captions, and a client month as a CSV', function () {
     Storage::fake('local');
     Storage::disk('local')->put('clients/test/inbox/photo.jpg', 'jpg-bytes');
-    $post = Post::factory()->for($this->client)->create(['platforms' => ['instagram'], 'scheduled_at' => '2026-11-20 09:00']);
+    $post = Post::factory()->for($this->client)->create(['platforms' => ['instagram'], 'scheduled_at' => '2026-11-20 09:00', 'settings' => ['design' => ['el' => 'Τίτλος', 'en' => 'Headline']]]);
     $post->variants()->create(['platform' => 'instagram', 'lang' => 'el', 'caption' => 'Γεια, "Χανιά"', 'hashtags' => ['chania']]);
     $post->variants()->create(['platform' => 'instagram', 'lang' => 'en', 'caption' => 'Hello', 'hashtags' => ['#crete'], 'alt_text' => 'A deck']);
     $post->assets()->attach(Asset::factory()->for($this->client)->create(['name' => 'ALMYRA_photo.jpg']), ['position' => 0]);
@@ -133,11 +134,11 @@ test('a post exports as a ZIP of media and captions, and a client month as a CSV
     $zip = new ZipArchive;
     $zip->open($zipPath);
     expect($zip->getFromName('ALMYRA_photo.jpg'))->toBe('jpg-bytes')
-        ->and($zip->getFromName('captions.txt'))->toContain('== Instagram ==', "[EL]\nΓεια", '#chania', 'Alt text: A deck');
+        ->and($zip->getFromName('captions.txt'))->toContain('== Instagram ==', "[EL]\nΓεια", '#chania', 'Alt text: A deck', "== Design text EN ==\nHeadline");
 
     $csv = $this->actingAs($this->staff)->get("/clients/{$this->client->id}/posts/export.csv?date=2026-11-01")->assertOk()->assertHeader('Content-Type', 'text/csv; charset=UTF-8')->getContent();
-    expect($csv)->toStartWith("\xEF\xBB\xBFdate,time,post,state,platform,format,pillar,caption_el,caption_en,hashtags,alt_text,media\n")
-        ->and($csv)->toContain('2026-11-20,09:00,'.$post->name.',Draft,instagram,', ',"Γεια, ""Χανιά""",Hello,"#chania #crete","A deck",ALMYRA_photo.jpg');
+    expect($csv)->toStartWith("\xEF\xBB\xBFdate,time,post,state,platform,format,pillar,caption_el,caption_en,hashtags,alt_text,design_el,design_en,media\n")
+        ->and($csv)->toContain('2026-11-20,09:00,'.$post->name.',Draft,instagram,', ',"Γεια, ""Χανιά""",Hello,"#chania #crete","A deck",Τίτλος,Headline,ALMYRA_photo.jpg');
     expect($this->actingAs($this->staff)->get("/clients/{$this->client->id}/posts/export.csv?date=2026-12-01")->getContent())->not->toContain($post->name);
 });
 

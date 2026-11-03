@@ -94,6 +94,7 @@ class PostController extends Controller
                 ]);
             }
         }
+        $post->update(['settings' => ['design' => $captions['design'] ?? null] + ($post->settings ?? [])]);
         $post->reopenForReview();
 
         return redirect()->route('posts.edit', $post)->with(['status' => 'captions-drafted', 'notes' => $captions['notes_for_reviewer']]);
@@ -174,6 +175,9 @@ class PostController extends Controller
             $zip->addFile(Storage::disk($asset->disk)->path($asset->path), $asset->name); // shortcut: local disk only, use addFromString(get()) for S3
         }
         $text = "{$post->name}\nScheduled: ".($post->scheduled_at?->format('Y-m-d H:i') ?? '-')."\nState: {$post->state->label()}\nBrief: {$post->brief}\nMedia: {$post->assets->pluck('name')->join(', ')}\n";
+        foreach (array_filter($post->settings['design'] ?? []) as $lang => $design) {
+            $text .= "\n== Design text ".strtoupper($lang)." ==\n{$design}\n";
+        }
         foreach ($post->variants->groupBy('platform') as $platform => $variants) {
             $text .= "\n== ".ucfirst(str_replace('_', ' ', $platform))." ==\n";
             foreach ($variants as $v) {
