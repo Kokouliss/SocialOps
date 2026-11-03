@@ -3,6 +3,7 @@
 use App\Jobs\GenerateMonthlyReport;
 use App\Models\ClaudeCall;
 use App\Models\Client;
+use App\Models\FollowerSnapshot;
 use App\Models\Post;
 use App\Models\Report;
 use App\Models\User;
@@ -26,9 +27,14 @@ test('posts:insights reads likes, comments, reach and views back from both platf
         'graph.facebook.com/*/ig-1*' => Http::response(['like_count' => 80, 'comments_count' => 6]),
         'graph.facebook.com/*/fb-1/insights*' => Http::response(['error' => ['message' => 'Unsupported metric']], 400),
         'graph.facebook.com/*/fb-1*' => Http::response(['shares' => ['count' => 4], 'likes' => ['summary' => ['total_count' => 30]], 'comments' => ['summary' => ['total_count' => 2]]]),
+        'graph.facebook.com/*/ig-user*' => Http::response(['followers_count' => 1234]),
+        'graph.facebook.com/*/fb-page*' => Http::response(['error' => ['message' => 'Page not found']], 400),
     ]);
 
-    $this->artisan('posts:insights')->expectsOutputToContain('Read back 1 posts.')->assertSuccessful();
+    $this->artisan('posts:insights')->expectsOutputToContain('Read back 1 posts and 1 follower counts.')->expectsOutputToContain('Almyra facebook followers: Meta: Page not found')->assertSuccessful();
+    $this->artisan('posts:insights')->assertSuccessful(); // the same day again: one row, not two
+
+    expect(FollowerSnapshot::all()->map(fn ($s) => [$s->account->platform, $s->taken_on->toDateString(), $s->followers])->all())->toBe([['instagram', '2026-11-03', 1234]]);
 
     $metrics = $this->post->fresh()->metrics;
     expect($metrics['instagram'])->toMatchArray(['reach' => 1200, 'views' => 3000, 'likes' => 80, 'comments' => 6, 'saved' => 15, 'shares' => null])
@@ -42,6 +48,9 @@ test('the monthly report puts the real numbers under Claude\'s reading and lands
     Post::factory()->create(['client_id' => $this->client->id, 'state' => PostState::Published, 'scheduled_at' => '2026-11-02 10:00', 'platforms' => ['facebook'], 'pillar' => 'offers']); // next month, not counted
     $account = $this->client->accounts()->create(['platform' => 'google_business', 'external_id' => 'g', 'name' => 'Almyra', 'access_token' => 't']);
     $this->client->comments()->create(['account_id' => $account->id, 'platform' => 'google_business', 'external_id' => 'r1', 'text' => 'Great', 'rating' => 4, 'posted_at' => '2026-10-22 10:00']);
+    $ig = $this->client->accounts->firstWhere('platform', 'instagram');
+    $ig->snapshots()->createMany([['taken_on' => '2026-09-30', 'followers' => 1000], ['taken_on' => '2026-10-15', 'followers' => 1050], ['taken_on' => '2026-10-31', 'followers' => 1100], ['taken_on' => '2026-11-02', 'followers' => 1300]]);
+    $this->client->accounts->firstWhere('platform', 'facebook')->snapshots()->create(['taken_on' => '2026-10-20', 'followers' => 400]);
 
     $report = (new MonthlyReport(fakeClaude("## Summary\n- Reach grew on Instagram.\n\n## What worked\n\n## What to change\n\n## Next month\n")))->generate($this->client, CarbonImmutable::parse('2026-10-01'));
 
@@ -52,6 +61,7 @@ test('the monthly report puts the real numbers under Claude\'s reading and lands
         ->toContain('| place | 25 | 100 | 1 |', '| offers | 20 | 0 | 0 |')
         ->toContain('2 posts planned: 1 Published, 1 Failed.')
         ->toContain('0 comments, 1 still unanswered. 1 Google reviews, average 4 stars.')
+        ->toContain('| instagram | 1100 | +100 |', '| facebook | 400 | - |')
         ->not->toContain('2026-11-02');
     $prompt = json_decode((string) claudeRequests()[0]['request']->getBody(), true)['messages'][0]['content'];
     expect($prompt)->toContain('for October 2026', '| instagram | 1200 |')

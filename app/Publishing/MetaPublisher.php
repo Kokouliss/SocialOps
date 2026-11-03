@@ -180,6 +180,12 @@ class MetaPublisher implements Publisher
         return $out;
     }
 
+    /** Followers of the Instagram account or the Page today. */
+    public function followers(Account $account): int
+    {
+        return (int) ($this->get("/{$account->external_id}", ['fields' => 'followers_count', 'access_token' => $account->access_token])['followers_count'] ?? 0);
+    }
+
     public function withdraw(Account $account, string $externalId): void
     {
         throw_if($account->platform === 'instagram', new ManualNeeded('Instagram has no API to delete a post. Delete it in the Instagram app.'));
