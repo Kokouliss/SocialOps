@@ -28,7 +28,6 @@ class DraftBatch
         $profile = $request->profile;
         foreach ($posts as $i => &$post) {
             $progress('Drafting captions '.($i + 1).'/'.count($posts));
-            $post['name'] = PostName::for($profile, $post);
             $post['captions'] = $this->captions->draft($profile, [
                 'platforms' => $post['platforms'],
                 'format' => $post['format'],
