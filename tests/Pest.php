@@ -1,5 +1,9 @@
 <?php
 
+use Anthropic\Client;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Psr7\Response;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -44,7 +48,26 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+/** A Claude client whose replies are canned: one text block per call, in order. */
+function fakeClaude(string ...$texts): Client
 {
-    // ..
+    $responses = array_map(fn (string $text) => new Response(200, ['Content-Type' => 'application/json'], json_encode([
+        'id' => 'msg_test',
+        'type' => 'message',
+        'role' => 'assistant',
+        'model' => 'claude-opus-5-5',
+        'content' => [['type' => 'text', 'text' => $text]],
+        'stop_reason' => 'end_turn',
+        'stop_details' => null,
+        'stop_sequence' => null,
+        'usage' => [
+            'input_tokens' => 1, 'output_tokens' => 1, 'cache_creation' => null, 'cache_creation_input_tokens' => null,
+            'cache_read_input_tokens' => null, 'inference_geo' => null, 'output_tokens_details' => null,
+            'server_tool_use' => null, 'service_tier' => 'standard', 'speed' => 'standard',
+        ],
+    ])), $texts);
+
+    $handler = HandlerStack::create(new MockHandler($responses));
+
+    return new Client(apiKey: 'test', requestOptions: ['transporter' => new GuzzleHttp\Client(['handler' => $handler])]);
 }
