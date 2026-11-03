@@ -59,6 +59,7 @@ saved_replies: []       # answers you give often, offered in the comment inbox, 
                         # keywords (optional): a new Instagram or Facebook comment containing one of them gets that reply at once; complaints, questions and anything negative wait for a human
 signatures: {}          # a line added under every caption of that platform at publish time, e.g. { facebook: "Κρατήσεις / Bookings: +30 28210 00000", google_business: "almyra.gr" }
 fields: {}              # placeholders for captions, signatures and the first comment, written as {{phone}} and filled at publish time, e.g. { phone: "+30 28210 00000", site: almyra.gr, booking: "https://almyra.gr/book" }
+webhooks: []            # HTTPS URLs that get a signed JSON POST when a post is published, fails or needs a human (docs/api.md), e.g. [{ url: "https://example.com/hook", secret: "shared-secret", events: [post.published] }]
 utm: false              # true adds utm_source=<platform>&utm_medium=social&utm_campaign=<post name> to every link in captions, first comments and Google buttons at publish time (links that already carry utm_ are left alone)
 
 key_dates:

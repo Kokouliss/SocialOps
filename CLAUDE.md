@@ -64,6 +64,7 @@ Out of MVP: CSV import, evergreen queues, Canva autofill, auto-reports, auto-Ree
 - UTM: `utm: true` in the profile makes `Client::tagLinks()` add `utm_source=<platform>&utm_medium=social&utm_campaign=<post name>` to every link in captions, first comments and Google buttons at publish time; links that already carry `utm_` are left alone.
 - Trend brief and batch plan prompts: `prompts/trend-research.md`, `prompts/content-plan.md`. `php artisan content:plan <client> --posts=N` drafts a reviewable batch; `--brief <file>` skips the web research and uses a pasted brief instead. The "Plan with Claude" form on the client page runs the same command as a queued job (`App\Jobs\PlanContentBatch`) and mails the outcome.
 - Monthly report to the client: "Email to client" on the report page, or `approval.email_monthly_report: true` for the job to do it, mails the approvers a signed 30-day link (`/reports/{id}/client`, guest layout) with the month's numbers attached as CSV (`MonthlyReport::mail()`, `MonthlyReport::csv()`).
+- JSON API and webhooks (`docs/api.md`): bearer tokens from the Staff page (`api_tokens`, hashed, optionally limited to one client, `App\Http\Middleware\ApiAuth`), `routes/api.php` reads clients, posts and the inbox, creates Drafts through the same `PostRequest` as the form and answers comments; it never publishes. The profile's `webhooks` list gets a signed JSON POST (`App\Webhooks\Webhooks`, `SendWebhook` job, `X-SocialOps-Signature` HMAC) on `post.published`, `post.failed`, `post.manual_needed`.
 
 ## Files
 - `docs/research.md`: full research report with sources (tools, APIs, workflow, AI, architecture, risks).
@@ -72,4 +73,5 @@ Out of MVP: CSV import, evergreen queues, Canva autofill, auto-reports, auto-Ree
 - `config/clients/example.yaml`: brand profile template.
 - `prompts/caption-draft.md`: caption drafting prompt.
 - `docs/pilot-setup.md`: one-time setup of the Meta, TikTok and Google apps, the server and the first client.
+- `docs/api.md`: the JSON API and the outgoing webhooks.
 - `.claude/commands/`: `/kickoff` (first session), `/next` (continue the roadmap).

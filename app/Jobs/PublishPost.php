@@ -11,6 +11,7 @@ use App\Publishing\ManualNeeded;
 use App\Publishing\MetaPublisher;
 use App\Publishing\Publishers;
 use App\Publishing\PublishFailed;
+use App\Webhooks\Webhooks;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
@@ -65,11 +66,13 @@ class PublishPost implements ShouldQueue
             $post->transitionTo(PostState::ManualNeeded);
             Mail::to(self::whoToTell($post))->send($mail = new PostNeedsHuman($post, 'manual'));
             Slack::mailed($mail, route('posts.edit', $post));
+            Webhooks::post($post, 'post.manual_needed');
 
             return;
         }
         $post->forceFill(['publish_error' => null])->save();
         $post->transitionTo(PostState::Published);
+        Webhooks::post($post, 'post.published');
         if ($next = $post->spawnRepeat()) {
             Slack::send("{$post->client->name}: next {$post->settings['repeat']} repeat drafted, {$next->name}, send it to review\n".route('posts.edit', $next));
         }
@@ -100,6 +103,7 @@ class PublishPost implements ShouldQueue
         $post->transitionTo(PostState::Failed);
         Mail::to(self::whoToTell($post))->send($mail = new PostNeedsHuman($post, 'failed'));
         Slack::mailed($mail, route('posts.edit', $post));
+        Webhooks::post($post, 'post.failed');
     }
 
     public static function whoToTell(Post $post): string

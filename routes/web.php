@@ -80,6 +80,8 @@ Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
     Route::delete('/staff/{user}', [StaffController::class, 'destroy'])->name('staff.destroy');
     Route::patch('/staff/{user}', [StaffController::class, 'update'])->name('staff.update');
+    Route::post('/staff/tokens', [StaffController::class, 'tokenStore'])->name('staff.tokens.store');
+    Route::delete('/staff/tokens/{token}', [StaffController::class, 'tokenDestroy'])->name('staff.tokens.destroy');
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

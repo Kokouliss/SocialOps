@@ -112,6 +112,30 @@ class Post extends Model
         return self::handles($this->settings['instagram']['collaborators'] ?? null);
     }
 
+    /** The post as the JSON API and the webhooks show it (docs/api.md). */
+    public function toApiArray(): array
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'client_id' => $this->client_id,
+            'state' => $this->state->value,
+            'platforms' => $this->platforms,
+            'format' => $this->format,
+            'pillar' => $this->pillar,
+            'brief' => $this->brief,
+            'scheduled_at' => $this->scheduled_at?->toIso8601String(),
+            'published_at' => $this->published_at?->toIso8601String(),
+            'external_ids' => $this->external_ids,
+            'publish_error' => $this->publish_error,
+            'metrics' => $this->metrics,
+            'settings' => $this->settings,
+            'captions' => $this->variants->groupBy('platform')->map(fn ($vs) => $vs->keyBy('lang')->map(fn (PostVariant $v) => ['caption' => $v->caption, 'alt_text' => $v->alt_text, 'hashtags' => $v->hashtags ?? []])),
+            'assets' => $this->assets->map(fn (Asset $a) => ['id' => $a->id, 'name' => $a->name, 'kind' => $a->kind])->values(),
+            'url' => route('posts.edit', $this),
+        ];
+    }
+
     public function altTextFor(string $platform): ?string
     {
         return $this->variants->where('platform', $platform)->whereNotNull('alt_text')->first()?->alt_text;

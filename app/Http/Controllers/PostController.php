@@ -40,9 +40,17 @@ class PostController extends Controller
 
     public function store(PostRequest $request, Client $client): RedirectResponse
     {
+        $post = $this->createPost($request, $client);
+
+        return redirect()->route('posts.edit', $post)->with('status', 'post-created');
+    }
+
+    /** A new Draft from a validated post request, with its variants and assets; the form and the JSON API share it. */
+    public function createPost(PostRequest $request, Client $client): Post
+    {
         $data = $request->validated();
 
-        $post = DB::transaction(function () use ($request, $client, $data) {
+        return DB::transaction(function () use ($request, $client, $data) {
             $date = ($data['scheduled_at'] ?? null) ? Carbon::parse($data['scheduled_at']) : now(); // absent when the form is posted without the field
             $post = $client->posts()->create([
                 'name' => PostNamer::name($client, $data['platforms'], $data['format'], $data['pillar'] ?? null, $date),
@@ -53,15 +61,13 @@ class PostController extends Controller
                 'brief' => $data['brief'] ?? null,
                 'settings' => $data['settings'] ?? null,
                 'scheduled_at' => $data['scheduled_at'] ?? null,
-                'created_by' => $request->user()->id,
+                'created_by' => $request->user()?->id,
             ]);
             $post->variants()->createMany($request->variantRows());
             $post->assets()->sync($this->assetPositions($data['assets'] ?? []));
 
             return $post;
         });
-
-        return redirect()->route('posts.edit', $post)->with('status', 'post-created');
     }
 
     /** The CSV template for a bulk import: the client's own columns and one example row. */
