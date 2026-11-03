@@ -58,6 +58,7 @@ Out of MVP: CSV import, evergreen queues, Canva autofill, auto-reports, auto-Ree
 - Instagram collab posts: `settings.instagram.collaborators` on the post form (up to 3 usernames, feed, carousel and Reel) goes on the media container as `collaborators`; the invited accounts accept in the app. Not for Stories.
 - Listening report prompt: `prompts/listening-report.md` (`App\Reporting\ListeningReport`, weekly `listening:report`: the profile's `research.hashtags_to_watch` through the Instagram Hashtag Search API, `research.competitors` through Business Discovery, both via the client's connected Instagram account; no scraping, ever).
 - Monthly report prompt: `prompts/monthly-report.md` (`App\Reporting\MonthlyReport`: numbers built in PHP from `posts.metrics`, read back daily by `posts:insights`; Claude writes the reading).
+- UTM: `utm: true` in the profile makes `Client::tagLinks()` add `utm_source=<platform>&utm_medium=social&utm_campaign=<post name>` to every link in captions, first comments and Google buttons at publish time; links that already carry `utm_` are left alone.
 - Trend brief and batch plan prompts: `prompts/trend-research.md`, `prompts/content-plan.md`. `php artisan content:plan <client> --posts=N` drafts a reviewable batch; `--brief <file>` skips the web research and uses a pasted brief instead. The "Plan with Claude" form on the client page runs the same command as a queued job (`App\Jobs\PlanContentBatch`) and mails the outcome.
 
 ## Files

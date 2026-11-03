@@ -13,7 +13,7 @@ use Symfony\Component\Yaml\Yaml;
 /** Parses and validates a brand profile written in the config/clients/example.yaml format. */
 final class ClientProfile
 {
-    public const SECTIONS = ['accounts', 'languages', 'extra_languages', 'voice', 'pillars', 'hashtags', 'research', 'approval', 'slots', 'saved_replies', 'signatures', 'fields', 'key_dates'];
+    public const SECTIONS = ['accounts', 'languages', 'extra_languages', 'voice', 'pillars', 'hashtags', 'research', 'approval', 'slots', 'saved_replies', 'signatures', 'fields', 'utm', 'key_dates'];
 
     public const PLATFORMS = ['instagram', 'facebook', 'tiktok', 'google_business'];
 
@@ -26,7 +26,7 @@ final class ClientProfile
      */
     public static function parse(string $yaml): array
     {
-        $data = Arr::only(self::parseYaml($yaml), self::SECTIONS) + ['extra_languages' => [], 'slots' => [], 'saved_replies' => [], 'signatures' => [], 'fields' => [], 'key_dates' => [], 'research' => ['sources' => [], 'excluded_domains' => [], 'excluded_topics' => []]];
+        $data = Arr::only(self::parseYaml($yaml), self::SECTIONS) + ['extra_languages' => [], 'slots' => [], 'saved_replies' => [], 'signatures' => [], 'fields' => [], 'utm' => false, 'key_dates' => [], 'research' => ['sources' => [], 'excluded_domains' => [], 'excluded_topics' => []]];
 
         $validator = Validator::make($data, self::rules());
 
@@ -153,6 +153,7 @@ final class ClientProfile
             'signatures.*' => ['nullable', 'string', 'max:300'],
             'fields' => ['present', 'array', 'max:50'],
             'fields.*' => ['nullable', 'string', 'max:300'],
+            'utm' => ['present', 'boolean'],
             'key_dates' => ['present', 'array'],
             'key_dates.*.date' => ['required', 'date'],
             'key_dates.*.label' => ['required', 'string'],
