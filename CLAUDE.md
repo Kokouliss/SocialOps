@@ -7,7 +7,7 @@ Goal: cut time from every step: asset intake, captions, translation, approvals, 
 
 ## Status
 - Research done (November 2026): `docs/research.md`. Read it before proposing architecture or features.
-- Scaffold and clients CRUD done. Next: the first unticked Phase 1 item in `docs/roadmap.md`.
+- Scaffold, clients CRUD and asset inbox done. Next: the first unticked Phase 1 item in `docs/roadmap.md`.
 - Decisions taken so far and decisions still open: `docs/decisions.md`. **Ask the user about open decisions before writing code that depends on them.**
 
 ## Core idea
@@ -45,7 +45,7 @@ Out of MVP: CSV import, evergreen queues, Canva autofill, auto-reports, auto-Ree
 `composer install && cp .env.example .env && php artisan key:generate && php artisan migrate && npm install && npm run build`. Create a staff login with `php artisan staff:create "Name" email` (no public registration). Run `php artisan test` and `vendor/bin/pint --test` before every commit; CI runs both.
 
 ## Conventions
-- Asset/post naming: `CLIENT_YYYYMMDD_PLATFORM_FORMAT_PILLAR_LANG_v#`, e.g. `ALMYRA_20270512_IG_REEL_FOOD_EL-EN_v2`. Enforced automatically on upload.
+- Asset/post naming: `CLIENT_YYYYMMDD_PLATFORM_FORMAT_PILLAR_LANG_v#`, e.g. `ALMYRA_20270512_IG_REEL_FOOD_EL-EN_v2`. Enforced automatically on upload; raw inbox uploads use `ANY` for the platform and `IMG`/`VID` for the format (e.g. `ALMYRA_20261103_ANY_IMG_FOOD_EL-EN_v1.jpg`) because platform and post format are decided later on the post.
 - Client brand profiles live in the `clients` table (`profile` JSON column in the `example.yaml` shape, `Client::toProfileArray()` returns the full shape). `config/clients/<slug>.yaml` files are imported with `php artisan clients:import`; `example.yaml` stays the template. Every client-owned table carries `client_id`.
 - Caption prompt: `prompts/caption-draft.md`.
 
