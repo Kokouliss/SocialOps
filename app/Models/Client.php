@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Storage;
  * A client account. Every other client-owned table (accounts, assets, posts)
  * carries a client_id so data stays isolated per client.
  */
-#[Fillable(['slug', 'code', 'name', 'type', 'location', 'profile'])]
+#[Fillable(['slug', 'code', 'name', 'type', 'location', 'profile', 'status', 'owner', 'priority', 'plan_due', 'posts_per_week', 'stories_per_week', 'tiktoks_per_month', 'pending', 'links'])]
 class Client extends Model
 {
     /** @use HasFactory<ClientFactory> */
@@ -25,9 +25,14 @@ class Client extends Model
 
     public const TYPES = ['villa', 'hotel', 'beach_bar', 'restaurant', 'brand'];
 
+    /** Where the client stands for the agency, on the Clients board. */
+    public const STATUSES = ['active' => 'Active', 'waiting_dates' => 'Client tells us when', 'waiting' => 'Waiting', 'seasonal' => 'Seasonal', 'stopped' => 'Stopped'];
+
+    public const PRIORITIES = ['low' => 'Low', 'medium' => 'Medium', 'high' => 'High'];
+
     protected function casts(): array
     {
-        return ['profile' => 'array'];
+        return ['profile' => 'array', 'plan_due' => 'date', 'links' => 'array'];
     }
 
     public function assets(): HasMany

@@ -22,7 +22,8 @@ class ClientController extends Controller
             'posts as failed_count' => fn ($q) => $q->whereIn('state', [PostState::Failed, PostState::ManualNeeded]),
             'comments as open_comments_count' => fn ($q) => $q->open(),
             'accounts as expiring_count' => fn ($q) => $q->whereNotIn('platform', ['canva', 'dropbox'])->where('token_expires_at', '<', now()->addDays(7)),
-        ])->get();
+        ])->withMax(['posts as scheduled_until' => fn ($q) => $q->whereIn('state', [PostState::Approved, PostState::Scheduled])], 'scheduled_at')
+            ->reorder()->orderByRaw('plan_due is null')->orderBy('plan_due')->orderBy('name')->get(); // the soonest plan due first
 
         return view('clients.index', ['clients' => $clients]);
     }
