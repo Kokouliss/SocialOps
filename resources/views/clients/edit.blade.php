@@ -101,12 +101,38 @@
                 <x-input-error class="mt-2" :messages="$errors->get('csv')" />
             </div>
 
-            <div class="bg-white p-6 shadow-sm sm:rounded-lg mt-6">
+            <div id="bio" class="bg-white p-6 shadow-sm sm:rounded-lg mt-6">
                 <h3 class="font-semibold text-lg text-gray-800">{{ __('Link in bio') }}</h3>
                 <p class="mt-1 text-sm text-gray-600">{{ __('Put this address in the Instagram and TikTok bio. The buttons come from the profile placeholders that hold a link, a phone number or an e-mail (booking, site, menu, phone, whatsapp…) and from the accounts.') }}</p>
                 <div class="mt-3 flex gap-2">
                     <x-text-input type="text" class="block w-full font-mono text-xs" :value="route('bio', $client)" readonly onclick="this.select()" />
                     <a href="{{ route('bio', $client) }}" target="_blank" class="inline-flex items-center px-3 py-1 border rounded text-xs hover:bg-gray-100">{{ __('Open') }}</a>
+                </div>
+                <div class="mt-4 border-t pt-4">
+                    <p class="text-sm text-gray-600">{{ __('Or put the same buttons on a page of the WordPress site of the client: connect with a WordPress user that may edit pages and an application password made for Social Ops (WordPress → Users → Profile → Application Passwords), then press Publish; press it again after changing the profile.') }}</p>
+                    @if (session('status') === 'wordpress-published')
+                        <p class="mt-2 text-sm text-green-600">{{ __('The page is on WordPress.') }}</p>
+                    @elseif (session('status') === 'wordpress-connected')
+                        <p class="mt-2 text-sm text-green-600">{{ __('WordPress connected. Press Publish to make the page.') }}</p>
+                    @elseif (session('status') === 'wordpress-disconnected')
+                        <p class="mt-2 text-sm text-green-600">{{ __('WordPress disconnected.') }}</p>
+                    @endif
+                    <x-input-error class="mt-2" :messages="$errors->wordpress->all()" />
+                    @if ($wordpress)
+                        <p class="mt-2 text-sm text-gray-800">{{ __('Connected to :site as :user', ['site' => $wordpress->name, 'user' => $wordpress->meta['user']]) }}@if ($wordpress->meta['url'] ?? null) · <a href="{{ $wordpress->meta['url'] }}" target="_blank" class="underline">{{ $wordpress->meta['url'] }}</a>@endif</p>
+                        <div class="mt-2 flex gap-2">
+                            <form method="post" action="{{ route('wordpress.publish', $client) }}">@csrf<x-primary-button>{{ ($wordpress->meta['page_id'] ?? null) ? __('Update on WordPress') : __('Publish to WordPress') }}</x-primary-button></form>
+                            <form method="post" action="{{ route('wordpress.disconnect', $client) }}">@csrf @method('delete')<button type="submit" class="inline-flex items-center px-3 py-2 border rounded text-xs hover:bg-gray-100">{{ __('Disconnect') }}</button></form>
+                        </div>
+                    @else
+                        <form method="post" action="{{ route('wordpress.connect', $client) }}" class="mt-2 grid gap-2 sm:grid-cols-3">
+                            @csrf
+                            <div><x-input-label for="wp-site" :value="__('Site address')" /><x-text-input id="wp-site" name="site" type="text" class="mt-1 block w-full" :value="old('site')" placeholder="https://client.gr" required /></div>
+                            <div><x-input-label for="wp-user" :value="__('WordPress user')" /><x-text-input id="wp-user" name="user" type="text" class="mt-1 block w-full" :value="old('user')" required /></div>
+                            <div><x-input-label for="wp-password" :value="__('Application password')" /><x-text-input id="wp-password" name="password" type="password" class="mt-1 block w-full" required autocomplete="off" /></div>
+                            <div class="sm:col-span-3"><x-primary-button>{{ __('Connect') }}</x-primary-button></div>
+                        </form>
+                    @endif
                 </div>
             </div>
         </div>
