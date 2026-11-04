@@ -44,6 +44,9 @@ class StaffController extends Controller
     {
         abort_if($user->is($request->user()), 422, 'You cannot limit your own login.');
         $user->update(['client_ids' => $this->clientIds($request)]);
+        if ($request->user()->is_admin) {
+            $user->forceFill(['is_admin' => $request->boolean('is_admin')])->save();
+        }
 
         return redirect()->route('staff.index')->with('status', 'login-updated');
     }
@@ -66,7 +69,7 @@ class StaffController extends Controller
     public function finishSetup(Request $request)
     {
         abort_unless(User::count() === 0, 404);
-        auth()->login($this->create($request));
+        auth()->login(tap($this->create($request), fn (User $user) => $user->forceFill(['is_admin' => true])->save())); // the first login owns the Settings page
 
         return redirect()->route('dashboard');
     }

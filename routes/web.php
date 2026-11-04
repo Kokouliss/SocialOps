@@ -17,6 +17,7 @@ use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\WordPressController;
 use App\Http\Middleware\LimitClients;
@@ -85,6 +86,8 @@ Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::get('/clients/{client}/posts/export.csv', [CalendarController::class, 'csv'])->name('posts.csv');
     Route::get('/clients/{client}/posts/import.csv', [PostController::class, 'importTemplate'])->name('posts.import.template');
     Route::post('/clients/{client}/posts/import', [PostController::class, 'import'])->name('posts.import');
+    Route::get('/settings', [SettingsController::class, 'edit'])->middleware('can:admin')->name('settings.edit');
+    Route::post('/settings', [SettingsController::class, 'update'])->middleware('can:admin')->name('settings.update');
     Route::get('/staff', [StaffController::class, 'index'])->name('staff.index');
     Route::post('/staff', [StaffController::class, 'store'])->name('staff.store');
     Route::delete('/staff/{user}', [StaffController::class, 'destroy'])->name('staff.destroy');

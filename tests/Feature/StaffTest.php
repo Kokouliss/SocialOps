@@ -11,7 +11,8 @@ test('setup creates the first login and then disappears', function () use ($inpu
 
     $this->post('/setup', $input)->assertRedirect('/dashboard');
     $this->assertAuthenticated();
-    expect(User::firstOrFail()->email_verified_at)->not->toBeNull();
+    expect(User::firstOrFail()->email_verified_at)->not->toBeNull()
+        ->and(User::firstOrFail()->is_admin)->toBeTrue();
 
     $this->get('/setup')->assertNotFound();
     $this->post('/setup', ['email' => 'x@example.com'] + $input)->assertNotFound();
