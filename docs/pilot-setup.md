@@ -136,12 +136,12 @@ A subdomain of the agency domain is enough, for example `social.AGENCY.gr`; the 
    ```
    Then open `https://SUB/setup` in the browser and create the first staff login (the page disappears once a user exists); add colleagues on the Staff page.
    Front-end assets: if `node -v` works over SSH (Plesk's Node.js extension), run `npm ci && npm run build` there; otherwise run those two commands on your PC and upload the `public/build` folder with File Manager.
-9. **Scheduled Tasks → Add Task**, type *Run a command*, cron style `* * * * *` (every minute), two tasks:
+9. **Scheduled Tasks → Add Task**, type *Run a command*, cron style `* * * * *` (every minute), two tasks. Write the app folder's full path, the one that holds `artisan` (for example `/var/www/vhosts/AGENCY.gr/SUB.AGENCY.gr`), in place of ROOT:
    ```
    /opt/plesk/php/8.3/bin/php ROOT/artisan schedule:run
    /opt/plesk/php/8.3/bin/php ROOT/artisan queue:work --stop-when-empty --max-time=55
    ```
-   The first runs `posts:publish-due`, `reviews:remind` and `accounts:check-tokens`; the second publishes the queued posts.
+   The first runs the scheduled commands (publishing due posts, reminders, token checks, the hourly folder pulls); the second works the queue: planning, Reels, imports, mails. Plesk's PHP prints two harmless `memcached.so` warnings before the real output; "Could not open input file" means the path is wrong. The Jobs page in the app shows waiting jobs with their attempts: a job that stays at 0 attempts means this task is not running.
 10. Updates: Git → *Pull now* (or push to `main` with auto-deploy on) followed by
    ```
    composer install --no-dev --optimize-autoloader && php artisan migrate --force && php artisan optimize
