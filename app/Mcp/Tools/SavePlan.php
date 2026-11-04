@@ -62,6 +62,7 @@ class SavePlan extends Tool
         return Response::json([
             'drafts' => count($result['posts']),
             'review_sheet' => route('reports.show', $sheet),
+            'word' => route('reports.word', $sheet),
             'posts' => array_map(fn ($p) => ['date' => $p['date'], 'name' => $p['name'], 'url' => $p['url']], $result['posts']),
             'next' => 'The team reviews the Drafts in the app, sends them for approval and posts them by hand.',
         ]);

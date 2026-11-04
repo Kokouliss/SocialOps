@@ -667,5 +667,13 @@
     "What the posts are about (optional)": "Το θέμα των αναρτήσεων (προαιρετικό)",
     "e.g. December: gifts, Christmas opening hours, the New Year party": "π.χ. Δεκέμβριος: δώρα, ωράριο Χριστουγέννων, το πάρτι της Πρωτοχρονιάς",
     "Copied": "Αντιγράφηκε",
-    "Copy the request": "Αντιγραφή αιτήματος"
+    "Copy the request": "Αντιγραφή αιτήματος",
+    ":month posts :year": "Αναρτήσεις :month :year",
+    "Suggested topics of :month for :client": "Προτεινόμενες θεματολογίες :month για :client",
+    "Trend:": "Τάση:",
+    "Why now:": "Γιατί τώρα:",
+    "Assets:": "Υλικό:",
+    "Caption:": "Λεζάντα:",
+    "Pillar:": "Πυλώνας:",
+    "Download Word": "Λήψη Word"
 }
