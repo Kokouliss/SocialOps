@@ -23,7 +23,7 @@
                         <label class="flex items-center gap-3 text-sm">
                             <input type="checkbox" name="posts[]" value="{{ $post->id }}" class="rounded border-gray-300" />
                             <span class="font-mono">{{ $post->name }}</span>
-                            <span class="px-2 py-0.5 rounded text-xs bg-gray-100">{{ $post->state->label() }}</span>
+                            <x-state-badge :state="$post->state" />
                             <span class="text-gray-500">{{ $post->scheduled_at?->format('D j M, H:i') ?? __('not scheduled') }}</span>
                         </label>
                     @empty

@@ -95,6 +95,14 @@
             </div>
             @endif
             @include('calendar._list', ['class' => $view === 'list' ? '' : 'sm:hidden'])
+
+            <p class="flex flex-wrap items-center gap-1.5 bg-white p-3 shadow-sm sm:rounded-lg text-xs text-gray-500" title="{{ __('Click a state to show only those posts; click it again to show all.') }}">
+                {{ __('States') }}:
+                @foreach (\App\Posts\PostState::cases() as $state)
+                    @php($on = ($filters['state'] ?? '') === $state->value)
+                    <a href="{{ route('calendar', [...$filters, 'state' => $on ? null : $state->value, 'view' => $view, 'client' => $clientSlug, 'date' => $date->toDateString()]) }}"><x-state-badge :state="$state" :class="$on ? 'ring-2 ring-gray-800' : ''" /></a>
+                @endforeach
+            </p>
         </div>
     </div>
 

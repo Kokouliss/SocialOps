@@ -39,7 +39,7 @@
                             <h3 class="font-semibold text-gray-900">{{ __('Due within 7 days, not sent for approval yet') }}</h3>
                             <ul class="mt-2 space-y-1">
                                 @foreach ($drafts as $post)
-                                    <li><span class="font-medium text-gray-700">{{ $post->scheduled_at->translatedFormat('D j M H:i') }}</span> {!! $line($post) !!} · {{ __($post->state->label()) }}</li>
+                                    <li><span class="font-medium text-gray-700">{{ $post->scheduled_at->translatedFormat('D j M H:i') }}</span> {!! $line($post) !!} <x-state-badge :state="$post->state" /></li>
                                 @endforeach
                             </ul>
                         </div>
@@ -50,7 +50,7 @@
                             <h3 class="font-semibold text-gray-900">{{ __('Failed or waiting for a human') }}</h3>
                             <ul class="mt-2 space-y-1">
                                 @foreach ($stuck as $post)
-                                    <li><a class="text-brand-600 hover:underline" href="{{ route('posts.edit', $post) }}">{{ $post->name }}</a> · {{ $post->state->label() }} <span class="text-red-600">{{ Str::limit($post->publish_error, 120) }}</span></li>
+                                    <li><a class="text-brand-600 hover:underline" href="{{ route('posts.edit', $post) }}">{{ $post->name }}</a> <x-state-badge :state="$post->state" /> <span class="text-red-600">{{ Str::limit($post->publish_error, 120) }}</span></li>
                                 @endforeach
                             </ul>
                         </div>
