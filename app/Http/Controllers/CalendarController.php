@@ -22,9 +22,11 @@ class CalendarController extends Controller
     {
         [$view, $date, $start, $end] = $this->range($request);
         $clientSlug = $request->input('client');
+        $filters = $request->only(['state', 'platform', 'pillar']);
 
         $posts = $request->user()->restrict(Post::with('client', 'assets'))
             ->when($clientSlug, fn ($q) => $q->whereRelation('client', 'slug', $clientSlug))
+            ->filter($filters)
             ->whereBetween('scheduled_at', [$start, $end])
             ->orderBy('scheduled_at')
             ->get()
@@ -32,6 +34,7 @@ class CalendarController extends Controller
 
         $unscheduled = $request->user()->restrict(Post::with('client', 'assets'))
             ->when($clientSlug, fn ($q) => $q->whereRelation('client', 'slug', $clientSlug))
+            ->filter($filters)
             ->whereNull('scheduled_at')
             ->latest()
             ->get();
@@ -49,6 +52,8 @@ class CalendarController extends Controller
         }
 
         return view('calendar.index', [
+            'filters' => $filters,
+            'pillars' => ($client ? collect([$client]) : $clients)->flatMap(fn ($c) => array_keys($c->profile['pillars'] ?? []))->unique()->sort()->values(),
             'marks' => $marks,
             'view' => $view,
             'date' => $date,
