@@ -38,7 +38,7 @@
                                 <td><a href="{{ route('reports.show', $report) }}" class="text-brand-600 hover:underline">{{ $report->title }}</a></td>
                             </tr>
                         @empty
-                            <tr><td colspan="3" class="py-2 text-gray-500">{{ __('No reports yet. Run "Plan with Claude" on the client page.') }}</td></tr>
+                            <tr><td colspan="3" class="py-2"><x-empty-state :action="__('Plan with Claude')" :href="route('clients.edit', $client)">{{ __('No reports yet. "Monthly report" above writes the first one from last month\'s numbers; "Plan with Claude" on the client page files its trend brief and content plan here.') }}</x-empty-state></td></tr>
                         @endforelse
                     </tbody>
                 </table>

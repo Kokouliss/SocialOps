@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 test('the dashboard lists what needs a human, each with a link, and says so when nothing does', function () {
     $this->travelTo('2026-11-10 10:00:00');
     $me = User::factory()->create();
-    $this->actingAs($me)->get('/dashboard')->assertOk()->assertSee('Nothing needs you right now');
+    $this->actingAs($me)->get('/dashboard')->assertOk()->assertSee('No clients yet');
 
     $client = Client::factory()->create(['name' => 'Almyra']);
     Post::factory()->create(['client_id' => $client->id, 'name' => 'DUE_TODAY', 'state' => PostState::Scheduled, 'scheduled_at' => '2026-11-10 18:00']);
