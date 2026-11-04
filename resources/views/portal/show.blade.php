@@ -26,7 +26,7 @@
                     · {{ str_replace('_', ' ', $post->format) }}
                 </p>
                 @foreach ($post->platforms as $platform)
-                    @include('portal._preview', ['post' => $post, 'platform' => $platform])
+                    @include('portal._preview', ['post' => $post, 'platform' => $platform, 'client' => $review->client, 'assetUrl' => fn ($a) => $review->assetUrl($a)])
                 @endforeach
 
                 @if ($post->pivot->decision)

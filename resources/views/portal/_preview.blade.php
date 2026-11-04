@@ -1,44 +1,49 @@
-{{-- A lookalike of the post on one network: enough for the client to judge image, text and hashtags. --}}
+{{-- A lookalike of the post on one network: enough for the client to judge image, text and hashtags. Needs $post, $platform, $client and $assetUrl (closure); $live (the staff form) renders a line per language so the form can fill it as you type. --}}
 @php($asset = $post->assets->first())
 @php($vertical = in_array($post->format, ['reel', 'story', 'tiktok_video', 'tiktok_photos']))
 @php($labels = ['instagram' => 'Instagram', 'facebook' => 'Facebook', 'tiktok' => 'TikTok', 'google_business' => 'Google Business Profile'])
+@php($variants = $post->variants->where('platform', $platform)->keyBy('lang'))
+@php($langs = ($live ?? false) ? array_merge($client->profile['languages'], $client->profile['extra_languages'] ?? []) : $variants->keys()->all())
+@php($textFirst = $platform === 'facebook' || $platform === 'google_business')
+@php($hashtags = fn ($v) => collect($v?->hashtags ?? [])->map(fn ($h) => '#'.ltrim($h, '#'))->join(' '))
 <div class="rounded-lg border border-gray-200 overflow-hidden text-sm {{ $vertical ? 'bg-black text-white' : 'bg-white' }}">
     <div class="flex items-center gap-2 px-3 py-2">
-        <span class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold text-gray-700">{{ mb_substr($review->client->name, 0, 1) }}</span>
-        <span class="font-semibold">{{ $review->client->name }}</span>
+        <span class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold text-gray-700">{{ mb_substr($client->name, 0, 1) }}</span>
+        <span class="font-semibold">{{ $client->name }}</span>
         @if ($platform === 'instagram' && $post->collaborators())
             <span class="text-xs opacity-60">{{ __('with') }} {{ collect($post->collaborators())->map(fn ($h) => "@$h")->join(', ') }}</span>
         @endif
         <span class="ml-auto text-xs opacity-60">{{ $labels[$platform] }}</span>
     </div>
-    @foreach ($post->variants->where('platform', $platform) as $variant)
-        @if ($platform === 'facebook' || $platform === 'google_business')
-            <div class="px-3 pb-2 whitespace-pre-line"><span class="text-xs uppercase opacity-60 mr-1">{{ $variant->lang }}</span>{{ $review->client->substitute($variant->caption) }}</div>
+    @if ($textFirst)
+        @foreach ($langs as $lang)
+            <div class="px-3 pb-2 whitespace-pre-line {{ trim($variants[$lang]->caption ?? '') === '' ? 'hidden' : '' }}" data-preview-line><span class="text-xs uppercase opacity-60 mr-1">{{ $lang }}</span><span data-preview="{{ $platform }}.{{ $lang }}.caption">{{ $client->substitute($variants[$lang]->caption ?? '') }}</span></div>
+        @endforeach
+        @if ($post->signatureFor($platform))
+            <div class="px-3 pb-2 whitespace-pre-line opacity-80">{{ $post->signatureFor($platform) }}</div>
         @endif
-    @endforeach
-    @if (($platform === 'facebook' || $platform === 'google_business') && $post->signatureFor($platform))
-        <div class="px-3 pb-2 whitespace-pre-line opacity-80">{{ $post->signatureFor($platform) }}</div>
     @endif
-    <div class="bg-gray-100 {{ $vertical ? 'aspect-[9/16]' : ($platform === 'google_business' ? 'aspect-video' : 'aspect-square') }} flex items-center justify-center overflow-hidden">
+    <div class="bg-gray-100 {{ $vertical ? 'aspect-[9/16]' : ($platform === 'google_business' ? 'aspect-video' : 'aspect-square') }} flex items-center justify-center overflow-hidden" data-preview-media data-current="{{ $asset ? $asset->kind.':'.$asset->id : '' }}">
         @if (! $asset)
             <span class="text-xs text-gray-500">{{ __('Photo or video to follow') }}</span>
         @elseif ($asset->kind === 'video')
-            <video src="{{ $review->assetUrl($asset) }}" controls playsinline class="h-full w-full object-cover"></video>
+            <video src="{{ $assetUrl($asset) }}" controls playsinline class="h-full w-full object-cover"></video>
         @else
-            <img src="{{ $review->assetUrl($asset) }}" alt="" class="h-full w-full object-cover" />
+            <img src="{{ $assetUrl($asset) }}" alt="" class="h-full w-full object-cover" />
         @endif
     </div>
     @if ($platform === 'google_business')
         <div class="px-3 py-2 text-xs font-semibold text-blue-700">{{ __($post->format === 'gbp_offer' ? 'View offer' : (\App\Publishing\GbpPublisher::CTAS[$post->settings['gbp']['cta'] ?? 'LEARN_MORE'] ?? 'Learn more')) }}</div>
     @endif
-    @foreach ($post->variants->where('platform', $platform) as $variant)
-        @if ($platform === 'instagram' || $platform === 'tiktok')
-            <div class="px-3 py-2 whitespace-pre-line"><span class="text-xs uppercase opacity-60 mr-1">{{ $variant->lang }}</span><span class="font-semibold mr-1">{{ $review->client->name }}</span>{{ $review->client->substitute($variant->caption) }}
+    @foreach ($langs as $lang)
+        @php($v = $variants[$lang] ?? null)
+        @if ($textFirst)
+            <div class="px-3 pb-2 text-blue-800 {{ empty($v?->hashtags) ? 'hidden' : '' }}" data-preview-tags><span data-preview="{{ $platform }}.{{ $lang }}.hashtags">{{ $hashtags($v) }}</span></div>
+        @else
+            <div class="px-3 py-2 whitespace-pre-line {{ trim($v?->caption ?? '') === '' ? 'hidden' : '' }}" data-preview-line><span class="text-xs uppercase opacity-60 mr-1">{{ $lang }}</span><span class="font-semibold mr-1">{{ $client->name }}</span><span data-preview="{{ $platform }}.{{ $lang }}.caption">{{ $client->substitute($v?->caption ?? '') }}</span>
                 @if ($loop->last && $post->signatureFor($platform)) <span class="block opacity-80">{{ $post->signatureFor($platform) }}</span> @endif
-                @if ($variant->hashtags) <span class="{{ $vertical ? 'text-blue-300' : 'text-blue-800' }}">{{ collect($variant->hashtags)->map(fn ($h) => '#'.ltrim($h, '#'))->join(' ') }}</span> @endif
+                <span class="{{ $vertical ? 'text-blue-300' : 'text-blue-800' }}" data-preview="{{ $platform }}.{{ $lang }}.hashtags">{{ $hashtags($v) }}</span>
             </div>
-        @elseif ($variant->hashtags)
-            <div class="px-3 pb-2 text-blue-800">{{ collect($variant->hashtags)->map(fn ($h) => '#'.ltrim($h, '#'))->join(' ') }}</div>
         @endif
     @endforeach
 </div>
