@@ -32,7 +32,10 @@ class AssetController extends Controller
 
         return view('clients.assets', [
             'client' => $client,
-            'assets' => $client->assets()->latest()->get(),
+            'assets' => $client->assets()->with('posts')
+                ->when($request->input('kind'), fn ($q, $kind) => $q->where('kind', $kind))
+                ->when($request->input('pillar'), fn ($q, $pillar) => $q->where('pillar', $pillar))
+                ->latest()->get(),
             'inboxUrl' => URL::temporarySignedRoute('inbox.show', now()->addDays(self::LINK_DAYS), ['client' => $client->slug]),
             'canva' => $canvaAccount,
             'canvaReady' => (bool) config('services.canva.client_id'),
