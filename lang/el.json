@@ -8,6 +8,7 @@
     ", :auto answered automatically": ", :auto απαντήθηκαν αυτόματα",
     "2 to 12 capital letters or digits. Made from the name when left empty.": "2 έως 12 κεφαλαία λατινικά γράμματα ή ψηφία. Φτιάχνεται από το όνομα όταν μείνει κενό.",
     ":client has no approver yet: add one to the client profile first.": "Ο πελάτης :client δεν έχει ακόμη εγκρίνοντα: πρόσθεσε έναν στο προφίλ του πρώτα.",
+    ":client wants to work in Social Ops as :user: read the clients and posts this login sees, file Drafts and plans. Nothing is published.": ":client θέλει να δουλέψει στο Social Ops ως :user: να διαβάζει τους πελάτες και τις αναρτήσεις που βλέπει αυτή η σύνδεση, να καταχωρεί Drafts και πλάνα. Τίποτα δεν δημοσιεύεται.",
     ":client: :n new :what to answer, :a need attention": ":client: :n νέα :what προς απάντηση, :a χρειάζονται προσοχή",
     ":client: :n posts to approve": ":client: :n αναρτήσεις προς έγκριση",
     ":client: approval overdue": ":client: η έγκριση καθυστερεί",
@@ -57,6 +58,7 @@
     "All reports": "Όλες οι αναφορές",
     "All rights reserved.": "Με επιφύλαξη παντός δικαιώματος.",
     "All the pictures of this post": "Όλες οι φωτογραφίες της ανάρτησης",
+    "Allow": "Να επιτραπεί",
     "Allow comments": "Να επιτρέπονται σχόλια",
     "Allow duet": "Να επιτρέπεται duet",
     "Allow stitch": "Να επιτρέπεται stitch",
@@ -639,6 +641,7 @@
     "They appear in the list below within a minute or two; a failed import shows on the Jobs page and in Slack.": "Εμφανίζονται στη λίστα παρακάτω σε ένα-δύο λεπτά· μια αποτυχημένη εισαγωγή φαίνεται στη σελίδα Εργασίες και στο Slack.",
     "This is a secure area of the application. Please confirm your password before continuing.": "Αυτή είναι ασφαλής περιοχή της εφαρμογής. Επιβεβαιώστε τον κωδικό σας πριν συνεχίσετε.",
     "This login is limited to other clients.": "Αυτός ο χρήστης περιορίζεται σε άλλους πελάτες.",
+    "This page works even when the dashboard fails after an update.": "Αυτή η σελίδα δουλεύει ακόμη κι όταν ο πίνακας αποτυγχάνει μετά από ενημέρωση.",
     "This page works only while the app has no users. Add colleagues later from the Staff page.": "Αυτή η σελίδα λειτουργεί μόνο όσο η εφαρμογή δεν έχει χρήστες. Πρόσθεσε συναδέλφους αργότερα από τη σελίδα Προσωπικό.",
     "This password reset link will expire in :count minutes.": "Ο σύνδεσμος επαναφοράς λήγει σε :count λεπτά.",
     "This post is approved and locked. Saving a change sends it back to review.": "Η ανάρτηση είναι εγκεκριμένη και κλειδωμένη. Μια αλλαγή τη στέλνει πίσω σε έλεγχο.",
@@ -749,6 +752,5 @@
     "{0} nothing waiting for the client|{1} :count waiting for the client|[2,*] :count waiting for the client": "{0} τίποτα δεν περιμένει τον πελάτη|{1} :count περιμένει τον πελάτη|[2,*] :count περιμένουν τον πελάτη",
     "{1} :count post failed or needs a human|[2,*] :count posts failed or need a human": "{1} :count ανάρτηση απέτυχε ή χρειάζεται άνθρωπο|[2,*] :count αναρτήσεις απέτυχαν ή χρειάζονται άνθρωπο",
     "{1} :count post|[2,*] :count posts": "{1} :count ανάρτηση|[2,*] :count αναρτήσεις",
-    "{1} :count token expiring|[2,*] :count tokens expiring": "{1} :count σύνδεση λήγει|[2,*] :count συνδέσεις λήγουν",
-    "This page works even when the dashboard fails after an update.": "Αυτή η σελίδα δουλεύει ακόμη κι όταν ο πίνακας αποτυγχάνει μετά από ενημέρωση."
+    "{1} :count token expiring|[2,*] :count tokens expiring": "{1} :count σύνδεση λήγει|[2,*] :count συνδέσεις λήγουν"
 }

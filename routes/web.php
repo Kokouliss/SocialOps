@@ -36,6 +36,7 @@ Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['au
 // After a git pull on the server: run new migrations and rebuild the caches, instead of SSH.
 Route::post('/refresh', function () {
     Artisan::call('migrate', ['--force' => true]);
+    file_exists(storage_path('oauth-private.key')) || Artisan::call('passport:keys'); // the Claude connector's login signs its tokens with these
     Artisan::call('optimize');
 
     return redirect()->route('dashboard')->with('status', 'app-refreshed');

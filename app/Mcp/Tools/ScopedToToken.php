@@ -8,14 +8,15 @@ use App\Models\Post;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\ValidationException;
 
-/** What the caller may see: the token's client over HTTP (ApiAuth), every client over stdio. */
+/** What the caller may see: the token's client over HTTP (ApiAuth), the login's clients behind an OAuth token (McpAuth), every client over stdio. */
 trait ScopedToToken
 {
     protected function clients(): Builder
     {
         $token = request()->attributes->get('api_token');
+        $user = request()->user();
 
-        return Client::query()->when($token?->client_id, fn ($q, $id) => $q->whereKey($id))->orderBy('name');
+        return Client::query()->when($token?->client_id, fn ($q, $id) => $q->whereKey($id))->when($user, fn ($q) => $user->restrict($q, 'id'))->orderBy('name');
     }
 
     /** A client by id or slug, or a validation error the caller can read. */
