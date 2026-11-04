@@ -48,7 +48,8 @@ class PlanContentBatch implements ShouldQueue
     private function mail(string $subject, string $body): void
     {
         $calendar = route('calendar', ['client' => $this->client->slug, 'date' => $this->options['from']]);
-        Mail::raw("{$body}\n\nCalendar: {$calendar}", fn ($message) => $message->to($this->user->email, $this->user->name)->subject($subject));
+        // a dead mailer must not fail a job whose posts are already drafted (a retry would draft them again): log it, Slack still tells
+        rescue(fn () => Mail::raw("{$body}\n\nCalendar: {$calendar}", fn ($message) => $message->to($this->user->email, $this->user->name)->subject($subject)));
         Slack::send("{$subject}\n".last(array_filter(explode("\n", trim($body))))."\n{$calendar}"); // the last line is the outcome or the error
     }
 }
