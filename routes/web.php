@@ -40,6 +40,7 @@ Route::post('/refresh', function () {
 
     return redirect()->route('dashboard')->with('status', 'app-refreshed');
 })->middleware('auth')->name('refresh');
+Route::get('/refresh', fn () => view('refresh'))->middleware('auth'); // reachable even while the dashboard fails before a migration
 
 Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::resource('clients', ClientController::class)->except('show');
