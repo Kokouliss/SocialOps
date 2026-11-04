@@ -703,5 +703,21 @@
     "Stopped": "Σταμάτησε",
     "Low": "Χαμηλή",
     "Medium": "Μεσαία",
-    "High": "Υψηλή"
+    "High": "Υψηλή",
+    "Deadlines in the next 7 days": "Προθεσμίες των επόμενων 7 ημερών",
+    "deadlines": "προθεσμίες",
+    "Deadlines": "Προθεσμίες",
+    "Add a deadline": "Νέα προθεσμία",
+    "What the client owes us (products, footage, answers) and what we owe the client (the topic plan, the edited videos), by when. Tick it when it is done.": "Τι μας χρωστά ο πελάτης (προϊόντα, υλικό, απαντήσεις) και τι χρωστάμε εμείς στον πελάτη (η θεματολογία, τα μονταρισμένα βίντεο), μέχρι πότε. Τσεκάρισέ το όταν γίνει.",
+    "What": "Τι",
+    "December topic plan": "Θεματολογία Δεκεμβρίου",
+    "Who": "Ποιος",
+    "No date": "Χωρίς ημερομηνία",
+    "Reopen": "Άνοιγμα ξανά",
+    "Mark done": "Έγινε",
+    "done": "έγινε",
+    "Delete this deadline?": "Να διαγραφεί αυτή η προθεσμία;",
+    "No deadlines yet. Add what the client owes and what we owe for the month.": "Καμία προθεσμία ακόμη. Πρόσθεσε τι χρωστά ο πελάτης και τι χρωστάμε εμείς για τον μήνα.",
+    "Ours": "Δικό μας",
+    "Deadline added": "Η προθεσμία προστέθηκε"
 }

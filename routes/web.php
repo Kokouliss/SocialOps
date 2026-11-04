@@ -8,6 +8,7 @@ use App\Http\Controllers\CanvaController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DeadlineController;
 use App\Http\Controllers\FolderController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\JobController;
@@ -58,6 +59,10 @@ Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::post('/clients/{client}/wordpress', [WordPressController::class, 'connect'])->name('wordpress.connect');
     Route::post('/clients/{client}/wordpress/publish', [WordPressController::class, 'publish'])->name('wordpress.publish');
     Route::delete('/clients/{client}/wordpress', [WordPressController::class, 'disconnect'])->name('wordpress.disconnect');
+    Route::get('/clients/{client}/deadlines', [DeadlineController::class, 'index'])->name('clients.deadlines');
+    Route::post('/clients/{client}/deadlines', [DeadlineController::class, 'store'])->name('deadlines.store');
+    Route::patch('/deadlines/{deadline}', [DeadlineController::class, 'toggle'])->name('deadlines.toggle');
+    Route::delete('/deadlines/{deadline}', [DeadlineController::class, 'destroy'])->name('deadlines.destroy');
     Route::get('/clients/{client}/reviews', [ReviewController::class, 'index'])->name('clients.reviews');
     Route::post('/clients/{client}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
     Route::get('/clients/{client}/reports', [ReportController::class, 'index'])->name('clients.reports');
