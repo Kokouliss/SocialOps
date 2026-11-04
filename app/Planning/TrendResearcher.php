@@ -24,8 +24,7 @@ class TrendResearcher
                 'type' => 'web_search_20260209',
                 'name' => 'web_search',
                 'maxUses' => self::MAX_SEARCHES,
-                // every client is in Crete, so bias results towards Greece
-                'userLocation' => ['type' => 'approximate', 'country' => 'GR', 'timezone' => 'Europe/Athens'],
+                // no userLocation: the API rejects Greece ("Country code GR is not supported"); the prompt names the client's place and Crete
                 ...($blocked ? ['blockedDomains' => $blocked] : []),
             ]],
         );
