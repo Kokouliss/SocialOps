@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :client="$client">
     <x-slot name="header">
         <div class="flex flex-wrap items-center gap-3">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $client->name }} <span class="font-mono text-sm text-gray-500">{{ $post->name }}</span></h2>

@@ -18,7 +18,15 @@ class ClientController extends Controller
 {
     public function index(Request $request): View
     {
-        return view('clients.index', ['clients' => $request->user()->clients()->get()]);
+        $clients = $request->user()->clients()->withCount([
+            'posts as week_count' => fn ($q) => $q->whereIn('state', [PostState::Approved, PostState::Scheduled])->whereBetween('scheduled_at', [now(), now()->addDays(7)]),
+            'posts as in_review_count' => fn ($q) => $q->where('state', PostState::InReview),
+            'posts as failed_count' => fn ($q) => $q->whereIn('state', [PostState::Failed, PostState::ManualNeeded]),
+            'comments as open_comments_count' => fn ($q) => $q->open(),
+            'accounts as expiring_count' => fn ($q) => $q->where('platform', '!=', 'canva')->where('token_expires_at', '<', now()->addDays(7)),
+        ])->get();
+
+        return view('clients.index', ['clients' => $clients]);
     }
 
     public function create(): View
