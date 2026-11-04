@@ -51,7 +51,7 @@ Lets a client drop photos and videos in a shared Google Drive folder; Social Ops
 1. In a Google Cloud project of the agency: **APIs & Services → Library** → enable *Google Drive API*.
 2. **IAM & Admin → Service accounts → Create service account**: name `social-ops-drive`, no roles, **Done**.
 3. Open it → **Keys → Add key → Create new key → JSON**. The file downloads once. It is a credential: keep it out of the repository and out of `public/`.
-4. Upload it to the server next to the app (not inside it), point `.env` at it, then **Refresh after update** on the dashboard (or `php artisan config:clear`).
+4. Upload it to the server next to the app (not inside it), point `.env` at it, then **Refresh after update** on the dashboard or at `/refresh` (or `php artisan config:clear`).
 5. Per client, on the assets page: share the folder (the client's own, or one you make in the agency's Drive and share with the client) with the address the box shows, *Viewer* is enough; paste the folder link; **Watch folder**. The folder itself is read, not its subfolders; one folder per client; a file is filed once, by its Drive id.
 
 `.env`:
@@ -116,7 +116,7 @@ A subdomain of the agency domain is enough, for example `social.AGENCY.gr`; the 
    /opt/plesk/php/8.3/bin/php ROOT/artisan queue:work --stop-when-empty --max-time=55
    ```
    The first runs the scheduled commands (publishing due posts, reminders, token checks, the hourly folder pulls); the second works the queue: planning, Reels, imports, mails. Plesk's PHP prints two harmless `memcached.so` warnings before the real output; "Could not open input file" means the path is wrong. The Jobs page in the app shows waiting jobs with their attempts: a job that stays at 0 attempts means this task is not running.
-10. Updates: Git → *Pull now* (or push to `main` with auto-deploy on) followed by
+10. Updates: Git → *Pull now* (or push to `main` with auto-deploy on), then open `/refresh` in the app and press **Refresh after update** (the dashboard has the same button, but a migration the dashboard needs makes it fail until the refresh has run). Or over SSH:
    ```
    composer install --no-dev --optimize-autoloader && php artisan migrate --force && php artisan optimize
    ```
