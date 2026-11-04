@@ -41,6 +41,8 @@ class AssetController extends Controller
             'canva' => $canvaAccount,
             'drive' => $client->accounts()->where('platform', 'drive')->first(),
             'driveEmail' => GoogleDrive::email(),
+            'dropbox' => $client->accounts()->where('platform', 'dropbox')->first(),
+            'dropboxReady' => (bool) config('services.dropbox.app_key'),
             'canvaReady' => (bool) config('services.canva.client_id'),
             'designs' => $designs,
             'canvaError' => $canvaError,

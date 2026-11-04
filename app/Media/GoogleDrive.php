@@ -2,7 +2,9 @@
 
 namespace App\Media;
 
+use App\Models\Account;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
@@ -36,34 +38,32 @@ final class GoogleDrive
     }
 
     /**
-     * The photos and videos directly in the folder.
+     * The photos and videos directly in the watched folder (`external_id`).
      *
-     * @return list<array{id: string, name: string, mimeType: string}>
+     * @return list<array{id: string, name: string, mime: string}>
      */
-    public function files(string $folderId): array
+    public function files(Account $account): array
     {
         // shortcut: subfolders are not read, a client drops files in the shared folder itself; walk them when a client asks for albums
         $files = [];
         $page = null;
         do {
-            $result = $this->call('files', array_filter(['q' => "'{$folderId}' in parents and trashed = false and (mimeType contains 'image/' or mimeType contains 'video/')", 'fields' => 'nextPageToken,files(id,name,mimeType)', 'pageSize' => 1000, 'includeItemsFromAllDrives' => 'true', 'pageToken' => $page]));
-            $files = array_merge($files, $result['files'] ?? []);
+            $result = $this->call('files', array_filter(['q' => "'{$account->external_id}' in parents and trashed = false and (mimeType contains 'image/' or mimeType contains 'video/')", 'fields' => 'nextPageToken,files(id,name,mimeType)', 'pageSize' => 1000, 'includeItemsFromAllDrives' => 'true', 'pageToken' => $page]));
+            foreach ($result['files'] ?? [] as $file) {
+                $files[] = ['id' => $file['id'], 'name' => $file['name'], 'mime' => $file['mimeType']];
+            }
         } while ($page = $result['nextPageToken'] ?? null);
 
         return $files;
     }
 
-    /** Streams a file into $path. */
-    public function download(string $id, string $path): void
+    /** The file's bytes, to be streamed from the response body. */
+    public function download(Account $account, string $id): Response
     {
         $response = $this->http()->timeout(900)->get(self::API."files/{$id}", ['alt' => 'media', 'supportsAllDrives' => 'true']);
         throw_unless($response->successful(), new RuntimeException("Google Drive: download of {$id} failed ({$response->status()})."));
-        $body = $response->toPsrResponse()->getBody();
-        $out = fopen($path, 'w');
-        while (! $body->eof()) {
-            fwrite($out, $body->read(1 << 20));
-        }
-        fclose($out);
+
+        return $response;
     }
 
     private function call(string $path, array $query): array

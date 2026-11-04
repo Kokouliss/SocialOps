@@ -34,7 +34,7 @@ Exit: monthly reports fully automatic; onboarding a new client takes under 1 hou
 - [ ] Canva Brand Template autofill for repeat graphics (menus, events, offers)
 - [x] Monthly auto-report: insights pull → Claude summary (`posts:insights` daily, `reports:monthly` on the 1st; the report lives in the client's Reports page, .md download; branded PDF still open)
 - [x] Google Drive folder → asset inbox (our own service account, hourly, no n8n)
-- [ ] Dropbox folder → asset inbox
+- [x] Dropbox folder → asset inbox (our own Dropbox app, the agency's account, hourly)
 - [ ] WhatsApp → asset inbox (needs a dedicated WhatsApp Business number on the Cloud API; incoming service messages are free, decide after Meta verification)
 - [x] MCP endpoint so Claude can query the calendar and draft posts (`routes/ai.php`, `App\Mcp\SocialOpsServer`: `/mcp` over HTTP with the API tokens, stdio for local use; never publishes)
 - [x] Content-pillar mix tracking per client, with drift warning (`App\Planning\PillarMix`: shares 30 days back and ahead on the client form and in the monthly report; "Pillar mix off target" on the dashboard and in the Thursday `slots:check` Slack line)
