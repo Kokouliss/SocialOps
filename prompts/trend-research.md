@@ -27,7 +27,7 @@ Never propose: {{research.excluded_topics}}
 - Do not invent engagement numbers. A number must come from a cited source.
 
 ## Output
-Markdown only, in this shape:
+Markdown only, written in {{plan_language}}, in this shape:
 
 # Trend brief: {{client.name}}, {{today}}
 

@@ -19,6 +19,7 @@
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>
+        <env name="APP_LOCALE" value="en"/>
         <env name="FEATURE_PUBLISHING" value="true"/>
         <env name="FEATURE_CLAUDE_API" value="true"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>

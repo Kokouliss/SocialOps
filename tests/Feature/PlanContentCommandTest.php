@@ -29,7 +29,7 @@ it('creates Draft posts with captions per platform and language, plus a review s
     expect($draft->state)->toBe(PostState::Draft)
         ->and($draft->scheduled_at->format('Y-m-d H:i'))->toBe('2027-05-12 18:00')
         ->and(Post::where('name', 'ALMYRA_20270514_IG_REEL_FOODDRINK_EL-EN_v1')->value('scheduled_at')->format('Y-m-d H:i'))->toBe('2027-05-14 10:00') // the second post takes the next free slot
-        ->and($draft->brief)->toContain('Trend: Golden hour reels')
+        ->and($draft->brief)->toContain('Τάση: Golden hour reels')
         ->and($draft->variants->map(fn ($v) => [$v->platform, $v->lang, $v->caption, $v->alt_text, $v->hashtags])->all())->toBe([
             ['instagram', 'el', 'Κοκτέιλ στο ηλιοβασίλεμα', 'α', ['#chania']],
             ['instagram', 'en', 'Sunset cocktails', 'a', ['#chania']],
@@ -38,8 +38,8 @@ it('creates Draft posts with captions per platform and language, plus a review s
     $reports = Report::orderBy('id')->get();
     expect($reports->pluck('kind')->all())->toBe(['trend_brief', 'plan'])
         ->and($reports[0]->body)->toBe('# Trend brief')
-        ->and($reports[1]->title)->toBe('Content batch 2027-05-10 to 2027-05-23')
-        ->and($reports[1]->body)->toContain('## 1. Sunset cocktails (2027-05-12)')->toContain('Every caption needs a human review')
+        ->and($reports[1]->title)->toBe('Πλάνο περιεχομένου 2027-05-10 έως 2027-05-23')
+        ->and($reports[1]->body)->toContain('## 1. Sunset cocktails (2027-05-12)')->toContain('Κάθε λεζάντα θέλει έλεγχο από άνθρωπο')
         ->and($reports[1]->meta['posts'][0]['captions']['el']['instagram'])->toBe('Κοκτέιλ στο ηλιοβασίλεμα');
 });
 
