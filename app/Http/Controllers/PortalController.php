@@ -25,14 +25,17 @@ class PortalController extends Controller
     public function decide(Request $request, Review $review): RedirectResponse
     {
         $data = $request->validate([
-            'post_id' => ['required', 'integer', 'in:'.$review->pending()->pluck('posts.id')->join(',')],
+            'post_id' => ['required', 'in:all,'.$review->pending()->pluck('posts.id')->join(',')],
             'decision' => ['required', 'in:approved,changes_requested'],
             'comment' => ['nullable', 'string', 'max:2000', 'required_if:decision,changes_requested'],
             'name' => ['required', 'string', 'max:100'],
         ], ['comment.required_if' => __('Tell us what to change.')]);
 
         session(['reviewer_name' => $data['name']]);
-        $review->decide($review->posts()->findOrFail($data['post_id']), $data['decision'], $data['comment'] ?? null, $data['name']);
+        $posts = $data['post_id'] === 'all' ? $review->pending()->get() : [$review->posts()->findOrFail($data['post_id'])];
+        foreach ($posts as $post) {
+            $review->decide($post, $data['decision'], $data['comment'] ?? null, $data['name']);
+        }
 
         // GET and POST share the signed URL, so the redirect keeps the signature
         return redirect($request->fullUrl())->with('status', $data['decision']);

@@ -38,7 +38,7 @@ test('staff send posts for approval: they go in review and the approvers get a s
     Mail::assertSent(ReviewMail::class, fn (ReviewMail $mail) => $mail->kind === 'request' && $mail->hasTo('owner@example.com'));
 
     $this->get("/review/{$review->id}")->assertForbidden();
-    $this->get($review->url())->assertOk()->assertSee('Almyra Beach Lounge')->assertSee('2 posts to approve');
+    $this->get($review->url())->assertOk()->assertSee('Almyra Beach Lounge')->assertSee('2 posts · 0 approved · 0 to rework · 2 waiting for you');
     $this->actingAs($this->user)->get(route('clients.reviews', $this->client))->assertOk()->assertSee('no answer yet');
 
     // a published post cannot be sent, and a client without approvers gets told
