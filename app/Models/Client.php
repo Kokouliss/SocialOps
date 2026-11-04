@@ -73,6 +73,11 @@ class Client extends Model
         return $this->hasMany(Review::class);
     }
 
+    public function deadlines(): HasMany
+    {
+        return $this->hasMany(Deadline::class);
+    }
+
     public function reports(): HasMany
     {
         return $this->hasMany(Report::class);
