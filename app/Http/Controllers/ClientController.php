@@ -77,6 +77,30 @@ class ClientController extends Controller
         return redirect()->route('clients.edit', $client)->with('status', 'plan-started');
     }
 
+    /** "Post from a prompt": one Draft from the team's words, the profile and the trend brief, through the same queued content:plan run. */
+    public function draft(Request $request, Client $client): RedirectResponse
+    {
+        $input = $request->validateWithBag('draft', [
+            'instruction' => ['required', 'string', 'max:2000'],
+            'platforms' => ['required', 'array'],
+            'platforms.*' => [Rule::in(PlanRequest::accounts($client->toProfileArray()))],
+            'date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:today'],
+            'fresh' => ['nullable', 'boolean'],
+            'brief' => ['nullable', 'string', 'max:50000'],
+        ]);
+        PlanContentBatch::dispatch($client, $request->user(), [
+            'posts' => 1,
+            'platforms' => $input['platforms'],
+            'from' => $input['date'] ?? now()->addDay()->toDateString(),
+            'days' => 1,
+            'instruction' => $input['instruction'],
+            'latest_brief' => ! ($input['fresh'] ?? false),
+            'brief' => $input['brief'] ?? null,
+        ]);
+
+        return redirect()->route('clients.edit', $client)->with('status', 'post-started');
+    }
+
     public function update(ClientRequest $request, Client $client): RedirectResponse
     {
         $client->update($request->clientAttributes());

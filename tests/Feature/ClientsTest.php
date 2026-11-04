@@ -130,6 +130,27 @@ test('plan with Claude queues a content:plan run for the chosen accounts and mai
     (new PlanContentBatch($client, $staff, ['posts' => 3, 'platforms' => ['instagram'], 'from' => $from, 'days' => 14]))->handle();
 });
 
+test('post from a prompt queues a one-post content:plan run with the instruction and the latest brief, and mails the post link', function () {
+    Bus::fake();
+    $staff = User::factory()->create();
+    $client = Client::factory()->create(['slug' => 'almyra']);
+
+    $this->actingAs($staff)->get("/clients/{$client->id}/edit")->assertOk()->assertSee('Post from a prompt');
+    $this->actingAs($staff)->post("/clients/{$client->id}/draft", ['instruction' => 'Sunset cocktails this weekend', 'platforms' => ['instagram', 'facebook'], 'date' => ''])
+        ->assertRedirect("/clients/{$client->id}/edit")->assertSessionHas('status', 'post-started');
+    Bus::assertDispatched(PlanContentBatch::class, fn (PlanContentBatch $job) => $job->options === ['posts' => 1, 'platforms' => ['instagram', 'facebook'], 'from' => now()->addDay()->toDateString(), 'days' => 1, 'instruction' => 'Sunset cocktails this weekend', 'latest_brief' => true, 'brief' => null]);
+    $this->actingAs($staff)->post("/clients/{$client->id}/draft", ['instruction' => 'Fresh one', 'platforms' => ['instagram'], 'date' => '2027-05-12', 'fresh' => '1', 'brief' => '# Pasted'])
+        ->assertSessionHas('status', 'post-started');
+    Bus::assertDispatched(PlanContentBatch::class, fn (PlanContentBatch $job) => $job->options['from'] === '2027-05-12' && $job->options['latest_brief'] === false && $job->options['brief'] === '# Pasted');
+    $this->actingAs($staff)->post("/clients/{$client->id}/draft", ['instruction' => '', 'platforms' => ['linkedin']])
+        ->assertSessionHasErrorsIn('draft', ['instruction', 'platforms.0']);
+
+    Artisan::shouldReceive('call')->once()->with('content:plan', ['client' => 'almyra', '--posts' => 1, '--platforms' => 'instagram', '--from' => '2027-05-12', '--days' => 1, '--latest-brief' => true, '--instruction' => 'Sunset cocktails this weekend']);
+    Artisan::shouldReceive('output')->andReturn("1 Draft posts created.\nPost: http://localhost/posts/7/edit");
+    Mail::shouldReceive('raw')->once()->withArgs(fn (string $body, $message) => str_contains($body, 'Post: http://localhost/posts/7/edit'));
+    (new PlanContentBatch($client, $staff, ['posts' => 1, 'platforms' => ['instagram'], 'from' => '2027-05-12', 'days' => 1, 'instruction' => 'Sunset cocktails this weekend', 'latest_brief' => true]))->handle();
+});
+
 test('a profile written before the research section existed still parses', function () {
     $yaml = preg_replace('/^research:\n(    .*\n)*/m', '', ClientProfile::templateYaml());
 

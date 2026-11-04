@@ -10,13 +10,17 @@ class PlanRequest
     /** Each post costs a caption call, so a batch stays small enough to review in one sitting. */
     public const MAX_POSTS = 30;
 
-    /** @param  array  $profile  the client profile, shaped like config/clients/example.yaml (Client::toProfileArray()) */
+    /**
+     * @param  array  $profile  the client profile, shaped like config/clients/example.yaml (Client::toProfileArray())
+     * @param  string  $instruction  what the team wants the posts to be about; it decides the topic instead of the pillar quota
+     */
     public function __construct(
         public readonly array $profile,
         public readonly int $count,
         public readonly array $platforms,
         public readonly CarbonImmutable $from,
         public readonly CarbonImmutable $to,
+        public readonly string $instruction = '',
     ) {
         if ($count < 1 || $count > self::MAX_POSTS) {
             throw new InvalidArgumentException('Posts per batch must be between 1 and '.self::MAX_POSTS);
@@ -42,6 +46,7 @@ class PlanRequest
             'window' => ['start' => $this->from->toDateString(), 'end' => $this->to->toDateString()],
             'platforms' => $this->platforms,
             'count' => $this->count,
+            'instruction' => $this->instruction,
             'holidays' => Holidays::lines($this->from, $this->to, Holidays::inCyprus($this->profile['location'] ?? null)),
         ];
     }

@@ -13,6 +13,7 @@ You plan social media content for {{client.name}}, a {{client.type}} in {{client
 ## The batch
 - Posts to plan: {{count}}
 - Posts per pillar (exact): {{quota}}
+- Instruction from the team: {{instruction}}
 - Publishing window: {{window.start}} to {{window.end}}
 - Platforms: {{platforms}}
 - Key dates: {{key_dates}}
@@ -26,6 +27,7 @@ You plan social media content for {{client.name}}, a {{client.type}} in {{client
 
 ## Rules
 - Use the trend brief for roughly half of the posts; the rest are evergreen posts from the pillars. Name the signal each trend post uses.
+- When the team gives an instruction, every post does what it says: it decides the topic; pick the pillar, the format and the trend signals that fit it. The quota and the half-and-half rule then do not apply.
 - Spread the dates across the window. Avoid two posts on the same day for the same platform unless the window is shorter than the count.
 - Place posts near a key date when one falls inside the window.
 - When there are posting slots, date the posts on slot days.

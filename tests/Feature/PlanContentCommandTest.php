@@ -43,6 +43,33 @@ it('creates Draft posts with captions per platform and language, plus a review s
         ->and($reports[1]->meta['posts'][0]['captions']['el']['instagram'])->toBe('Κοκτέιλ στο ηλιοβασίλεμα');
 });
 
+it('follows an instruction, reuses a trend brief from the last 7 days, and prints the post link', function () {
+    $client = Client::factory()->create(['slug' => 'almyra', 'code' => 'ALMYRA']);
+    $client->reports()->create(['kind' => 'trend_brief', 'title' => 'Old', 'body' => '# Old brief'])->forceFill(['created_at' => now()->subDays(8)])->save();
+    $recent = $client->reports()->create(['kind' => 'trend_brief', 'title' => 'Recent', 'body' => '# Recent brief']);
+    $post = ['date' => '2027-05-12', 'platforms' => ['instagram'], 'format' => 'reel', 'pillar' => 'offers', 'title' => 'Sunset cocktails',
+        'angle' => 'Golden hour at the bar.', 'trend_signal' => 'Golden hour reels', 'why_now' => 'Trending this month.', 'asset_brief' => 'Shoot at 20:00.', 'caption_brief' => 'Soft CTA.'];
+    $captions = ['el' => ['instagram' => 'Κοκτέιλ'], 'en' => ['instagram' => 'Cocktails'], 'hashtags' => ['#chania'], 'alt_text' => ['el' => 'α', 'en' => 'a'], 'notes_for_reviewer' => ''];
+
+    $research = $this->mock(TrendResearcher::class);
+    $research->shouldNotReceive('brief');
+    $this->mock(ContentPlanner::class)->shouldReceive('plan')->twice()
+        ->withArgs(fn ($request, $brief) => $request->instruction === 'Sunset cocktails this weekend' && $request->count === 1 && in_array($brief, ['# Recent brief', '# New brief']))
+        ->andReturn(['posts' => [$post], 'warnings' => []]);
+    $this->mock(CaptionDrafter::class)->shouldReceive('draft')->twice()->andReturn($captions);
+
+    $this->artisan('content:plan almyra --posts=1 --from=2027-05-12 --days=1 --latest-brief --instruction="Sunset cocktails this weekend"')
+        ->expectsOutputToContain('Post: '.config('app.url').'/posts/')
+        ->assertSuccessful();
+    expect(Post::count())->toBe(1)->and(Report::where('kind', 'trend_brief')->count())->toBe(2); // the recent brief was reused, none written
+
+    // older than 7 days: researched again and saved
+    $recent->delete();
+    $this->mock(TrendResearcher::class)->shouldReceive('brief')->once()->andReturn('# New brief');
+    $this->artisan('content:plan almyra --posts=1 --from=2027-05-12 --days=1 --latest-brief --instruction="Sunset cocktails this weekend"')->assertSuccessful();
+    expect(Report::where('kind', 'trend_brief')->latest('id')->value('body'))->toBe('# New brief');
+});
+
 it('uses a supplied brief instead of researching, and tells the planner the recent topics', function () {
     $client = Client::factory()->create(['slug' => 'almyra']);
     Post::factory()->create(['client_id' => $client->id, 'scheduled_at' => now()->subDays(3), 'brief' => "Sunset cocktails\nGolden hour at the bar.\nTrend: Golden hour reels. Why now: trending."]);

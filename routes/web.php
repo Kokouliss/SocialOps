@@ -39,6 +39,7 @@ Route::post('/refresh', function () {
 Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::resource('clients', ClientController::class)->except('show');
     Route::post('/clients/{client}/plan', [ClientController::class, 'plan'])->name('clients.plan');
+    Route::post('/clients/{client}/draft', [ClientController::class, 'draft'])->name('clients.draft');
     Route::get('/clients/{client}/assets', [AssetController::class, 'index'])->name('clients.assets');
     Route::get('/clients/{client}/grid', [ClientController::class, 'grid'])->name('clients.grid');
     Route::get('/assets/{asset}/thumb', [AssetController::class, 'thumb'])->name('assets.thumb');

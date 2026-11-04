@@ -21,17 +21,18 @@ class ContentPlanner
      */
     public function plan(PlanRequest $request, string $trendBrief, array $recent = []): array
     {
-        $quota = PillarQuota::split($request->profile['pillars'], $request->count);
+        // an instruction from the team decides the topic, so the pillar quota does not apply
+        $quota = $request->instruction === '' ? PillarQuota::split($request->profile['pillars'], $request->count) : [];
 
         $message = $this->claude->messages->create(
             model: config('services.anthropic.model'),
             maxTokens: 16000,
             messages: [['role' => 'user', 'content' => Prompt::render('content-plan', $request->promptVars() + [
-                'quota' => implode(', ', array_map(fn ($pillar, $n) => "{$pillar}: {$n}", array_keys($quota), $quota)),
+                'quota' => $quota ? implode(', ', array_map(fn ($pillar, $n) => "{$pillar}: {$n}", array_keys($quota), $quota)) : 'none, the instruction decides',
                 'trend_brief' => $trendBrief,
                 'recent' => $recent,
             ])]],
-            outputConfig: ['format' => ['type' => 'json_schema', 'schema' => self::schema($request->platforms, array_keys($quota))]],
+            outputConfig: ['format' => ['type' => 'json_schema', 'schema' => self::schema($request->platforms, $quota ? array_keys($quota) : array_keys($request->profile['pillars']))]],
         );
 
         ClaudeCall::record($message, 'plan', $request->profile['slug']);
