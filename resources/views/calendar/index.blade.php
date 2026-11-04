@@ -39,7 +39,6 @@
             <a class="px-2 py-1 border rounded {{ $view === 'list' ? 'bg-gray-800 text-white' : '' }}" href="{{ route('calendar', [...$filters, 'view' => 'list', 'client' => $clientSlug, 'date' => $date->toDateString()]) }}">{{ __('List') }}</a>
             @if ($clientSlug)
                 <a class="px-2 py-1 border rounded" href="{{ route('posts.csv', [$clients->firstWhere('slug', $clientSlug), 'view' => $view, 'date' => $date->toDateString()]) }}" title="{{ __('The posts shown, one row per platform, for Canva Bulk Create or a spreadsheet') }}">{{ __('Export CSV') }}</a>
-                <a class="ml-auto inline-flex items-center px-4 py-2 bg-brand-500 rounded-full font-semibold text-xs text-white uppercase tracking-widest hover:bg-brand-600" href="{{ route('posts.create', $clients->firstWhere('slug', $clientSlug)) }}">{{ __('New post') }}</a>
             @else
                 <button type="button" data-new-post="" class="ml-auto inline-flex items-center px-4 py-2 bg-brand-500 rounded-full font-semibold text-xs text-white uppercase tracking-widest hover:bg-brand-600">{{ __('New post') }}</button>
             @endif

@@ -67,7 +67,13 @@
                         </form>
                     </div>
                 @empty
-                    <p class="mt-3 text-gray-500">{{ $tab === 'all' && ! request('platform') ? __('Nothing to answer.') : __('Nothing here; the other tabs may still have something.') }}</p>
+                    @if ($tab !== 'all' || request('platform'))
+                        <x-empty-state class="mt-3" :action="__('Show everything')" :href="route('clients.comments', $client)">{{ __('Nothing here; the other tabs may still have something.') }}</x-empty-state>
+                    @elseif ($client->accounts()->whereIn('platform', ['instagram', 'facebook', 'google_business'])->doesntExist())
+                        <x-empty-state class="mt-3" :action="__('Connect an account')" :href="route('clients.accounts', $client)">{{ __('Nothing to answer yet: connect Instagram, Facebook or Google Business Profile and comments, messages and reviews arrive here every hour.') }}</x-empty-state>
+                    @else
+                        <x-empty-state class="mt-3">{{ __('Nothing to answer. New comments, messages and reviews arrive every hour.') }}</x-empty-state>
+                    @endif
                 @endforelse
             </div>
 

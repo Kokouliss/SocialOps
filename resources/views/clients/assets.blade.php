@@ -115,7 +115,11 @@
                             </form>
                         </div>
                     @empty
-                        <p class="col-span-full text-sm text-gray-500">{{ request()->hasAny(['kind', 'pillar']) ? __('Nothing matches these filters.') : __('Nothing uploaded yet. Send the client the upload link above, or import from Canva.') }}</p>
+                        @if (request()->hasAny(['kind', 'pillar']))
+                            <x-empty-state class="col-span-full" :action="__('Show everything')" :href="route('clients.assets', $client)">{{ __('Nothing matches these filters.') }}</x-empty-state>
+                        @else
+                            <x-empty-state class="col-span-full" :action="__('Upload link')" href="#inbox-url">{{ __('Nothing uploaded yet. Send the client the upload link, drop files in yourself, or import designs from Canva.') }}</x-empty-state>
+                        @endif
                     @endforelse
                 </div>
             </div>

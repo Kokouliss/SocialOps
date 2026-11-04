@@ -27,7 +27,7 @@
                             <span class="text-gray-500">{{ $post->scheduled_at?->format('D j M, H:i') ?? __('not scheduled') }}</span>
                         </label>
                     @empty
-                        <p class="text-sm text-gray-500">{{ __('No draft posts waiting. Create them on the calendar first.') }}</p>
+                        <x-empty-state :action="__('New post')" :href="route('posts.create', $client)">{{ __('No draft posts waiting. A post shows here once it exists on the calendar; tick it and send it, the approvers get the link by email.') }}</x-empty-state>
                     @endforelse
                 </div>
                 @if ($candidates->isNotEmpty())

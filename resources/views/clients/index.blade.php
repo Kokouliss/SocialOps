@@ -48,7 +48,7 @@
                         </div>
                     </div>
                 @empty
-                    <div class="bg-white shadow-sm sm:rounded-lg p-6 text-gray-500 md:col-span-2">{{ __('No clients yet.') }} <a href="{{ route('clients.create') }}" class="text-brand-600 hover:underline">{{ __('Add the first one') }}</a>.</div>
+                    <x-empty-state class="bg-white md:col-span-2" :action="__('Add the first client')" :href="route('clients.create')">{{ __('No clients yet. A client profile holds the accounts, the voice, the pillars and the approvers; everything else hangs off it.') }}</x-empty-state>
                 @endforelse
             </div>
         </div>

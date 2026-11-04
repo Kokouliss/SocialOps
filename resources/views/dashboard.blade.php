@@ -10,8 +10,10 @@
             @if (session('status'))
                 <p class="text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
-            @if ($quiet)
-                <p class="bg-white p-6 shadow-sm sm:rounded-lg text-gray-500">{{ __('Nothing needs you right now.') }}</p>
+            @if ($clients->isEmpty())
+                <x-empty-state class="bg-white" :action="__('Add the first client')" :href="route('clients.create')">{{ __('No clients yet. A client profile holds the accounts, the voice, the pillars and the approvers; everything else hangs off it.') }}</x-empty-state>
+            @elseif ($quiet)
+                <x-empty-state class="bg-white" :action="__('Open the calendar')" :href="route('calendar')">{{ __('Nothing needs you right now.') }}</x-empty-state>
             @endif
 
             <div class="grid gap-4 lg:grid-cols-2 lg:items-start">
