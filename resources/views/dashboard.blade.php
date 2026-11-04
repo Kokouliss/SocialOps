@@ -3,7 +3,7 @@
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('Needs attention') }}</h2>
     </x-slot>
 
-    @php($quiet = $week->isEmpty() && $drafts->isEmpty() && $stuck->isEmpty() && $waiting->isEmpty() && $unanswered->isEmpty() && $tokens->isEmpty() && ! $failedJobs)
+    @php($quiet = $week->isEmpty() && $drafts->isEmpty() && $stuck->isEmpty() && $waiting->isEmpty() && $unanswered->isEmpty() && $tokens->isEmpty() && $drift->isEmpty() && ! $failedJobs)
     @php($line = fn ($post) => '<a class="text-brand-600 hover:underline" href="'.route('posts.edit', $post).'">'.e($post->name).'</a> <span class="text-gray-500">'.e($post->client->code.' · '.collect($post->platforms)->map(fn ($p) => str_replace('_', ' ', ucfirst($p)))->join(', ')).'</span>')
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-4 text-sm">
@@ -53,6 +53,20 @@
                             <ul class="mt-2 space-y-1">
                                 @foreach ($stuck as $post)
                                     <li><a class="text-brand-600 hover:underline" href="{{ route('posts.edit', $post) }}">{{ $post->name }}</a> <x-state-badge :state="$post->state" /> <span class="text-red-600">{{ Str::limit($post->publish_error, 120) }}</span></li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    @if ($drift->isNotEmpty())
+                        <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+                            <h3 class="font-semibold text-gray-900">{{ __('Pillar mix off target') }}</h3>
+                            <p class="mt-1 text-xs text-gray-500">{{ __('Share of posts per pillar, :days days back and ahead, against the profile.', ['days' => \App\Planning\PillarMix::DAYS]) }}</p>
+                            <ul class="mt-2 space-y-1">
+                                @foreach ($drift as $row)
+                                    <li><a class="text-brand-600 hover:underline" href="{{ route('clients.edit', $row['client']) }}">{{ $row['client']->name }}</a>:
+                                        @foreach ($row['mix']['drifted'] as $pillar){{ __(':pillar at :actual%, target :target%', ['pillar' => str_replace('_', ' ', $pillar), 'actual' => $row['mix']['rows'][$pillar]['actual'], 'target' => $row['mix']['rows'][$pillar]['target']]) }}@if (! $loop->last) · @endif @endforeach
+                                    </li>
                                 @endforeach
                             </ul>
                         </div>
