@@ -1,7 +1,8 @@
 {{-- The posts of the period in date order, one row each with a thumbnail: what phones get instead of the grid, and the "List" button on a desktop. --}}
 @php($groups = $days->filter(fn ($d) => $posts->has($d->toDateString()) || isset($marks[$d->toDateString()]))->mapWithKeys(fn ($d) => [$d->toDateString() => $posts->get($d->toDateString(), collect())]))
 @php($unscheduled->isEmpty() || $groups->put('', $unscheduled))
-<div class="bg-white shadow-sm sm:rounded-lg divide-y divide-gray-100 text-sm {{ $class }}" data-view="list">
+<form method="POST" action="{{ route('posts.bulk') }}" class="bg-white shadow-sm sm:rounded-lg divide-y divide-gray-100 text-sm {{ $class }}" data-view="list" data-bulk>
+    @csrf
     @forelse ($groups as $key => $dayPosts)
         @php($day = $key ? \Illuminate\Support\Carbon::parse($key) : null)
         <div class="p-3">
@@ -16,6 +17,11 @@
             </div>
             @foreach ($dayPosts as $post)
                 <div class="mt-2 flex items-center gap-3">
+                    @if ($post->state === \App\Posts\PostState::Published)
+                        <span class="w-4 flex-none" title="{{ __('Published posts stay as they are') }}"></span>
+                    @else
+                        <input type="checkbox" name="posts[]" value="{{ $post->id }}" class="flex-none rounded border-gray-300" aria-label="{{ __('Tick :name', ['name' => $post->name]) }}">
+                    @endif
                     @if ($thumb = $post->assets->firstWhere('kind', 'image'))
                         <img src="{{ route('assets.thumb', $thumb) }}" alt="" loading="lazy" class="h-12 w-12 flex-none rounded object-cover">
                     @else
@@ -31,4 +37,31 @@
     @empty
         <p class="p-3 text-gray-500">{{ __('Nothing scheduled here yet.') }}</p>
     @endforelse
-</div>
+    @if ($groups->isNotEmpty())
+        <div class="sticky bottom-0 flex flex-wrap items-center gap-2 rounded-b-lg bg-white p-3">
+            <label class="flex items-center gap-2 text-gray-600"><input type="checkbox" data-bulk-all class="rounded border-gray-300"> <span data-bulk-count>0</span> {{ __('ticked') }}</label>
+            <button name="action" value="review" class="rounded border px-3 py-1 hover:bg-gray-100 disabled:opacity-40">{{ __('Send for approval') }}</button>
+            <span class="flex items-center gap-1">
+                <input type="date" name="date" value="{{ old('date') }}" class="rounded-md border-gray-300 py-1 text-sm" aria-label="{{ __('Move to') }}">
+                <button name="action" value="move" class="rounded border px-3 py-1 hover:bg-gray-100 disabled:opacity-40">{{ __('Move') }}</button>
+            </span>
+            <button name="action" value="delete" class="rounded border px-3 py-1 text-red-700 hover:bg-red-50 disabled:opacity-40" onclick="return confirm('{{ __('Delete the ticked posts? Published posts stay.') }}')">{{ __('Delete') }}</button>
+            @if ($errors->hasAny(['posts', 'date']))
+                <span class="text-red-600">{{ $errors->first('posts') ?: $errors->first('date') }}</span>
+            @endif
+        </div>
+    @endif
+</form>
+<script>
+    // Tick posts in the list: the bar counts them and its buttons wake up; the first box ticks all.
+    document.querySelectorAll('[data-bulk]').forEach(form => {
+        const boxes = () => [...form.querySelectorAll('input[name="posts[]"]')];
+        const sync = () => {
+            const n = boxes().filter(b => b.checked).length;
+            form.querySelector('[data-bulk-count]')?.replaceChildren(String(n));
+            form.querySelectorAll('button').forEach(b => b.disabled = !n);
+        };
+        form.addEventListener('change', e => { if (e.target.matches('[data-bulk-all]')) boxes().forEach(b => b.checked = e.target.checked); sync(); });
+        sync();
+    });
+</script>
