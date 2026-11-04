@@ -15,7 +15,7 @@
     </div>
 @endif
 
-@php($tabs = ['basics' => __('Basics'), 'voice' => __('Voice and content'), 'approval' => __('Approval and timing'), 'research' => __('Research'), 'more' => __('Replies and webhooks')])
+@php($tabs = ['basics' => __('Basics'), 'agency' => __('Agency'), 'voice' => __('Voice and content'), 'approval' => __('Approval and timing'), 'research' => __('Research'), 'more' => __('Replies and webhooks')])
 <style>[x-cloak] { display: none !important }</style>
 <div x-data="{ tab: localStorage.getItem('client-tab') || 'basics' }" x-init="$watch('tab', t => localStorage.setItem('client-tab', t))">
 <nav class="mb-4 flex gap-1 overflow-x-auto text-sm" role="tablist">
@@ -81,6 +81,58 @@
     </div>
 </div>
 
+</div>
+<div x-show="tab === 'agency'" x-cloak>
+<p class="text-sm text-gray-500">{{ __('How the team tracks this client on the Clients board. The client never sees these.') }}</p>
+<div class="mt-2 grid gap-4 md:grid-cols-4">
+    <div>
+        <x-input-label for="status" :value="__('Status')" />
+        <select id="status" name="status" class="{{ $input }}">
+            @foreach (\App\Models\Client::STATUSES as $value => $label)<option value="{{ $value }}" @selected(old('status', $client->status ?? 'active') === $value)>{{ __($label) }}</option>@endforeach
+        </select>
+    </div>
+    <div>
+        <x-input-label for="owner" :value="__('Person')" />
+        <x-text-input id="owner" name="owner" type="text" list="staff-names" class="mt-1 block w-full" :value="old('owner', $client->owner)" />
+        <datalist id="staff-names">@foreach (\App\Models\User::orderBy('name')->pluck('name') as $name)<option value="{{ $name }}">@endforeach</datalist>
+    </div>
+    <div>
+        <x-input-label for="priority" :value="__('Priority')" />
+        <select id="priority" name="priority" class="{{ $input }}">
+            <option value="">—</option>
+            @foreach (\App\Models\Client::PRIORITIES as $value => $label)<option value="{{ $value }}" @selected(old('priority', $client->priority) === $value)>{{ __($label) }}</option>@endforeach
+        </select>
+    </div>
+    <div>
+        <x-input-label for="plan_due" :value="__('Next plan due')" />
+        <x-text-input id="plan_due" name="plan_due" type="date" class="mt-1 block w-full" :value="old('plan_due', $client->plan_due?->toDateString())" />
+    </div>
+    <div>
+        <x-input-label for="posts_per_week" :value="__('Posts per week')" />
+        <x-text-input id="posts_per_week" name="posts_per_week" type="number" min="0" max="31" class="mt-1 block w-full" :value="old('posts_per_week', $client->posts_per_week)" />
+    </div>
+    <div>
+        <x-input-label for="stories_per_week" :value="__('Stories per week')" />
+        <x-text-input id="stories_per_week" name="stories_per_week" type="number" min="0" max="31" class="mt-1 block w-full" :value="old('stories_per_week', $client->stories_per_week)" />
+    </div>
+    <div>
+        <x-input-label for="tiktoks_per_month" :value="__('TikToks per month')" />
+        <x-text-input id="tiktoks_per_month" name="tiktoks_per_month" type="number" min="0" max="31" class="mt-1 block w-full" :value="old('tiktoks_per_month', $client->tiktoks_per_month)" />
+    </div>
+    <div class="md:col-span-4">
+        <x-input-label for="pending" :value="__('Pending')" />
+        <textarea id="pending" name="pending" rows="2" class="{{ $input }}" placeholder="{{ __('e.g. 9 posts sent to the client, waiting for approval') }}">{{ old('pending', $client->pending) }}</textarea>
+    </div>
+    <div class="md:col-span-4">
+        <x-input-label :value="__('Links the team opens often (the Drive folder, the posts presentation)')" />
+        @foreach ($rows(old('links', $client->links ?? [])) as $i => $row)
+            <div class="mt-1 grid grid-cols-3 gap-2">
+                <x-text-input name="links[{{ $i }}][label]" type="text" class="block w-full text-sm" :value="$row['label'] ?? ''" placeholder="{{ __('Posts') }}" />
+                <x-text-input name="links[{{ $i }}][url]" type="url" pattern="https://.*" class="col-span-2 block w-full font-mono text-sm" :value="$row['url'] ?? ''" placeholder="https://docs.google.com/presentation/d/…" />
+            </div>
+        @endforeach
+    </div>
+</div>
 </div>
 <div x-show="tab === 'voice'" x-cloak>
 <h3 class="font-semibold text-gray-800">{{ __('Voice') }}</h3>

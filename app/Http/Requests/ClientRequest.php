@@ -21,6 +21,10 @@ class ClientRequest extends FormRequest
             'code' => strtoupper($this->filled('code') ? $this->code : substr(strlen($word) >= 2 ? $word : preg_replace('/[^a-z0-9]/i', '', $name), 0, 12)),
         ]);
 
+        if (is_array($this->links)) {
+            $this->merge(['links' => array_values(array_filter($this->links, fn ($l) => filled($l['url'] ?? null)))]);
+        }
+
         if (is_array($this->input('p'))) {
             $this->merge(['profile' => Yaml::dump(ClientProfile::fromForm($this->input('p')), 4)]);
         }

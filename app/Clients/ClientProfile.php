@@ -169,6 +169,18 @@ final class ClientProfile
             'name' => ['required', 'string', 'max:120'],
             'type' => ['required', Rule::in(Client::TYPES)],
             'location' => ['required', 'string', 'max:120'],
+            // the agency's board fields (Agency tab of the form), all optional
+            'status' => ['sometimes', 'required', Rule::in(array_keys(Client::STATUSES))],
+            'owner' => ['nullable', 'string', 'max:60'],
+            'priority' => ['nullable', Rule::in(array_keys(Client::PRIORITIES))],
+            'plan_due' => ['nullable', 'date'],
+            'posts_per_week' => ['nullable', 'integer', 'min:0', 'max:31'],
+            'stories_per_week' => ['nullable', 'integer', 'min:0', 'max:31'],
+            'tiktoks_per_month' => ['nullable', 'integer', 'min:0', 'max:31'],
+            'pending' => ['nullable', 'string', 'max:2000'],
+            'links' => ['nullable', 'array', 'max:10'],
+            'links.*.label' => ['nullable', 'string', 'max:40'],
+            'links.*.url' => ['required', 'url:https'],
         ];
     }
 
