@@ -154,10 +154,10 @@
                     <textarea name="variants[{{ $platform }}][{{ $lang }}][caption]" data-lang="{{ $lang }}" rows="5" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">{{ old("variants.$platform.$lang.caption", $v?->caption) }}</textarea>
                     <x-input-error class="mt-1" :messages="$errors->get(\"variants.$platform.$lang.caption\")" />
                     @if ($platform !== 'google_business')
-                        <x-text-input name="variants[{{ $platform }}][{{ $lang }}][hashtags]" type="text" class="mt-2 block w-full text-sm" placeholder="#chania #crete" :value="old(\"variants.$platform.$lang.hashtags\", implode(' ', $v?->hashtags ?? []))" />
+                        <x-text-input name="variants[{{ $platform }}][{{ $lang }}][hashtags]" type="text" class="mt-2 block w-full text-sm" placeholder="#chania #crete" :value="old('variants.'.$platform.'.'.$lang.'.hashtags', implode(' ', $v?->hashtags ?? []))" />
                     @endif
                     @if ($platform !== 'tiktok')
-                        <x-text-input name="variants[{{ $platform }}][{{ $lang }}][alt_text]" type="text" class="mt-2 block w-full text-sm" placeholder="{{ __('Alt text') }}" :value="old(\"variants.$platform.$lang.alt_text\", $v?->alt_text)" />
+                        <x-text-input name="variants[{{ $platform }}][{{ $lang }}][alt_text]" type="text" class="mt-2 block w-full text-sm" placeholder="{{ __('Alt text') }}" :value="old('variants.'.$platform.'.'.$lang.'.alt_text', $v?->alt_text)" />
                     @endif
                 </div>
             @endforeach
