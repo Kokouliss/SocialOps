@@ -82,4 +82,5 @@ Out of MVP: CSV import, evergreen queues, Canva autofill, auto-reports, auto-Ree
 - `prompts/caption-draft.md`: caption drafting prompt.
 - `docs/pilot-setup.md`: one-time setup of the Meta, TikTok and Google apps, the server and the first client.
 - `docs/api.md`: the JSON API and the outgoing webhooks.
+- `docs/dpa-template.md`: data processing agreement template with the sub-processor list and the security measures as built; keep it in step with the features.
 - `.claude/commands/`: `/kickoff` (first session), `/next` (continue the roadmap).
