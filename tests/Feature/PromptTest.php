@@ -17,16 +17,18 @@ it('fills the caption prompt from the example profile and leaves no placeholder 
         ->toContain('Platforms: instagram, facebook')
         ->toContain('Sunset cocktails')
         ->toContain('Client-specific banned phrases: none')
+        ->toContain('Extra information about the client: none')
         ->not->toContain('Used by the AI Drafting Service')
         ->not->toMatch('/\{\{\s*[\w.]+\s*\}\}/');
 });
 
 it('renders the trend and plan prompts with key dates as bullet lines', function () {
-    $profile = Client::factory()->create()->toProfileArray();
+    $profile = ['notes' => 'Family business since 1987.'] + Client::factory()->create()->toProfileArray();
     $vars = Prompt::profileVars($profile) + ['today' => '2027-05-01', 'window' => ['start' => '2027-05-02', 'end' => '2027-05-15'], 'platforms' => ['instagram'], 'count' => 3, 'holidays' => ['2027-05-02 Πάσχα (Orthodox Easter)']];
 
     expect(Prompt::render('trend-research', $vars + ['max_searches' => 12]))
         ->toContain('- date: 2027-05-01, label: Season opening')
+        ->toContain('Extra information about the client: Family business since 1987.')
         ->toContain('place 25%, food_drink 25%');
     expect(Prompt::render('content-plan', $vars + ['quota' => 'place: 2, offers: 1', 'instruction' => '', 'trend_brief' => 'BRIEF', 'recent' => []]))
         ->toContain('Posts per pillar (exact): place: 2, offers: 1')

@@ -9,6 +9,7 @@ You plan social media content for {{client.name}}, a {{client.type}} in {{client
 ## Voice
 - Tone: {{voice.tone}}
 - Facts to keep consistent: {{voice.facts}}
+- Extra information about the client: {{notes}}
 
 ## The batch
 - Posts to plan: {{count}}
