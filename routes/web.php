@@ -72,6 +72,7 @@ Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::post('/posts/{post}/draft', [PostController::class, 'draft'])->name('posts.draft');
     Route::post('/posts/{post}/shorten', [PostController::class, 'shorten'])->name('posts.shorten');
     Route::post('/posts/{post}/transition', [PostController::class, 'transition'])->name('posts.transition');
+    Route::post('/posts/{post}/duplicate', [PostController::class, 'duplicate'])->name('posts.duplicate');
     Route::patch('/posts/{post}/reschedule', [PostController::class, 'reschedule'])->name('posts.reschedule');
     Route::post('/posts/{post}/notes', [PostController::class, 'note'])->name('posts.note');
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');

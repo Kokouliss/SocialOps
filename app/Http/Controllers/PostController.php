@@ -243,6 +243,16 @@ class PostController extends Controller
         return back();
     }
 
+    /** A Draft copy for this or another of the login's clients, optionally on a date; the media follows only within the same client. */
+    public function duplicate(Request $request, Post $post): RedirectResponse
+    {
+        $data = $request->validate(['client_id' => ['required', Rule::in($request->user()->clients()->pluck('id'))], 'date' => ['nullable', 'date']]);
+        $client = Client::findOrFail($data['client_id']);
+        $copy = $post->duplicate($client, ($data['date'] ?? null) ? Carbon::parse($data['date'])->setTimeFrom($post->scheduled_at ?? now()->setTime(10, 0)) : null);
+
+        return redirect()->route('posts.edit', $copy)->with('status', $client->is($post->client) ? 'duplicated-as-a-draft' : 'duplicated-as-a-draft-without-the-media-which-stays-with-its-client');
+    }
+
     public function destroy(Post $post): RedirectResponse
     {
         abort_if($post->state === PostState::Published, 422, 'Published posts cannot be deleted.');
