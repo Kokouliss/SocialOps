@@ -15,6 +15,15 @@
     </div>
 @endif
 
+@php($tabs = ['basics' => __('Basics'), 'voice' => __('Voice and content'), 'approval' => __('Approval and timing'), 'research' => __('Research'), 'more' => __('Replies and webhooks')])
+<style>[x-cloak] { display: none !important }</style>
+<div x-data="{ tab: localStorage.getItem('client-tab') || 'basics' }" x-init="$watch('tab', t => localStorage.setItem('client-tab', t))">
+<nav class="mb-4 flex gap-1 overflow-x-auto text-sm" role="tablist">
+    @foreach ($tabs as $key => $label)
+        <button type="button" role="tab" class="whitespace-nowrap px-3 py-2 border-b-2" :class="tab === '{{ $key }}' ? 'border-brand-500 text-gray-900 font-medium' : 'border-transparent text-gray-500 hover:text-gray-900'" :aria-selected="tab === '{{ $key }}'" x-on:click="tab = '{{ $key }}'">{{ $label }}</button>
+    @endforeach
+</nav>
+<div x-show="tab === 'basics'">
 <div class="grid gap-6 md:grid-cols-3">
     <div>
         <x-input-label for="name" :value="__('Name')" />
@@ -72,7 +81,9 @@
     </div>
 </div>
 
-<h3 class="mt-8 font-semibold text-gray-800">{{ __('Voice') }}</h3>
+</div>
+<div x-show="tab === 'voice'" x-cloak>
+<h3 class="font-semibold text-gray-800">{{ __('Voice') }}</h3>
 <p class="text-sm text-gray-500">{{ __('How the captions sound. Claude follows this on every post, reply and report.') }}</p>
 <div class="mt-2 grid gap-4 md:grid-cols-2">
     <div class="md:col-span-2">
@@ -140,7 +151,28 @@
     </div>
 </div>
 
-<h3 class="mt-8 font-semibold text-gray-800">{{ __('Approval') }}</h3>
+<h3 class="mt-8 font-semibold text-gray-800">{{ __('Text added to every post') }}</h3>
+<div class="mt-2 grid gap-4 md:grid-cols-2">
+    <div>
+        <x-input-label :value="__('Signature line under every caption, per platform (optional)')" />
+        @foreach ($platforms as $platform => $label)
+            <x-text-input name="p[signatures][{{ $platform }}]" type="text" class="mt-1 block w-full text-sm" :value="$p('signatures.'.$platform)" placeholder="{{ $label }}" />
+        @endforeach
+    </div>
+    <div>
+        <x-input-label :value="__('Placeholders for captions, written as :tag and filled at publish time', ['tag' => '{'.'{phone}}'])" />
+        @foreach ($rows(collect(old('p.fields', collect($profile['fields'] ?? [])->map(fn ($v, $k) => ['key' => $k, 'value' => $v])->values()->all()))->all()) as $i => $row)
+            <div class="mt-1 grid grid-cols-3 gap-2">
+                <x-text-input name="p[fields][{{ $i }}][key]" type="text" class="block w-full font-mono text-sm" :value="$row['key'] ?? ''" placeholder="phone" />
+                <x-text-input name="p[fields][{{ $i }}][value]" type="text" class="col-span-2 block w-full text-sm" :value="$row['value'] ?? ''" placeholder="+30 28210 00000" />
+            </div>
+        @endforeach
+    </div>
+</div>
+
+</div>
+<div x-show="tab === 'approval'" x-cloak>
+<h3 class="font-semibold text-gray-800">{{ __('Approval') }}</h3>
 <div class="mt-2 grid gap-4 md:grid-cols-2">
     <div>
         <x-input-label for="p-policy" :value="__('Who approves the posts, and the hours the client has to answer')" />
@@ -197,7 +229,9 @@
     </div>
 </div>
 
-<h3 class="mt-8 font-semibold text-gray-800">{{ __('Research') }}</h3>
+</div>
+<div x-show="tab === 'research'" x-cloak>
+<h3 class="font-semibold text-gray-800">{{ __('Research') }}</h3>
 <p class="text-sm text-gray-500">{{ __('Steers the trend research, the planner and the weekly listening report.') }}</p>
 <div class="mt-2 grid gap-4 md:grid-cols-3">
     <div>
@@ -222,26 +256,9 @@
     </div>
 </div>
 
-<h3 class="mt-8 font-semibold text-gray-800">{{ __('Text added to every post') }}</h3>
-<div class="mt-2 grid gap-4 md:grid-cols-2">
-    <div>
-        <x-input-label :value="__('Signature line under every caption, per platform (optional)')" />
-        @foreach ($platforms as $platform => $label)
-            <x-text-input name="p[signatures][{{ $platform }}]" type="text" class="mt-1 block w-full text-sm" :value="$p('signatures.'.$platform)" placeholder="{{ $label }}" />
-        @endforeach
-    </div>
-    <div>
-        <x-input-label :value="__('Placeholders for captions, written as :tag and filled at publish time', ['tag' => '{'.'{phone}}'])" />
-        @foreach ($rows(collect(old('p.fields', collect($profile['fields'] ?? [])->map(fn ($v, $k) => ['key' => $k, 'value' => $v])->values()->all()))->all()) as $i => $row)
-            <div class="mt-1 grid grid-cols-3 gap-2">
-                <x-text-input name="p[fields][{{ $i }}][key]" type="text" class="block w-full font-mono text-sm" :value="$row['key'] ?? ''" placeholder="phone" />
-                <x-text-input name="p[fields][{{ $i }}][value]" type="text" class="col-span-2 block w-full text-sm" :value="$row['value'] ?? ''" placeholder="+30 28210 00000" />
-            </div>
-        @endforeach
-    </div>
 </div>
-
-<h3 class="mt-8 font-semibold text-gray-800">{{ __('Comment replies') }}</h3>
+<div x-show="tab === 'more'" x-cloak>
+<h3 class="font-semibold text-gray-800">{{ __('Comment replies') }}</h3>
 <x-input-label class="mt-2" :value="__('Saved replies for the comment inbox (label, text, and keywords that trigger it on a new Instagram or Facebook comment)')" />
 @foreach ($rows(old('p.saved_replies', $profile['saved_replies'] ?? [])) as $i => $row)
     <div class="mt-1 grid gap-2 md:grid-cols-6">
@@ -267,6 +284,9 @@
         </div>
     @endforeach
 </details>
+
+</div>
+</div>
 
 <div class="mt-6 flex items-center gap-4">
     <x-primary-button>{{ __('Save') }}</x-primary-button>
