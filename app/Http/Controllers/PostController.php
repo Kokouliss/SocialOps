@@ -10,7 +10,6 @@ use App\Http\Requests\PostRequest;
 use App\Media\TextOverlay;
 use App\Models\Client;
 use App\Models\Post;
-use App\Models\PostVariant;
 use App\Posts\CsvImport;
 use App\Posts\InvalidTransition;
 use App\Posts\PostNamer;
@@ -103,18 +102,10 @@ class PostController extends Controller
     public function draft(CaptionDrafter $drafter, Post $post): RedirectResponse
     {
         abort_if($post->state === PostState::Published, 422, 'Published posts cannot be redrafted.');
-        $client = $post->client;
-        $examples = PostVariant::whereHas('post', fn ($q) => $q->where('client_id', $client->id)->whereIn('state', [PostState::Approved, PostState::Scheduled, PostState::Published]))
-            ->latest('id')->limit(6)->pluck('caption')->filter()->values()->all();
+        $vars = CaptionDrafter::postVars($post);
 
         try {
-            $captions = $drafter->draft($client->toProfileArray(), [
-                'platforms' => $post->platforms,
-                'format' => $post->format,
-                'pillar' => $post->pillar ?? 'misc',
-                'brief' => (string) $post->brief,
-                'asset_description' => $post->assets->map(fn ($a) => "{$a->kind} {$a->name}".($a->note ? ": {$a->note}" : ''))->join('; ') ?: 'not chosen yet',
-            ], $examples, $post->assets->firstWhere('kind', 'image')?->preview());
+            $captions = $drafter->draft($post->client->toProfileArray(), $vars['post'], $vars['examples'], $post->assets->firstWhere('kind', 'image')?->preview());
         } catch (\Exception $e) { // a malformed reply or an API error is shown on the form, not as a 500
             return back()->withErrors(['draft' => $e->getMessage()]);
         }

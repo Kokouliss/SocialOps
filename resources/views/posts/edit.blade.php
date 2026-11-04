@@ -37,6 +37,8 @@
                     @csrf
                     <button type="submit" class="px-3 py-1 border border-brand-300 rounded text-xs text-brand-700 hover:bg-brand-50">{{ __('Draft captions with Claude') }}</button>
                 </form>
+                @else
+                <p class="text-xs text-gray-500 self-center">{{ __('Captions with Claude: in a chat with the Social Ops connector, ask "write the captions for post :id" (or shorten or change them).', ['id' => $post->id]) }}</p>
                 @endif
                 <form method="POST" action="{{ route('posts.destroy', $post) }}" class="ml-auto" onsubmit="return confirm('{{ __('Delete this post?') }}')">
                     @csrf

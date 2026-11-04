@@ -131,6 +131,7 @@
     "Caption languages, the main one first (e.g. el, en)": "Γλώσσες λεζάντας, πρώτα η κύρια (π.χ. el, en)",
     "Caption:": "Λεζάντα:",
     "Captions": "Λεζάντες",
+    "Captions with Claude: in a chat with the Social Ops connector, ask \"write the captions for post :id\" (or shorten or change them).": "Λεζάντες με το Claude: σε μια συνομιλία με τον connector Social Ops, ζητήστε «γράψε τις λεζάντες για την ανάρτηση :id» (ή να τις κοντύνει ή να τις αλλάξει).",
     "Carousel": "Carousel",
     "Change with Claude": "Αλλαγή με το Claude",
     "Changes requested": "Ζητήθηκαν αλλαγές",
