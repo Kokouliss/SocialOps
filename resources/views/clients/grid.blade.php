@@ -24,7 +24,7 @@
                         @if ($post->format !== 'feed')
                             <span class="absolute top-1 right-1 rounded bg-black/60 px-1 text-[10px] text-white">{{ $post->format === 'reel' ? '▶' : '▣' }}</span>
                         @endif
-                        <span class="absolute bottom-0 inset-x-0 bg-black/60 px-1 py-0.5 text-[10px] text-white truncate">{{ $post->scheduled_at->format('j M') }} · {{ $post->state->label() }}</span>
+                        <span class="absolute bottom-0 inset-x-0 flex items-center justify-between gap-1 bg-black/60 px-1 py-0.5 text-[10px] text-white"><span class="whitespace-nowrap">{{ $post->scheduled_at->format('j M') }}</span> <x-state-badge :state="$post->state" class="min-w-0 truncate" /></span>
                     </a>
                 @endforeach
             </div>
