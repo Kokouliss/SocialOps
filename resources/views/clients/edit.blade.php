@@ -100,6 +100,15 @@
                 </form>
                 <x-input-error class="mt-2" :messages="$errors->get('csv')" />
             </div>
+
+            <div class="bg-white p-6 shadow-sm sm:rounded-lg mt-6">
+                <h3 class="font-semibold text-lg text-gray-800">{{ __('Link in bio') }}</h3>
+                <p class="mt-1 text-sm text-gray-600">{{ __('Put this address in the Instagram and TikTok bio. The buttons come from the profile placeholders that hold a link, a phone number or an e-mail (booking, site, menu, phone, whatsapp…) and from the accounts.') }}</p>
+                <div class="mt-3 flex gap-2">
+                    <x-text-input type="text" class="block w-full font-mono text-xs" :value="route('bio', $client)" readonly onclick="this.select()" />
+                    <a href="{{ route('bio', $client) }}" target="_blank" class="inline-flex items-center px-3 py-1 border rounded text-xs hover:bg-gray-100">{{ __('Open') }}</a>
+                </div>
+            </div>
         </div>
     </div>
 </x-app-layout>

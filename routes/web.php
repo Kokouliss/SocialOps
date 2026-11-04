@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AssetController;
+use App\Http\Controllers\BioController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CanvaController;
 use App\Http\Controllers\ClientController;
@@ -106,6 +107,9 @@ Route::middleware(['auth', LimitClients::class])->group(function () {
 // OAuth return and the pick step: the state and candidates in the session are the credential, staff or client alike
 Route::get('/oauth/{provider}/callback', [AccountController::class, 'callback'])->name('oauth.callback');
 Route::post('/clients/{client}/accounts', [AccountController::class, 'attach'])->name('accounts.attach');
+
+// The link-in-bio page is public on purpose: its address sits in the client's Instagram and TikTok profile
+Route::get('/bio/{client:slug}', BioController::class)->name('bio');
 
 // Client-facing pages: no login, the signed link is the credential (GET and POST share the URL)
 Route::middleware('signed')->group(function () {
