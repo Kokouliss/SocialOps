@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
 /** A media file in a client's inbox. The file itself lives on `disk` at `path`. */
-#[Fillable(['name', 'original_name', 'disk', 'path', 'mime', 'size', 'kind', 'pillar', 'season', 'people_consent', 'ugc_permission', 'note', 'uploaded_via'])]
+#[Fillable(['name', 'original_name', 'disk', 'path', 'mime', 'size', 'kind', 'pillar', 'season', 'people_consent', 'ugc_permission', 'note', 'uploaded_via', 'source_id'])]
 class Asset extends Model
 {
     /** @use HasFactory<AssetFactory> */

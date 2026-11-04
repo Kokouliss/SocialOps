@@ -70,6 +70,21 @@ CANVA_CLIENT_ID=…
 CANVA_CLIENT_SECRET=…
 ```
 
+## 3b. Google Drive folders (optional) → `GOOGLE_SERVICE_ACCOUNT_JSON`
+
+Lets a client drop photos and videos in a shared Google Drive folder; Social Ops files them in the client's inbox every hour (assets page → Google Drive box). The Drive API is free, and a service account needs no consent screen, no Google review and no token renewal.
+
+1. In the Google Cloud project of step 3: **APIs & Services → Library** → enable *Google Drive API*.
+2. **IAM & Admin → Service accounts → Create service account**: name `social-ops-drive`, no roles, **Done**.
+3. Open it → **Keys → Add key → Create new key → JSON**. The file downloads once. It is a credential: keep it out of the repository and out of `public/`.
+4. Upload it to the server next to the app (not inside it), point `.env` at it, then **Refresh after update** on the dashboard (or `php artisan config:clear`).
+5. Per client, on the assets page: share the folder (the client's own, or one you make in the agency's Drive and share with the client) with the address the box shows, *Viewer* is enough; paste the folder link; **Watch folder**. The folder itself is read, not its subfolders; one folder per client; a file is filed once, by its Drive id.
+
+`.env`:
+```
+GOOGLE_SERVICE_ACCOUNT_JSON=/var/www/vhosts/AGENCY-DOMAIN/socialops-drive.json
+```
+
 ## 4. Claude → `ANTHROPIC_API_KEY`
 
 Already in hand. Only in `.env`. Rotate at https://console.anthropic.com/settings/keys if it was ever pasted anywhere.
