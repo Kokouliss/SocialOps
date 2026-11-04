@@ -132,6 +132,9 @@
 
 <h3 class="mt-8 font-semibold text-gray-800">{{ __('Captions') }} <span class="text-sm font-normal text-gray-500">{{ __('(only the ticked platforms are saved; Greek is reviewed by a human before approval)') }}</span></h3>
 <label class="mt-2 flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" id="sync-captions" class="rounded border-gray-300"> {{ __('Same text on every platform: type it once, it copies to the other ticked platforms; untick to customise per platform') }}</label>
+@if (! config('features.claude_api'))
+    <label class="mt-2 flex items-center gap-2 text-sm text-gray-700"><input type="hidden" name="settings[ask_claude]" value="0"><input type="checkbox" name="settings[ask_claude]" value="1" class="rounded border-gray-300" @checked(old('settings.ask_claude', $post->settings['ask_claude'] ?? false))> {{ __('Ask Claude for the captions: the scheduled task writes them and files them here for review') }}</label>
+@endif
 @if ($post->exists && config('features.claude_api'))
     <div class="mt-3 flex gap-2">
         <x-text-input id="instruction" type="text" class="block w-full text-sm" placeholder="{{ __('e.g. make it shorter and more playful, add the opening hours, mention the full moon party on Saturday') }}" onkeydown="if (event.key === 'Enter') { event.preventDefault(); document.getElementById('rewrite').click(); }" />

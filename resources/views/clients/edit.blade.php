@@ -96,15 +96,20 @@
                 text() { return `{{ __('Plan :posts posts for :client (client ":slug") from :from for :days days.', ['posts' => '${this.posts}', 'client' => $client->name, 'slug' => $client->slug, 'from' => '${this.from}', 'days' => '${this.days}']) }}` + (this.instruction.trim() ? ' {{ __('About:') }} ' + this.instruction.trim() + '.' : '') + ` {{ __('Use the Social Ops tools: get-planning-brief first, research the current trends for this client (the last30days skill or web search), plan the posts and write the captions in :languages, then save-plan. Publish nothing.', ['languages' => strtoupper(implode(' + ', array_merge($client->profile['languages'], $client->profile['extra_languages'] ?? [])))]) }}`; },
                 copy() { navigator.clipboard.writeText(this.text()).then(() => { this.copied = true; setTimeout(() => this.copied = false, 2000) }) } }">
                 <h3 class="font-semibold text-lg text-gray-800">{{ __('Plan with Claude') }}</h3>
-                <p class="mt-1 text-sm text-gray-500">{{ __('Claude plans through the Social Ops connector: it reads this profile, researches the current trends, plans the posts with captions and files them on the calendar as Drafts with a review sheet in Reports. Fill in the fields, copy the request and paste it to Claude.') }} <a href="{{ route('staff.index') }}" class="text-brand-600 hover:underline">{{ __('Connector key: Staff page, API tokens') }}</a></p>
-                <div class="mt-4 grid gap-4 sm:grid-cols-4">
-                    <div><x-input-label for="mcp-posts" :value="__('Posts')" /><x-text-input id="mcp-posts" type="number" min="1" max="{{ \App\Planning\PlanRequest::MAX_POSTS }}" class="mt-1 block w-full" x-model="posts" /></div>
-                    <div><x-input-label for="mcp-from" :value="__('From')" /><x-text-input id="mcp-from" type="date" class="mt-1 block w-full" x-model="from" /></div>
-                    <div><x-input-label for="mcp-days" :value="__('Days')" /><x-text-input id="mcp-days" type="number" min="1" max="92" class="mt-1 block w-full" x-model="days" /></div>
-                    <div class="sm:col-span-4"><x-input-label for="mcp-instruction" :value="__('What the posts are about (optional)')" /><textarea id="mcp-instruction" rows="2" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm" x-model="instruction" placeholder="{{ __('e.g. December: gifts, Christmas opening hours, the New Year party') }}"></textarea></div>
+                <p class="mt-1 text-sm text-gray-500">{{ __('Claude plans through the Social Ops connector: it reads this profile, researches the current trends, plans the posts with captions and files them on the calendar as Drafts with a review sheet in Reports. Press "Queue for Claude" and the scheduled task does it at its next run (hourly), or copy the request and paste it to Claude in a chat.') }}</p>
+                @if (session('status') === 'job-queued')
+                    <p class="mt-2 text-sm text-green-600">{{ __('Queued. Claude picks it up at its next run; the Drafts and the review sheet land in Reports.') }}</p>
+                @endif
+                <form method="POST" action="{{ route('clients.queue', $client) }}" class="mt-4 grid gap-4 sm:grid-cols-4">
+                    @csrf
+                    <div><x-input-label for="mcp-posts" :value="__('Posts')" /><x-text-input id="mcp-posts" name="posts" type="number" min="1" max="{{ \App\Planning\PlanRequest::MAX_POSTS }}" class="mt-1 block w-full" x-model="posts" required /></div>
+                    <div><x-input-label for="mcp-from" :value="__('From')" /><x-text-input id="mcp-from" name="from" type="date" class="mt-1 block w-full" x-model="from" required /></div>
+                    <div><x-input-label for="mcp-days" :value="__('Days')" /><x-text-input id="mcp-days" name="days" type="number" min="1" max="92" class="mt-1 block w-full" x-model="days" required /></div>
+                    <div class="sm:col-span-4"><x-input-label for="mcp-instruction" :value="__('What the posts are about (optional)')" /><textarea id="mcp-instruction" name="instruction" rows="2" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm" x-model="instruction" placeholder="{{ __('e.g. December: gifts, Christmas opening hours, the New Year party') }}"></textarea></div>
                     <div class="sm:col-span-4 rounded-md bg-gray-50 p-3 text-sm text-gray-700" x-text="text()"></div>
-                    <div class="sm:col-span-4"><x-primary-button type="button" x-on:click="copy()"><span x-text="copied ? '{{ __('Copied') }}' : '{{ __('Copy the request') }}'"></span></x-primary-button></div>
-                </div>
+                    <div class="sm:col-span-4 flex gap-2"><x-primary-button>{{ __('Queue for Claude') }}</x-primary-button><x-secondary-button type="button" x-on:click="copy()"><span x-text="copied ? '{{ __('Copied') }}' : '{{ __('Copy the request') }}'"></span></x-secondary-button></div>
+                    <x-input-error class="sm:col-span-4" :messages="$errors->job->all()" />
+                </form>
             </div>
             @endif
             <div class="bg-white p-6 shadow-sm sm:rounded-lg mt-6">

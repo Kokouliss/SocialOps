@@ -25,6 +25,7 @@ class SavePlan extends Tool
         $languages = array_merge($profile['languages'], $profile['extra_languages'] ?? []);
 
         $input = Validator::make($request->all(), [
+            'job' => ['nullable', 'integer'],
             'trend_brief' => ['nullable', 'string', 'max:100000'],
             'posts' => ['required', 'array', 'min:1', 'max:'.PlanRequest::MAX_POSTS],
             'posts.*.date' => ['required', 'date_format:Y-m-d'],
@@ -58,6 +59,7 @@ class SavePlan extends Tool
             'posts' => $posts,
         ];
         $sheet = $writer->write($client, $result, fileBrief: ($input['trend_brief'] ?? '') !== '');
+        $client->reports()->where('kind', 'claude_job')->whereKey($input['job'] ?? 0)->delete();
 
         return Response::json([
             'drafts' => count($result['posts']),
@@ -72,6 +74,7 @@ class SavePlan extends Tool
     {
         return [
             'client' => $schema->string()->description('Client id or slug')->required(),
+            'job' => $schema->integer()->description('The plan job from list-claude-jobs this plan answers; it leaves the queue'),
             'trend_brief' => $schema->string()->description('The trend research the plan rests on, Markdown; filed in the client\'s reports'),
             'posts' => $schema->array()->items($schema->object()->description('date (YYYY-MM-DD), platforms [], format, pillar, title, angle, trend_signal (or null), why_now, asset_brief, caption_brief, captions {el: {instagram: "...", facebook: "..."}, en: {...}, hashtags: ["#chania"], alt_text: {el: "...", en: "..."}, design: {el: "...", en: "..."}, notes_for_reviewer: "..."}'))->min(1)->required(),
         ];

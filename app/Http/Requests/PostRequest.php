@@ -25,6 +25,13 @@ class PostRequest extends FormRequest
         return $this->route('client') ?? $this->route('post')->client;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('settings.ask_claude')) { // "1"/"0" from the form; the queue query needs a JSON boolean
+            $this->merge(['settings' => ['ask_claude' => $this->boolean('settings.ask_claude')] + (array) $this->input('settings')]);
+        }
+    }
+
     public function rules(): array
     {
         $client = $this->client();
@@ -47,6 +54,7 @@ class PostRequest extends FormRequest
             'settings.first_comment' => ['nullable', 'string', 'max:2200'],
             'settings.instagram.collaborators' => ['nullable', 'string', 'max:120'],
             'settings.repeat' => ['nullable', Rule::in(['weekly', 'monthly'])],
+            'settings.ask_claude' => ['nullable', 'boolean'],
             'assets' => ['sometimes', 'array'],
             'assets.*' => [Rule::exists('assets', 'id')->where('client_id', $client->id)],
             'variants' => ['sometimes', 'array'],
