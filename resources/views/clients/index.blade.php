@@ -17,7 +17,7 @@
                         <div class="flex flex-wrap items-baseline gap-x-3">
                             <a href="{{ route('calendar', ['client' => $client->slug]) }}" class="text-lg font-semibold text-gray-900 hover:underline">{{ $client->name }}</a>
                             <span class="font-mono text-sm text-gray-500">{{ $client->code }}</span>
-                            <span class="text-sm text-gray-500">{{ str_replace('_', ' ', $client->type) }} · {{ $client->location }}</span>
+                            <span class="text-sm text-gray-500">{{ __(str_replace('_', ' ', $client->type)) }} · {{ $client->location }}</span>
                         </div>
                         <p class="mt-1 text-xs text-gray-500">{{ collect($client->profile['accounts'])->filter()->keys()->map(fn ($p) => str_replace('_', ' ', $p))->join(', ') ?: '—' }} · {{ __('approval') }} {{ $client->profile['approval']['policy'] }}</p>
                         <div class="mt-3 flex flex-wrap gap-2 text-xs">

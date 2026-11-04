@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Clients\ClientProfile;
 use App\Http\Requests\ClientRequest;
 use App\Jobs\PlanContentBatch;
 use App\Models\Client;
@@ -12,7 +11,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
-use Symfony\Component\Yaml\Yaml;
 
 class ClientController extends Controller
 {
@@ -31,7 +29,7 @@ class ClientController extends Controller
 
     public function create(): View
     {
-        return view('clients.create', ['client' => new Client, 'profileYaml' => ClientProfile::templateYaml()]);
+        return view('clients.create', ['client' => new Client]);
     }
 
     public function store(ClientRequest $request): RedirectResponse
@@ -43,7 +41,7 @@ class ClientController extends Controller
 
     public function edit(Client $client): View
     {
-        return view('clients.edit', ['client' => $client, 'profileYaml' => Yaml::dump($client->profile, 4), 'accounts' => PlanRequest::accounts($client->toProfileArray())]);
+        return view('clients.edit', ['client' => $client, 'accounts' => PlanRequest::accounts($client->toProfileArray())]);
     }
 
     /** The Instagram grid as it will look: feed, carousel and Reel posts with a date, newest first, three across, with the first asset. */

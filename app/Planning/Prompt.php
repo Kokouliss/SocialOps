@@ -28,7 +28,7 @@ class Prompt
         return trim($text);
     }
 
-    /** Variables for the client.*, voice.*, hashtags.*, research.*, languages, pillars, key_dates, slots and fields placeholders, from a profile shaped like config/clients/example.yaml. */
+    /** Variables for the client.*, voice.*, hashtags.*, research.*, languages, pillars, notes, key_dates, slots and fields placeholders, from a profile shaped like config/clients/example.yaml. */
     public static function profileVars(array $profile): array
     {
         $pillars = $profile['pillars'] ?? [];
@@ -39,6 +39,7 @@ class Prompt
             'hashtags' => $profile['hashtags'] ?? [],
             'languages' => array_merge($profile['languages'] ?? ['el', 'en'], $profile['extra_languages'] ?? []),
             'pillars' => implode(', ', array_map(fn ($name, $share) => "{$name} {$share}%", array_keys($pillars), $pillars)),
+            'notes' => $profile['notes'] ?? '',
             'key_dates' => $profile['key_dates'] ?? [],
             'slots' => $profile['slots'] ?? [],
             'fields' => implode(', ', array_map(fn ($k, $v) => '{{'.$k.'}} = '.$v, array_keys($profile['fields'] ?? []), $profile['fields'] ?? [])),

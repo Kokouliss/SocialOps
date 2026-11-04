@@ -6,6 +6,7 @@ use App\Models\Client;
 use App\Webhooks\Webhooks;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\Yaml\Exception\ParseException;
@@ -14,7 +15,7 @@ use Symfony\Component\Yaml\Yaml;
 /** Parses and validates a brand profile written in the config/clients/example.yaml format. */
 final class ClientProfile
 {
-    public const SECTIONS = ['accounts', 'languages', 'extra_languages', 'voice', 'pillars', 'hashtags', 'research', 'approval', 'slots', 'saved_replies', 'signatures', 'fields', 'utm', 'webhooks', 'key_dates'];
+    public const SECTIONS = ['accounts', 'languages', 'extra_languages', 'voice', 'notes', 'pillars', 'hashtags', 'research', 'approval', 'slots', 'saved_replies', 'signatures', 'fields', 'utm', 'webhooks', 'key_dates'];
 
     public const PLATFORMS = ['instagram', 'facebook', 'tiktok', 'google_business'];
 
@@ -27,21 +28,21 @@ final class ClientProfile
      */
     public static function parse(string $yaml): array
     {
-        $data = Arr::only(self::parseYaml($yaml), self::SECTIONS) + ['extra_languages' => [], 'slots' => [], 'saved_replies' => [], 'signatures' => [], 'fields' => [], 'utm' => false, 'webhooks' => [], 'key_dates' => [], 'research' => ['sources' => [], 'excluded_domains' => [], 'excluded_topics' => []]];
+        $data = Arr::only(self::parseYaml($yaml), self::SECTIONS) + ['extra_languages' => [], 'notes' => '', 'slots' => [], 'saved_replies' => [], 'signatures' => [], 'fields' => [], 'utm' => false, 'webhooks' => [], 'key_dates' => [], 'research' => ['sources' => [], 'excluded_domains' => [], 'excluded_topics' => []]];
 
         $validator = Validator::make($data, self::rules());
 
         $validator->after(function ($v) use ($data) {
             if (is_array($data['pillars'] ?? null) && array_sum($data['pillars']) !== 100) {
-                $v->errors()->add('pillars', 'Pillar shares must add up to 100.');
+                $v->errors()->add('pillars', __('Pillar shares must add up to 100.'));
             }
             foreach (array_keys(is_array($data['fields'] ?? null) ? $data['fields'] : []) as $key) {
                 if (! preg_match('/^[a-z][a-z0-9_]*$/', (string) $key)) {
-                    $v->errors()->add('fields', "Field names are lowercase letters, digits and underscores: '{$key}' is not.");
+                    $v->errors()->add('fields', __("Field names are lowercase letters, digits and underscores: ':key' is not.", ['key' => $key]));
                 }
             }
             if (($data['approval']['auto_approve_on_timeout'] ?? false) && ($data['approval']['policy'] ?? null) !== 'optional') {
-                $v->errors()->add('approval.auto_approve_on_timeout', 'Auto-approve on timeout is only allowed when the policy is optional.');
+                $v->errors()->add('approval.auto_approve_on_timeout', __('Auto-approve on timeout is only allowed when the policy is optional.'));
             }
         });
 
@@ -50,35 +51,78 @@ final class ClientProfile
     }
 
     /**
-     * The form fields of the common sections (languages, approval, hashtags, signatures, placeholders, saved replies) written over a parsed profile; the YAML keeps everything else.
+     * The profile sections built from the client form (the `p[...]` inputs): lists are comma, space or line separated text, a row without its key is dropped.
      *
-     * @param  array<string, mixed>  $data
      * @param  array<string, mixed>  $form
      * @return array<string, mixed>
      */
-    public static function applyForm(array $data, array $form): array
+    public static function fromForm(array $form): array
     {
+        $text = fn ($s) => trim((string) $s);
         $list = fn ($s) => array_values(array_filter(array_map('trim', preg_split('/[\s,]+/', (string) $s))));
+        $lines = fn ($s) => array_values(array_filter(array_map('trim', preg_split('/\R/', (string) $s)), 'strlen'));
         $tags = fn ($s) => array_map(fn ($h) => '#'.ltrim($h, '#'), $list($s));
-        $rows = fn ($rows, $keep) => array_values(array_filter(array_map(fn ($r) => array_map('trim', (array) $r), (array) $rows), $keep));
+        $rows = fn ($rows, $keep) => array_values(array_filter(array_map(fn ($r) => array_map(fn ($v) => is_array($v) ? $v : trim((string) $v), (array) $r), (array) $rows), $keep));
 
-        $data['languages'] = $list($form['languages'] ?? '');
-        $data['extra_languages'] = $list($form['extra_languages'] ?? '');
-        $data['approval'] = array_replace($data['approval'] ?? [], [
-            'policy' => $form['approval']['policy'] ?? null,
-            'sla_hours' => (int) ($form['approval']['sla_hours'] ?? 0),
-            'approvers' => $rows($form['approval']['approvers'] ?? [], fn ($r) => ($r['name'] ?? '') !== '' || ($r['email'] ?? '') !== ''),
-        ]);
-        $data['hashtags'] = array_replace($data['hashtags'] ?? [], [
-            'always' => $tags($form['hashtags']['always'] ?? ''),
-            'pool' => $tags($form['hashtags']['pool'] ?? ''),
-            'max_per_post' => (int) ($form['hashtags']['max_per_post'] ?? 0),
-        ]);
-        $data['signatures'] = array_filter(array_map('trim', (array) ($form['signatures'] ?? [])));
-        $data['fields'] = collect($rows($form['fields'] ?? [], fn ($r) => ($r['key'] ?? '') !== ''))->mapWithKeys(fn ($r) => [$r['key'] => $r['value'] ?? ''])->all();
-        $data['saved_replies'] = array_map(fn ($r) => ['label' => $r['label'], 'text' => $r['text'], 'keywords' => $list($r['keywords'] ?? '')], $rows($form['saved_replies'] ?? [], fn ($r) => ($r['label'] ?? '') !== '' && ($r['text'] ?? '') !== ''));
+        return [
+            'accounts' => array_map($text, array_replace(array_fill_keys(self::PLATFORMS, ''), Arr::only((array) ($form['accounts'] ?? []), self::PLATFORMS))),
+            'languages' => $list($form['languages'] ?? ''),
+            'extra_languages' => $list($form['extra_languages'] ?? ''),
+            'voice' => [
+                'tone' => $text($form['voice']['tone'] ?? ''),
+                'person' => $text($form['voice']['person'] ?? ''),
+                'emoji' => $text($form['voice']['emoji'] ?? ''),
+                'cta_style' => $text($form['voice']['cta_style'] ?? ''),
+                'banned_phrases' => $lines($form['voice']['banned_phrases'] ?? ''),
+                'facts' => $lines($form['voice']['facts'] ?? ''),
+            ],
+            'notes' => $text($form['notes'] ?? ''),
+            'pillars' => collect($rows($form['pillars'] ?? [], fn ($r) => ($r['name'] ?? '') !== ''))->mapWithKeys(fn ($r) => [Str::slug($r['name'], '_') => (int) ($r['share'] ?? 0)])->all(),
+            'hashtags' => [
+                'always' => $tags($form['hashtags']['always'] ?? ''),
+                'pool' => $tags($form['hashtags']['pool'] ?? ''),
+                'max_per_post' => (int) ($form['hashtags']['max_per_post'] ?? 0),
+            ],
+            'research' => [
+                'sources' => $lines($form['research']['sources'] ?? ''),
+                'excluded_domains' => $lines($form['research']['excluded_domains'] ?? ''),
+                'excluded_topics' => $lines($form['research']['excluded_topics'] ?? ''),
+                'hashtags_to_watch' => array_map(fn ($h) => ltrim($h, '#'), $list($form['research']['hashtags_to_watch'] ?? '')),
+                'competitors' => $list($form['research']['competitors'] ?? ''),
+            ],
+            'approval' => [
+                'policy' => $form['approval']['policy'] ?? null,
+                'sla_hours' => (int) ($form['approval']['sla_hours'] ?? 0),
+                'auto_approve_on_timeout' => (bool) ($form['approval']['auto_approve_on_timeout'] ?? false),
+                'approvers' => $rows($form['approval']['approvers'] ?? [], fn ($r) => ($r['name'] ?? '') !== '' || ($r['email'] ?? '') !== ''),
+                'email_monthly_report' => (bool) ($form['approval']['email_monthly_report'] ?? false),
+            ],
+            'slots' => array_map(fn ($r) => $r['day'].' '.$r['time'], $rows($form['slots'] ?? [], fn ($r) => ($r['day'] ?? '') !== '' && ($r['time'] ?? '') !== '')),
+            'saved_replies' => array_map(fn ($r) => ['label' => $r['label'], 'text' => $r['text'], 'keywords' => $list($r['keywords'] ?? '')], $rows($form['saved_replies'] ?? [], fn ($r) => ($r['label'] ?? '') !== '' && ($r['text'] ?? '') !== '')),
+            'signatures' => array_filter(array_map('trim', (array) ($form['signatures'] ?? []))),
+            'fields' => collect($rows($form['fields'] ?? [], fn ($r) => ($r['key'] ?? '') !== ''))->mapWithKeys(fn ($r) => [$r['key'] => $r['value'] ?? ''])->all(),
+            'utm' => (bool) ($form['utm'] ?? false),
+            'webhooks' => array_map(fn ($r) => ['url' => $r['url'], 'secret' => $r['secret'] ?? '', 'events' => array_values((array) ($r['events'] ?? []))], $rows($form['webhooks'] ?? [], fn ($r) => ($r['url'] ?? '') !== '')),
+            'key_dates' => $rows($form['key_dates'] ?? [], fn ($r) => ($r['date'] ?? '') !== '' || ($r['label'] ?? '') !== ''),
+        ];
+    }
 
-        return $data;
+    /**
+     * The sections a new client's form starts from: the template's defaults, with the fictional example's own values blanked.
+     *
+     * @return array<string, mixed>
+     */
+    public static function template(): array
+    {
+        $t = self::parse(file_get_contents(base_path('config/clients/example.yaml')));
+
+        return array_replace($t, [
+            'accounts' => [],
+            'voice' => ['tone' => '', 'cta_style' => '', 'facts' => []] + $t['voice'],
+            'hashtags' => ['always' => [], 'pool' => []] + $t['hashtags'],
+            'approval' => ['approvers' => []] + $t['approval'],
+            'key_dates' => [],
+        ]);
     }
 
     /** The template sections from config/clients/example.yaml, as YAML for a new client form. */
@@ -150,6 +194,7 @@ final class ClientProfile
             'voice.banned_phrases.*' => ['string'],
             'voice.facts' => ['present', 'array'],
             'voice.facts.*' => ['string'],
+            'notes' => ['nullable', 'string', 'max:5000'],
             'pillars' => ['required', 'array', 'min:1'],
             'pillars.*' => ['integer', 'min:0', 'max:100'],
             'hashtags' => ['required', 'array'],

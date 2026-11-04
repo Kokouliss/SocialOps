@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Clients\ClientProfile;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\Yaml\Yaml;
 
@@ -12,14 +13,16 @@ class ClientRequest extends FormRequest
 {
     protected function prepareForValidation(): void
     {
-        $this->merge(['code' => strtoupper((string) $this->code)]);
+        // the link name and the file-name code are made from the name when the form leaves them empty
+        $name = trim(Str::ascii((string) $this->name));
+        $word = preg_replace('/[^a-z0-9]/i', '', explode(' ', $name)[0]);
+        $this->merge([
+            'slug' => $this->filled('slug') ? $this->slug : rtrim(substr(Str::slug($name), 0, 40), '-'),
+            'code' => strtoupper($this->filled('code') ? $this->code : substr(strlen($word) >= 2 ? $word : preg_replace('/[^a-z0-9]/i', '', $name), 0, 12)),
+        ]);
 
-        // the form's common sections win over the YAML; a YAML error is left for the profile rule to report
-        if (is_array($this->input('p')) && is_string($this->profile)) {
-            try {
-                $this->merge(['profile' => Yaml::dump(ClientProfile::applyForm(ClientProfile::parseYaml($this->profile), $this->input('p')), 4)]);
-            } catch (ValidationException) {
-            }
+        if (is_array($this->input('p'))) {
+            $this->merge(['profile' => Yaml::dump(ClientProfile::fromForm($this->input('p')), 4)]);
         }
     }
 
