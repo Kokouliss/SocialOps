@@ -8,11 +8,13 @@ use App\Models\Client;
 use App\Models\Report;
 use App\Reporting\ListeningReport;
 use App\Reporting\MonthlyReport;
+use App\Reporting\TopicsDocx;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReportController extends Controller
 {
@@ -71,5 +73,13 @@ class ReportController extends Controller
             'Content-Type' => 'text/markdown; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="'.Str::slug($report->title).'.md"',
         ]);
+    }
+
+    /** "Download Word": the θεματολογία (topic plan) of a content plan, for the client. */
+    public function word(Report $report): StreamedResponse
+    {
+        abort_unless($report->kind === 'plan' && isset($report->meta['posts']), 404);
+
+        return response()->streamDownload(fn () => print TopicsDocx::build($report), $report->client->name.' - '.TopicsDocx::title($report).'.docx', ['Content-Type' => TopicsDocx::MIME]);
     }
 }

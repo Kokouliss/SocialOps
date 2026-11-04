@@ -63,6 +63,7 @@ Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::get('/clients/{client}/reports', [ReportController::class, 'index'])->name('clients.reports');
     Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
     Route::get('/reports/{report}/download', [ReportController::class, 'download'])->name('reports.download');
+    Route::get('/reports/{report}/word', [ReportController::class, 'word'])->name('reports.word');
     Route::post('/reports/{report}/send', [ReportController::class, 'send'])->name('reports.send');
     Route::delete('/accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy'); // also Canva, Drive, Dropbox and WordPress
     Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar');
