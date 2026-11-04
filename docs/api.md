@@ -82,4 +82,4 @@ claude mcp add --transport http socialops https://<host>/mcp --header "Authoriza
 php artisan mcp:start socialops
 ```
 
-Tools: `list-clients`, `list-posts` (client, from, to, state), `get-post` (post), `create-draft` (client, platforms, format, pillar, brief, scheduled_at, variants, settings, assets: the fields of the post form above), `list-comments` (client, open), `reply-to-comment` (comment, text), `month-numbers` (client, month YYYY-MM). Validation errors come back as tool errors with the field messages.
+Tools: `list-clients`, `list-posts` (client, from, to, state), `get-post` (post), `create-draft` (client, platforms, format, pillar, brief, scheduled_at, variants, settings, assets: the fields of the post form above), `update-post` (post, plus any of those fields: only what is sent changes, a caption per platform and language replaces that one, an approved post goes back to In Review, a published one is refused), `list-comments` (client, open), `reply-to-comment` (comment, text), `month-numbers` (client, month YYYY-MM). Validation errors come back as tool errors with the field messages.

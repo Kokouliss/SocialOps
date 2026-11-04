@@ -73,6 +73,7 @@ Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::patch('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
     Route::post('/posts/{post}/draft', [PostController::class, 'draft'])->name('posts.draft');
     Route::post('/posts/{post}/shorten', [PostController::class, 'shorten'])->name('posts.shorten');
+    Route::post('/posts/{post}/rewrite', [PostController::class, 'rewrite'])->name('posts.rewrite');
     Route::post('/posts/{post}/transition', [PostController::class, 'transition'])->name('posts.transition');
     Route::post('/posts/bulk', [PostController::class, 'bulk'])->name('posts.bulk');
     Route::post('/posts/{post}/duplicate', [PostController::class, 'duplicate'])->name('posts.duplicate');

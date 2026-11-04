@@ -142,6 +142,13 @@
 
 <h3 class="mt-8 font-semibold text-gray-800">{{ __('Captions') }} <span class="text-sm font-normal text-gray-500">{{ __('(only the ticked platforms are saved; Greek is reviewed by a human before approval)') }}</span></h3>
 <label class="mt-2 flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" id="sync-captions" class="rounded border-gray-300"> {{ __('Same text on every platform: type it once, it copies to the other ticked platforms; untick to customise per platform') }}</label>
+@if ($post->exists)
+    <div class="mt-3 flex gap-2">
+        <x-text-input id="instruction" type="text" class="block w-full text-sm" placeholder="{{ __('e.g. make it shorter and more playful, add the opening hours, mention the full moon party on Saturday') }}" onkeydown="if (event.key === 'Enter') { event.preventDefault(); document.getElementById('rewrite').click(); }" />
+        <x-secondary-button type="button" id="rewrite" class="whitespace-nowrap" data-url="{{ route('posts.rewrite', $post) }}">{{ __('Change with Claude') }}</x-secondary-button>
+    </div>
+    <p class="mt-1 text-xs text-gray-500">{{ __('Rewrites the captions of every ticked platform as you say; nothing is saved until you press Save.') }}</p>
+@endif
 @foreach (\App\Models\Post::PLATFORMS as $platform)
     <fieldset class="mt-4 border rounded-md p-4" data-for="{{ $platform }}" data-platform="{{ $platform }}" data-max="{{ \App\Http\Requests\PostRequest::CAPTION_MAX[$platform] }}" data-signature="{{ trim($client->profile['signatures'][$platform] ?? '') }}" data-fields="{{ json_encode((object) ($client->profile['fields'] ?? [])) }}">
         <legend class="px-1 text-sm font-medium">{{ str_replace('_', ' ', $platform) }} <span class="count text-gray-400" title="{{ __('Characters of the published text: every language, then the hashtags') }}"></span>
@@ -219,6 +226,27 @@
     document.querySelectorAll('fieldset[data-max]').forEach(s => s.addEventListener('input', e => { if (sync.checked && e.isTrusted) copyFrom(e.target); }));
     sync.addEventListener('change', () => sync.checked && copyAll());
     showSections();
+
+    // The rewrite box: the instruction and the captions of the ticked platforms go to the server, the rewritten captions come back into the textareas, unsaved.
+    document.getElementById('rewrite')?.addEventListener('click', async ({ target: button }) => {
+        const instruction = document.getElementById('instruction').value.trim();
+        if (!instruction) return document.getElementById('instruction').focus();
+        button.disabled = true;
+        const captions = {};
+        sets().forEach(s => { captions[s.dataset.platform] = {}; s.querySelectorAll('textarea').forEach(t => captions[s.dataset.platform][t.dataset.lang] = t.value); });
+        const res = await fetch(button.dataset.url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+            body: JSON.stringify({ instruction, brief: document.getElementById('brief').value, captions }),
+        });
+        const json = await res.json();
+        if (res.ok) {
+            sets().forEach(s => s.querySelectorAll('textarea').forEach(t => { const v = json[s.dataset.platform]?.[t.dataset.lang]; if (v !== undefined) { t.value = v; t.dispatchEvent(new Event('input', { bubbles: true })); } }));
+        } else {
+            alert(json.error || json.message);
+        }
+        button.disabled = false;
+    });
     // On by default when the ticked platforms already share the same text (a new post, or one never customised).
     const texts = sets().map(s => [...s.querySelectorAll('textarea')].map(t => t.value.trim()).join('\u0001'));
     sync.checked = texts.every(t => t === texts[0]);
