@@ -21,7 +21,7 @@
                     <tbody class="divide-y divide-gray-100">
                         @foreach ($users as $user)
                             <tr>
-                                <td class="px-6 py-3 font-medium text-gray-900">{{ $user->name }}</td>
+                                <td class="px-6 py-3 font-medium text-gray-900">{{ $user->name }}@if ($user->is_admin) <span class="ml-1 text-xs font-normal text-gray-500">{{ __('admin') }}</span>@endif</td>
                                 <td class="px-6 py-3">{{ $user->email }}</td>
                                 <td class="px-6 py-3">
                                     {{ $user->client_ids === null ? __('all') : $clients->whereIn('id', $user->client_ids)->pluck('name')->join(', ') }}
@@ -34,6 +34,9 @@
                                                 @foreach ($clients as $client)
                                                     <label class="flex items-center gap-1"><input type="checkbox" name="client_ids[]" value="{{ $client->id }}" class="rounded border-gray-300" @checked(in_array($client->id, $user->client_ids ?? [])) /> {{ $client->name }}</label>
                                                 @endforeach
+                                                @can('admin')
+                                                    <label class="flex items-center gap-1 pt-1 border-t"><input type="checkbox" name="is_admin" value="1" class="rounded border-gray-300" @checked($user->is_admin) /> {{ __('Admin: sees the Settings page and can make other admins') }}</label>
+                                                @endcan
                                                 <button type="submit" class="px-2 py-1 border rounded hover:bg-gray-50">{{ __('Save (none ticked: every client)') }}</button>
                                             </form>
                                         </details>

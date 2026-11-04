@@ -29,6 +29,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'client_ids' => 'array',
+            'is_admin' => 'boolean',
         ];
     }
 

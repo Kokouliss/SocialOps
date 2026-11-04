@@ -27,6 +27,11 @@
                     <x-nav-link :href="route('staff.index')" :active="request()->routeIs('staff.*')">
                         {{ __('Staff') }}
                     </x-nav-link>
+                    @can('admin')
+                        <x-nav-link :href="route('settings.edit')" :active="request()->routeIs('settings.*')">
+                            {{ __('Settings') }}
+                        </x-nav-link>
+                    @endcan
                 </div>
             </div>
 
@@ -97,6 +102,11 @@
             <x-responsive-nav-link :href="route('staff.index')" :active="request()->routeIs('staff.*')">
                 {{ __('Staff') }}
             </x-responsive-nav-link>
+            @can('admin')
+                <x-responsive-nav-link :href="route('settings.edit')" :active="request()->routeIs('settings.*')">
+                    {{ __('Settings') }}
+                </x-responsive-nav-link>
+            @endcan
         </div>
 
         <!-- Responsive Settings Options -->
