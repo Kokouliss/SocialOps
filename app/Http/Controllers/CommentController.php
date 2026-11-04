@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Engagement\ReplyDrafter;
 use App\Models\Client;
 use App\Models\Comment;
-use App\Publishing\GbpPublisher;
 use App\Publishing\MetaPublisher;
 use App\Publishing\PublishFailed;
 use Illuminate\Http\RedirectResponse;
@@ -38,19 +37,13 @@ class CommentController extends Controller
         return $this->back($comment)->with('status', $draft['notes'] ? 'Claude: '.$draft['notes'] : 'draft-ready');
     }
 
-    public function reply(Request $request, MetaPublisher $meta, GbpPublisher $gbp, Comment $comment): RedirectResponse
+    public function reply(Request $request, Comment $comment): RedirectResponse
     {
-        $text = $request->validate(['reply' => ['required', 'string', 'max:2200']])['reply'];
         try {
-            match (true) {
-                $comment->platform === 'google_business' => $gbp->reply($comment->account, $comment->external_id, $text),
-                $comment->thread_id !== null => $meta->message($comment->account, $comment->thread_id, $text),
-                default => $meta->reply($comment->account, $comment->external_id, $text),
-            };
+            $comment->answer($request->validate(['reply' => ['required', 'string', 'max:2200']])['reply']);
         } catch (PublishFailed $e) {
             return $this->back($comment)->withErrors(['comment' => $e->getMessage()]);
         }
-        $comment->update(['reply' => $text, 'replied_at' => now()]);
 
         return $this->back($comment)->with('status', 'reply-sent');
     }

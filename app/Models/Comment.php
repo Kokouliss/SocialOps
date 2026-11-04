@@ -2,9 +2,13 @@
 
 namespace App\Models;
 
+use App\Publishing\GbpPublisher;
+use App\Publishing\MetaPublisher;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Arr;
 
 /** A comment someone left under a client's post, a direct message (with a thread_id to answer to), or a Google review (platform google_business, with a rating). `reply` is a draft until `replied_at` is set. */
 #[Fillable(['account_id', 'post_id', 'platform', 'external_id', 'thread_id', 'author', 'text', 'rating', 'posted_at', 'sentiment', 'intent', 'reply', 'replied_at', 'hidden_at'])]
@@ -16,6 +20,29 @@ class Comment extends Model
     }
 
     /** What this is, for a label: "Instagram message", "Facebook", "Google review". */
+    /** Not answered and not hidden. */
+    public function scopeOpen(Builder $q): Builder
+    {
+        return $q->whereNull('replied_at')->whereNull('hidden_at');
+    }
+
+    /** Send the reply on the platform (comment, direct message or Google review) and mark the comment answered. */
+    public function answer(string $text): void
+    {
+        match (true) {
+            $this->platform === 'google_business' => app(GbpPublisher::class)->reply($this->account, $this->external_id, $text),
+            $this->thread_id !== null => app(MetaPublisher::class)->message($this->account, $this->thread_id, $text),
+            default => app(MetaPublisher::class)->reply($this->account, $this->external_id, $text),
+        };
+        $this->update(['reply' => $text, 'replied_at' => now()]);
+    }
+
+    /** The comment as the JSON API and the MCP server show it. */
+    public function toApiArray(): array
+    {
+        return Arr::only($this->toArray(), ['id', 'post_id', 'platform', 'author', 'text', 'rating', 'posted_at', 'sentiment', 'intent', 'reply', 'replied_at', 'hidden_at']);
+    }
+
     public function label(): string
     {
         return $this->rating ? __('Google review') : ucfirst($this->platform).($this->thread_id ? ' '.__('message') : '');

@@ -9,6 +9,7 @@ use App\Posts\PostState;
 use App\Publishing\PublishFailed;
 use Database\Factories\PostFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -110,6 +111,14 @@ class Post extends Model
     public function collaborators(): array
     {
         return self::handles($this->settings['instagram']['collaborators'] ?? null);
+    }
+
+    /** The date range and state filters of the JSON API and the MCP server. */
+    public function scopeFilter(Builder $q, array $filters): Builder
+    {
+        return $q->when($filters['from'] ?? null, fn ($q, $d) => $q->where('scheduled_at', '>=', $d))
+            ->when($filters['to'] ?? null, fn ($q, $d) => $q->where('scheduled_at', '<=', $d))
+            ->when($filters['state'] ?? null, fn ($q, $s) => $q->where('state', $s));
     }
 
     /** The post as the JSON API and the webhooks show it (docs/api.md). */

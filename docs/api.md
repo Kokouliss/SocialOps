@@ -1,4 +1,4 @@
-# JSON API and webhooks
+# JSON API, MCP server and webhooks
 
 For scripts and other tools (a reporting sheet, Zapier-style automations the agency runs itself). JSON in, JSON out. Everything a token can do, a staff member can do in the app; the API never publishes a post, approval stays with a human.
 
@@ -64,3 +64,22 @@ webhooks:
 ```
 
 Events: `post.published`, `post.failed`, `post.manual_needed`. Each is a POST with a JSON body `{"event": "post.published", "at": "2027-05-12T18:00:04+03:00", "post": {…as above…}}` and two headers: `X-SocialOps-Event` and `X-SocialOps-Signature`, the hex HMAC-SHA256 of the raw body with the secret (empty secret, empty key). Check the signature before trusting the body. A delivery that does not answer 2xx is retried after one minute and again after ten.
+
+## MCP server
+
+The same reads and writes as the API, as tools for Claude Code, Claude Desktop or any MCP client, so you can say "draft three posts for Almyra for next week" or "what did Blue Villa do in October" and let Claude call them. Nothing here publishes; a Draft waits for review and approval in the app.
+
+Endpoint: `POST https://<host>/mcp` (Streamable HTTP), the same bearer token as the API, the same client scope and rate limit.
+
+```
+# Claude Code
+claude mcp add --transport http socialops https://<host>/mcp --header "Authorization: Bearer so_…"
+
+# Claude Desktop (Settings → Developer → Edit Config), through the free mcp-remote bridge
+{"mcpServers": {"socialops": {"command": "npx", "args": ["-y", "mcp-remote", "https://<host>/mcp", "--header", "Authorization: Bearer so_…"]}}}
+
+# On the server itself, over stdio, every client in reach
+php artisan mcp:start socialops
+```
+
+Tools: `list-clients`, `list-posts` (client, from, to, state), `get-post` (post), `create-draft` (client, platforms, format, pillar, brief, scheduled_at, variants, settings, assets: the fields of the post form above), `list-comments` (client, open), `reply-to-comment` (comment, text), `month-numbers` (client, month YYYY-MM). Validation errors come back as tool errors with the field messages.
