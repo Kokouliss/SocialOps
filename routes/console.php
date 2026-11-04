@@ -15,6 +15,7 @@ Schedule::command('slots:check')->weeklyOn(4, '09:00');
 Schedule::command('posts:preflight')->hourlyAt(30);
 Schedule::command('posts:reconcile')->hourlyAt(45);
 Schedule::command('comments:fetch')->hourly();
+Schedule::command('inbox:pull')->hourlyAt(15);
 Schedule::command('posts:insights')->dailyAt('06:00');
 Schedule::command('reports:monthly')->monthlyOn(1, '07:00');
 Schedule::command('listening:report')->weeklyOn(1, '07:00');

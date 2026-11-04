@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Media\Canva;
+use App\Media\GoogleDrive;
 use App\Models\Asset;
 use App\Models\Client;
 use Illuminate\Http\RedirectResponse;
@@ -38,6 +39,8 @@ class AssetController extends Controller
                 ->latest()->get(),
             'inboxUrl' => URL::temporarySignedRoute('inbox.show', now()->addDays(self::LINK_DAYS), ['client' => $client->slug]),
             'canva' => $canvaAccount,
+            'drive' => $client->accounts()->where('platform', 'drive')->first(),
+            'driveEmail' => GoogleDrive::email(),
             'canvaReady' => (bool) config('services.canva.client_id'),
             'designs' => $designs,
             'canvaError' => $canvaError,

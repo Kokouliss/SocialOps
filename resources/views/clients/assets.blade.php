@@ -68,6 +68,27 @@
             </div>
 
             <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+                <h3 class="text-lg font-medium text-gray-900">Google Drive</h3>
+                @error('drive') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                @if ($drive)
+                    <div class="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                        <span>{{ __('Watching the folder “:name”: new photos and videos land in this inbox every hour.', ['name' => $drive->name]) }}
+                            @if ($drive->meta['pulled_at'] ?? null) {{ __('Last check :when, :n files in the folder.', ['when' => \Illuminate\Support\Carbon::parse($drive->meta['pulled_at'])->diffForHumans(), 'n' => $drive->meta['files'] ?? 0]) }} @endif</span>
+                        <form method="POST" action="{{ route('drive.pull', $client) }}">@csrf<button class="text-brand-600 hover:underline">{{ __('Check now') }}</button></form>
+                        <form method="POST" action="{{ route('accounts.destroy', $drive) }}" onsubmit="return confirm('{{ __('Stop watching this folder?') }}')">@csrf @method('DELETE')<button class="text-red-600 hover:underline">{{ __('Stop watching') }}</button></form>
+                    </div>
+                @elseif ($driveEmail)
+                    <p class="mt-1 text-sm text-gray-600">{{ __('Share a Drive folder with :email (viewer is enough), then paste its link here. Photos and videos the client drops in it reach this inbox within the hour.', ['email' => $driveEmail]) }}</p>
+                    <form method="POST" action="{{ route('drive.watch', $client) }}" class="mt-3 flex gap-2">@csrf
+                        <x-text-input name="folder" type="text" class="block w-full text-sm" :value="old('folder')" placeholder="https://drive.google.com/drive/folders/…" />
+                        <x-primary-button>{{ __('Watch folder') }}</x-primary-button>
+                    </form>
+                @else
+                    <p class="mt-1 text-sm text-gray-500">{{ __('Add GOOGLE_SERVICE_ACCOUNT_JSON to .env to pull files from a shared Drive folder (docs/pilot-setup.md).') }}</p>
+                @endif
+            </div>
+
+            <div class="bg-white p-6 shadow-sm sm:rounded-lg">
                 <form method="GET" action="{{ route('clients.assets', $client) }}" class="flex flex-wrap items-center gap-2 text-sm">
                     <h3 class="font-semibold text-gray-900 mr-2">{{ __('Files') }} <span class="font-normal text-gray-500">({{ $assets->count() }})</span></h3>
                     <select name="kind" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm">
