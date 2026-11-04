@@ -74,7 +74,7 @@
                     <div class="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-600">
                         <span>{{ __('Watching the folder “:name”: new photos and videos land in this inbox every hour.', ['name' => $drive->name]) }}
                             @if ($drive->meta['pulled_at'] ?? null) {{ __('Last check :when, :n files in the folder.', ['when' => \Illuminate\Support\Carbon::parse($drive->meta['pulled_at'])->diffForHumans(), 'n' => $drive->meta['files'] ?? 0]) }} @endif</span>
-                        <form method="POST" action="{{ route('drive.pull', $client) }}">@csrf<button class="text-brand-600 hover:underline">{{ __('Check now') }}</button></form>
+                        <form method="POST" action="{{ route('folders.pull', [$client, 'drive']) }}">@csrf<button class="text-brand-600 hover:underline">{{ __('Check now') }}</button></form>
                         <form method="POST" action="{{ route('accounts.destroy', $drive) }}" onsubmit="return confirm('{{ __('Stop watching this folder?') }}')">@csrf @method('DELETE')<button class="text-red-600 hover:underline">{{ __('Stop watching') }}</button></form>
                     </div>
                 @elseif ($driveEmail)
@@ -85,6 +85,32 @@
                     </form>
                 @else
                     <p class="mt-1 text-sm text-gray-500">{{ __('Add GOOGLE_SERVICE_ACCOUNT_JSON to .env to pull files from a shared Drive folder (docs/pilot-setup.md).') }}</p>
+                @endif
+            </div>
+
+            <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+                <h3 class="text-lg font-medium text-gray-900">Dropbox</h3>
+                @error('dropbox') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                @if ($dropbox && ($dropbox->meta['folder'] ?? null))
+                    <div class="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                        <span>{{ __('Watching the folder “:name”: new photos and videos land in this inbox every hour.', ['name' => $dropbox->meta['folder_name']]) }}
+                            @if ($dropbox->meta['pulled_at'] ?? null) {{ __('Last check :when, :n files in the folder.', ['when' => \Illuminate\Support\Carbon::parse($dropbox->meta['pulled_at'])->diffForHumans(), 'n' => $dropbox->meta['files'] ?? 0]) }} @endif</span>
+                        <form method="POST" action="{{ route('folders.pull', [$client, 'dropbox']) }}">@csrf<button class="text-brand-600 hover:underline">{{ __('Check now') }}</button></form>
+                        <form method="POST" action="{{ route('accounts.destroy', $dropbox) }}" onsubmit="return confirm('{{ __('Stop watching this folder?') }}')">@csrf @method('DELETE')<button class="text-red-600 hover:underline">{{ __('Stop watching') }}</button></form>
+                    </div>
+                @elseif ($dropbox)
+                    <div class="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                        <span>{{ __('Connected as :name.', ['name' => $dropbox->name]) }} {{ __('Which folder? Its path in that Dropbox, for example /Clients/Almyra. A folder the client shared sits at the top level.') }}</span>
+                        <form method="POST" action="{{ route('accounts.destroy', $dropbox) }}" onsubmit="return confirm('{{ __('Disconnect Dropbox from this client?') }}')">@csrf @method('DELETE')<button class="text-red-600 hover:underline">{{ __('Disconnect') }}</button></form>
+                    </div>
+                    <form method="POST" action="{{ route('dropbox.watch', $client) }}" class="mt-3 flex gap-2">@csrf
+                        <x-text-input name="folder" type="text" class="block w-full text-sm" :value="old('folder')" placeholder="/Clients/Almyra" />
+                        <x-primary-button>{{ __('Watch folder') }}</x-primary-button>
+                    </form>
+                @elseif ($dropboxReady)
+                    <p class="mt-1 text-sm text-gray-600">{{ __('Bring the photos and videos a client drops in a shared Dropbox folder into this inbox.') }} <a href="{{ route('dropbox.connect', $client) }}" class="ml-2 inline-flex items-center px-3 py-1 border rounded text-xs hover:bg-gray-100">{{ __('Connect Dropbox') }}</a></p>
+                @else
+                    <p class="mt-1 text-sm text-gray-500">{{ __('Add DROPBOX_APP_KEY to .env to pull files from a Dropbox folder (docs/pilot-setup.md).') }}</p>
                 @endif
             </div>
 

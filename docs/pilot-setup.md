@@ -85,6 +85,20 @@ Lets a client drop photos and videos in a shared Google Drive folder; Social Ops
 GOOGLE_SERVICE_ACCOUNT_JSON=/var/www/vhosts/AGENCY-DOMAIN/socialops-drive.json
 ```
 
+## 3c. Dropbox folders (optional) → `DROPBOX_APP_KEY`
+
+Same idea with Dropbox: the client shares a folder with the agency's Dropbox (or you make one and share it with the client), and every hour its new photos and videos land in the client's inbox (assets page → Dropbox box). Free; a Dropbox app in development status serves the agency's own account without Dropbox's review.
+
+1. https://www.dropbox.com/developers/apps → **Create app**: *Scoped access*, *Full Dropbox* (so folders shared with the agency are visible wherever they sit), name `Social Ops`.
+2. **Permissions** tab: tick `account_info.read`, `files.metadata.read`, `files.content.read`, **Submit**. Nothing is written to Dropbox.
+3. **Settings** tab: *Redirect URIs* add `https://YOUR-DOMAIN/dropbox/callback`; copy the **App key** (no secret is needed, the login uses PKCE). The app can stay in *Development* status: it serves the agency's own account.
+4. Per client, on the assets page: **Connect Dropbox** (log in with the agency's Dropbox), then type the folder's path, for example `/Clients/Almyra` (a folder the client shared sits at the top level, `/Almyra photos`), **Watch folder**. The folder itself is read, not its subfolders; a file is filed once, by its Dropbox id.
+
+`.env`:
+```
+DROPBOX_APP_KEY=…
+```
+
 ## 4. Claude → `ANTHROPIC_API_KEY`
 
 Already in hand. Only in `.env`. Rotate at https://console.anthropic.com/settings/keys if it was ever pasted anywhere.

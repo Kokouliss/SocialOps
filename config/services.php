@@ -46,6 +46,11 @@ return [
         'client_secret' => env('CANVA_CLIENT_SECRET'),
     ],
 
+    // Dropbox app (optional): pulls a shared folder into the asset inbox, OAuth with PKCE so only the app key is needed
+    'dropbox' => [
+        'app_key' => env('DROPBOX_APP_KEY'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

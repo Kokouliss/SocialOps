@@ -21,7 +21,7 @@ class ClientController extends Controller
             'posts as in_review_count' => fn ($q) => $q->where('state', PostState::InReview),
             'posts as failed_count' => fn ($q) => $q->whereIn('state', [PostState::Failed, PostState::ManualNeeded]),
             'comments as open_comments_count' => fn ($q) => $q->open(),
-            'accounts as expiring_count' => fn ($q) => $q->where('platform', '!=', 'canva')->where('token_expires_at', '<', now()->addDays(7)),
+            'accounts as expiring_count' => fn ($q) => $q->whereNotIn('platform', ['canva', 'dropbox'])->where('token_expires_at', '<', now()->addDays(7)),
         ])->get();
 
         return view('clients.index', ['clients' => $clients]);
