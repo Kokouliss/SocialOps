@@ -24,3 +24,13 @@ test('the view-only calendar link shows the client their own posts in their own 
     $this->actingAs(User::factory()->create())->get(route('calendar', ['client' => 'almyra']))->assertOk()->assertSee('/calendar/almyra?');
     $this->actingAs(User::factory()->create())->get(route('calendar'))->assertOk()->assertDontSee('View-only link');
 });
+
+test('the client calendar fills the profile placeholders in captions', function () {
+    $client = Client::factory()->create();
+    $client->update(['profile' => array_replace($client->profile, ['fields' => ['booking' => 'https://example.com/book']])]);
+    $post = Post::factory()->create(['client_id' => $client->id, 'state' => PostState::Scheduled, 'scheduled_at' => now()->addDays(3)]);
+    $post->variants()->create(['platform' => 'instagram', 'lang' => 'el', 'caption' => 'Κράτηση: {{booking}}', 'hashtags' => []]);
+
+    $this->get(URL::temporarySignedRoute('calendar.client', now()->addDay(), ['client' => $client->slug]))
+        ->assertOk()->assertSee('Κράτηση: https://example.com/book')->assertDontSee('{{booking}}');
+});
