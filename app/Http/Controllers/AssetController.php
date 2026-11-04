@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\AssembleReel;
 use App\Media\Canva;
 use App\Media\GoogleDrive;
+use App\Media\ReelAssembler;
 use App\Models\Asset;
 use App\Models\Client;
 use Illuminate\Http\RedirectResponse;
@@ -11,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -18,6 +21,24 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class AssetController extends Controller
 {
     public const LINK_DAYS = 30;
+
+    /** One queued Reel from the ticked clips; it lands in the inbox like an upload. */
+    public function reel(Request $request, Client $client): RedirectResponse
+    {
+        abort_unless(ReelAssembler::binary(), 404, 'Install ffmpeg on the server first (docs/pilot-setup.md).');
+        $data = $request->validateWithBag('reel', [
+            'clips' => ['required', 'array', 'min:2', 'max:'.ReelAssembler::MAX_CLIPS],
+            'clips.*' => ['integer', Rule::exists('assets', 'id')->where('client_id', $client->id)->where('kind', 'video')],
+            'seconds' => ['required', 'integer', 'between:2,15'],
+            'headline' => ['nullable', 'string', 'max:80'],
+            'pillar' => ['nullable', Rule::in(array_keys($client->profile['pillars']))],
+        ]);
+        // shortcut: clips play in file-name order, the one phones give them; an order of your own needs drag and drop
+        $clips = $client->assets()->whereIn('id', $data['clips'])->orderBy('original_name')->orderBy('id')->pluck('id')->all();
+        AssembleReel::dispatch($client, $clips, (int) $data['seconds'], (string) ($data['headline'] ?? ''), $data['pillar'] ?? null);
+
+        return redirect()->route('clients.assets', $client)->with('status', __('Assembling the Reel, it lands in this inbox in a minute or two'));
+    }
 
     public function index(Request $request, Client $client, Canva $canva): View
     {
@@ -44,6 +65,8 @@ class AssetController extends Controller
             'dropbox' => $client->accounts()->where('platform', 'dropbox')->first(),
             'dropboxReady' => (bool) config('services.dropbox.app_key'),
             'canvaReady' => (bool) config('services.canva.client_id'),
+            'reelReady' => ReelAssembler::binary() !== null,
+            'hasVideos' => $client->assets()->where('kind', 'video')->exists(),
             'designs' => $designs,
             'canvaError' => $canvaError,
         ]);

@@ -46,6 +46,7 @@ Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::get('/assets/{asset}/thumb', [AssetController::class, 'thumb'])->name('assets.thumb');
     Route::get('/assets/{asset}/download', [AssetController::class, 'download'])->name('assets.download');
     Route::delete('/assets/{asset}', [AssetController::class, 'destroy'])->name('assets.destroy');
+    Route::post('/clients/{client}/reel', [AssetController::class, 'reel'])->name('assets.reel');
     Route::get('/clients/{client}/canva/connect', [CanvaController::class, 'connect'])->name('canva.connect');
     Route::post('/clients/{client}/canva/import', [CanvaController::class, 'import'])->name('canva.import');
     Route::get('/canva/callback', [CanvaController::class, 'callback'])->name('canva.callback');

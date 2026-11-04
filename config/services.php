@@ -51,6 +51,11 @@ return [
         'app_key' => env('DROPBOX_APP_KEY'),
     ],
 
+    // ffmpeg assembles Reels from clips; the full path when the queue runs with a bare cron PATH
+    'ffmpeg' => [
+        'path' => env('FFMPEG_PATH', 'ffmpeg'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

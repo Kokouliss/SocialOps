@@ -114,6 +114,36 @@
                 @endif
             </div>
 
+            @if ($hasVideos)
+                <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+                    <h3 class="text-lg font-medium text-gray-900">{{ __('Make a Reel') }}</h3>
+                    @if ($reelReady)
+                        <p class="mt-1 text-sm text-gray-600">{{ __('Tick the clips below (2 to 10). They play in file-name order, each cut to the chosen seconds, vertical 1080×1920 without sound; add music in the Instagram app and give the result its final cut.') }}</p>
+                        @if ($errors->reel->any())
+                            <ul class="mt-2 list-disc pl-5 text-sm text-red-600">@foreach ($errors->reel->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+                        @endif
+                        <form id="reel-form" method="POST" action="{{ route('assets.reel', $client) }}" class="mt-3 flex flex-wrap items-end gap-3 text-sm">
+                            @csrf
+                            <div>
+                                <x-input-label for="reel-seconds" :value="__('Seconds per clip')" />
+                                <select id="reel-seconds" name="seconds" class="mt-1 block border-gray-300 rounded-md shadow-sm text-sm">@foreach ([2, 3, 4, 5, 8, 10, 15] as $s)<option value="{{ $s }}" @selected((int) old('seconds', 3) === $s)>{{ $s }}</option>@endforeach</select>
+                            </div>
+                            <div class="grow">
+                                <x-input-label for="reel-headline" :value="__('Headline on the first seconds (optional)')" />
+                                <x-text-input id="reel-headline" name="headline" type="text" class="mt-1 block w-full text-sm" :value="old('headline')" maxlength="80" />
+                            </div>
+                            <div>
+                                <x-input-label for="reel-pillar" :value="__('Pillar')" />
+                                <select id="reel-pillar" name="pillar" class="mt-1 block border-gray-300 rounded-md shadow-sm text-sm"><option value="">—</option>@foreach (array_keys($client->profile['pillars']) as $pillar)<option value="{{ $pillar }}" @selected(old('pillar') === $pillar)>{{ ucfirst(str_replace('_', ' ', $pillar)) }}</option>@endforeach</select>
+                            </div>
+                            <x-primary-button>{{ __('Make the Reel') }}</x-primary-button>
+                        </form>
+                    @else
+                        <p class="mt-1 text-sm text-gray-500">{{ __('Install ffmpeg on the server to assemble Reels from clips (docs/pilot-setup.md).') }}</p>
+                    @endif
+                </div>
+            @endif
+
             <div class="bg-white p-6 shadow-sm sm:rounded-lg">
                 <form method="GET" action="{{ route('clients.assets', $client) }}" class="flex flex-wrap items-center gap-2 text-sm">
                     <h3 class="font-semibold text-gray-900 mr-2">{{ __('Files') }} <span class="font-normal text-gray-500">({{ $assets->count() }})</span></h3>
@@ -147,6 +177,9 @@
                                 @if ($asset->ugc_permission) · <span class="text-green-700">{{ __('UGC ok') }}</span> @endif
                             </p>
                             @if ($asset->note) <p class="text-gray-500">{{ $asset->note }}</p> @endif
+                            @if ($asset->kind === 'video' && $reelReady)
+                                <label class="mt-1 block text-gray-700"><input type="checkbox" name="clips[]" value="{{ $asset->id }}" form="reel-form" class="rounded border-gray-300 text-brand-600" @checked(in_array($asset->id, old('clips', [])))> {{ __('In the Reel') }}</label>
+                            @endif
                             <p class="mt-1">
                                 @forelse ($asset->posts as $post)
                                     <a href="{{ route('posts.edit', $post) }}" class="block truncate text-brand-600 hover:underline" title="{{ $post->name }}">{{ __('In') }} {{ $post->name }}</a>

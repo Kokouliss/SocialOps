@@ -57,7 +57,7 @@ class TextOverlay
     }
 
     /** @return list<string> */
-    private static function wrap(string $text, string $font, float $size, int $maxWidth): array
+    public static function wrap(string $text, string $font, float $size, int $maxWidth): array
     {
         $lines = [];
         $line = '';
