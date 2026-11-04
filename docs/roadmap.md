@@ -7,7 +7,7 @@ Tick items as they finish. Effort numbers are estimates for 1–2 developers; re
 - [ ] Meta developer app; request `instagram_content_publish` / Instagram Platform publishing, `pages_manage_posts`, `pages_read_engagement`, `pages_show_list`; record screencast; submit App Review
 - [ ] Google Business Profile API access request form (required: our own GBP driver)
 - [ ] TikTok developer app; Content Posting API with `video.publish`; submit audit (required for public TikTok posts; private-only until it passes)
-- [ ] DPA template for clients; list sub-processors (Anthropic, storage host)
+- [x] DPA template for clients; list sub-processors (Anthropic, storage host): `docs/dpa-template.md`, the lawyer's review and the Greek version pending
 
 ## Phase 1: MVP (~8–11 weeks; the four direct drivers add roughly 2 to 3 weeks over an aggregator)
 Exit: all current clients run one full month through the system.
@@ -42,6 +42,6 @@ Exit: monthly reports fully automatic; onboarding a new client takes under 1 hou
 ## Phase 3: Advanced AI (~6–8 weeks)
 Exit: Reels assembly and best-time suggestions in use by every client.
 
-- [ ] Auto-assembled Reels from venue clips (human final cut)
+- [x] Auto-assembled Reels from venue clips (human final cut): ffmpeg on the server, "Make a Reel" on the assets page
 - [x] Best-time-to-post suggestions from our own performance data
 - [ ] Link-in-bio pages generated on WordPress per client

@@ -150,6 +150,16 @@ A subdomain of the agency domain is enough, for example `social.AGENCY.gr`; the 
 
 Any other Linux server works the same with nginx + PHP-FPM, a database, cron for `schedule:run` and either the `queue:work` task above or Redis + `php artisan horizon` under systemd.
 
+## 5a. ffmpeg for Reels (optional)
+
+The "Make a Reel" box on the assets page cuts ticked clips into one vertical Reel with ffmpeg, which runs on the server. Install it once: `apt install ffmpeg` on Ubuntu or Debian, RPM Fusion's `ffmpeg` on AlmaLinux; check with `ffmpeg -version`. The queue task runs from cron with a short PATH, so put the full path in `.env` (`which ffmpeg` prints it):
+
+```
+FFMPEG_PATH=/usr/bin/ffmpeg
+```
+
+Without it the box says so and nothing else changes.
+
 ## 6. First client: Fuse Pharmacy (decision D4)
 
 1. Clients → New client. Code `FUSE`, type `brand`. Fill in the form: accounts, voice, pillars, hashtags, approver name and e-mail, SLA (a starter profile is in the project Library, `clients/fuse-pharmacy.yaml`; `php artisan clients:import` loads such a file, or copy its values into the form).
