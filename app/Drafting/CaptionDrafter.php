@@ -4,7 +4,10 @@ namespace App\Drafting;
 
 use Anthropic\Client;
 use App\Models\ClaudeCall;
+use App\Models\Post;
+use App\Models\PostVariant;
 use App\Planning\Prompt;
+use App\Posts\PostState;
 use RuntimeException;
 
 /**
@@ -54,6 +57,22 @@ class CaptionDrafter
         }
 
         return $captions;
+    }
+
+    /** @return array{post: array, examples: list<string>} the post as the prompt wants it, and recent approved captions of the client to match the voice */
+    public static function postVars(Post $post): array
+    {
+        return [
+            'post' => [
+                'platforms' => $post->platforms,
+                'format' => $post->format,
+                'pillar' => $post->pillar ?? 'misc',
+                'brief' => (string) $post->brief,
+                'asset_description' => $post->assets->map(fn ($a) => "{$a->kind} {$a->name}".($a->note ? ": {$a->note}" : ''))->join('; ') ?: 'not chosen yet',
+            ],
+            'examples' => PostVariant::whereHas('post', fn ($q) => $q->where('client_id', $post->client_id)->whereIn('state', [PostState::Approved, PostState::Scheduled, PostState::Published]))
+                ->latest('id')->limit(6)->pluck('caption')->filter()->values()->all(),
+        ];
     }
 
     private static function schema(array $platforms): array

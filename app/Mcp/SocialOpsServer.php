@@ -3,6 +3,7 @@
 namespace App\Mcp;
 
 use App\Mcp\Tools\CreateDraft;
+use App\Mcp\Tools\GetCaptionBrief;
 use App\Mcp\Tools\GetPlanningBrief;
 use App\Mcp\Tools\GetPost;
 use App\Mcp\Tools\ListClients;
@@ -24,6 +25,7 @@ use Laravel\Mcp\Server\Attributes\Version;
 Social Ops organizes the social media work of an agency's clients (hospitality and local brands in Crete and Cyprus, Greek and English): the team plans, briefs, approves and tracks every post here and posts it in the apps by hand.
 Start with list-clients, then use the client's id or slug in the other tools. Captions go per platform and language under variants.
 To plan a month: get-planning-brief (the profile, the quota, the window, the recent posts), research the current trends yourself (the last30days skill or web search), plan the posts and write their captions, then save-plan files them as Drafts with a review sheet.
+To write, shorten or change the captions of one post: get-caption-brief (the voice, the limits, the current captions), write them, then update-post.
 A Draft still goes through human review and approval in the app; nothing here publishes. Greek captions are reviewed by a person.
 MD)]
 class SocialOpsServer extends Server
@@ -34,6 +36,7 @@ class SocialOpsServer extends Server
         GetPost::class,
         CreateDraft::class,
         UpdatePost::class,
+        GetCaptionBrief::class,
         GetPlanningBrief::class,
         SavePlan::class,
         ListComments::class,
