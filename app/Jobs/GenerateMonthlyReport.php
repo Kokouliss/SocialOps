@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Alerts\Slack;
+use App\Drafting\Reply;
 use App\Models\Client;
 use App\Reporting\MonthlyReport;
 use Carbon\CarbonImmutable;
@@ -30,6 +31,6 @@ class GenerateMonthlyReport implements ShouldQueue
 
     public function failed(?Throwable $e): void
     {
-        Slack::send("{$this->client->name}: the monthly report for {$this->month} failed: ".($e?->getMessage() ?? 'unknown error'));
+        Slack::send("{$this->client->name}: the monthly report for {$this->month} failed: ".Reply::error($e));
     }
 }
