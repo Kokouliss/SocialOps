@@ -675,5 +675,9 @@
     "Assets:": "Υλικό:",
     "Caption:": "Λεζάντα:",
     "Pillar:": "Πυλώνας:",
-    "Download Word": "Λήψη Word"
+    "Download Word": "Λήψη Word",
+    "Basics": "Βασικά",
+    "Voice and content": "Ύφος και περιεχόμενο",
+    "Approval and timing": "Έγκριση και χρόνος",
+    "Replies and webhooks": "Απαντήσεις και webhooks"
 }
