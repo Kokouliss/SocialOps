@@ -25,6 +25,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use ZipArchive;
@@ -231,16 +232,48 @@ class PostController extends Controller
     public function reschedule(Request $request, Post $post): RedirectResponse
     {
         abort_if($post->state === PostState::Published, 422, 'Published posts cannot be moved.');
-        $date = $request->validate(['date' => ['required', 'date_format:Y-m-d']])['date'];
+        $this->move($post, $request->validate(['date' => ['required', 'date_format:Y-m-d']])['date']);
 
+        return back();
+    }
+
+    /** Same time of day on the new date; an approved post becomes scheduled. */
+    private function move(Post $post, string $date): void
+    {
         $time = $post->scheduled_at?->format('H:i') ?? '10:00';
         $post->forceFill(['scheduled_at' => "$date $time"])->save();
 
         if ($post->state === PostState::Approved) {
             $post->transitionTo(PostState::Scheduled);
         }
+    }
 
-        return back();
+    /** The list view's tick boxes: send for approval (one review per client), move to a date, or delete. Published posts are left alone and counted. */
+    public function bulk(Request $request): RedirectResponse
+    {
+        $data = $request->validate([
+            'action' => ['required', Rule::in(['review', 'move', 'delete'])],
+            'date' => ['required_if:action,move', 'nullable', 'date_format:Y-m-d'],
+            'posts' => ['required', 'array', 'min:1'],
+            'posts.*' => [Rule::exists('posts', 'id')->whereIn('client_id', $request->user()->clients()->pluck('id'))],
+        ]);
+        $posts = Post::with('client')->whereIn('id', $data['posts'])->get();
+
+        if ($data['action'] === 'review') {
+            [$sendable, $skipped] = $posts->partition(fn (Post $p) => in_array($p->state, ReviewController::SENDABLE, true));
+            try {
+                $sendable->groupBy('client_id')->each(fn ($group) => ReviewController::send($group->first()->client, $group->pluck('id')->all(), $request->user()->id));
+            } catch (ValidationException $e) {
+                return back()->withErrors($e->errors());
+            }
+            $done = __(':n sent for approval', ['n' => $sendable->count()]);
+        } else {
+            [$skipped, $todo] = $posts->partition(fn (Post $p) => $p->state === PostState::Published);
+            $todo->each(fn (Post $p) => $data['action'] === 'move' ? $this->move($p, $data['date']) : $p->delete());
+            $done = __($data['action'] === 'move' ? ':n moved' : ':n deleted', ['n' => $todo->count()]);
+        }
+
+        return back()->with('status', $done.($skipped->isNotEmpty() ? ', '.__(':n left as they are (published or already in review)', ['n' => $skipped->count()]) : ''));
     }
 
     /** A Draft copy for this or another of the login's clients, optionally on a date; the media follows only within the same client. */
