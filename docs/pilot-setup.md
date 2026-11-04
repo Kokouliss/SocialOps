@@ -116,7 +116,7 @@ A subdomain of the agency domain is enough, for example `social.AGENCY.gr`; the 
    /opt/plesk/php/8.3/bin/php ROOT/artisan queue:work --stop-when-empty --max-time=55
    ```
    The first runs the scheduled commands (publishing due posts, reminders, token checks, the hourly folder pulls); the second works the queue: planning, Reels, imports, mails. Plesk's PHP prints two harmless `memcached.so` warnings before the real output; "Could not open input file" means the path is wrong. The Jobs page in the app shows waiting jobs with their attempts: a job that stays at 0 attempts means this task is not running.
-10. Updates: Git → *Pull now* (or push to `main` with auto-deploy on), then open `/refresh` in the app and press **Refresh after update** (the dashboard has the same button, but a migration the dashboard needs makes it fail until the refresh has run). Or over SSH:
+10. Updates: Git → *Pull now* (or push to `main` with auto-deploy on), then open `/refresh` in the app and press **Refresh after update** (the dashboard has the same button, but a migration the dashboard needs makes it fail until the refresh has run). When the pull changed `composer.lock` (the pull request says so), run `composer install --no-dev --optimize-autoloader` in `ROOT` over SSH first: the button installs no packages. Or everything over SSH:
    ```
    composer install --no-dev --optimize-autoloader && php artisan migrate --force && php artisan optimize
    ```

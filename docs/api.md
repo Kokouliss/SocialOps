@@ -69,18 +69,22 @@ Events: `post.published`, `post.failed`, `post.manual_needed`. Each is a POST wi
 
 The same reads and writes as the API, as tools for Claude Code, Claude Desktop or any MCP client, so you can say "draft three posts for Almyra for next week" or "what did Blue Villa do in October" and let Claude call them. Nothing here publishes; a Draft waits for review and approval in the app.
 
-Endpoint: `POST https://<host>/mcp` (Streamable HTTP), the same bearer token as the API, the same client scope and rate limit.
+Endpoint: `POST https://<host>/mcp` (Streamable HTTP). Two ways in: **log in** (OAuth: Claude registers itself, sends you to the Social Ops login and an Allow page, and the tools then see the clients your login sees), or a **bearer token** from the Staff page (the same client scope as the API). Same rate limit either way.
 
 ```
-# Claude Code
-claude mcp add --transport http socialops https://<host>/mcp --header "Authorization: Bearer so_…"
+# claude.ai and the Claude desktop app: Settings → Connectors → Add custom connector
+#   Name: Social Ops   URL: https://<host>/mcp   → Add → Connect → log in → Allow.
+#   Then tick the connector in a chat and ask ("plan 8 posts for Fuse for December").
 
-# Claude Desktop (Settings → Developer → Edit Config), through the free mcp-remote bridge
-{"mcpServers": {"socialops": {"command": "npx", "args": ["-y", "mcp-remote", "https://<host>/mcp", "--header", "Authorization: Bearer so_…"]}}}
+# Claude Code: with the login (it opens the browser), or with a token
+claude mcp add --transport http socialops https://<host>/mcp
+claude mcp add --transport http socialops https://<host>/mcp --header "Authorization: Bearer so_…"
 
 # On the server itself, over stdio, every client in reach
 php artisan mcp:start socialops
 ```
+
+The login is Laravel Passport behind `Mcp::oauthRoutes()` (`routes/ai.php`): discovery under `/.well-known/`, client registration at `/oauth/register` (only the Claude domains and localhost may be sent back to, `config/mcp.php`), the Allow page `resources/views/auth/oauth-authorize.blade.php`. The signing keys live in `storage/oauth-*.key`; the Refresh after update button makes them once.
 
 Tools: `list-clients`, `list-posts` (client, from, to, state), `get-post` (post), `create-draft` (client, platforms, format, pillar, brief, scheduled_at, variants, settings, assets: the fields of the post form above), `update-post` (post, plus any of those fields: only what is sent changes, a caption per platform and language replaces that one, an approved post goes back to In Review, a published one is refused), `get-planning-brief` and `save-plan` (below). While `FEATURE_PUBLISHING` is on, also `list-comments` (client, open), `reply-to-comment` (comment, text), `month-numbers` (client, month YYYY-MM). Validation errors come back as tool errors with the field messages.
 

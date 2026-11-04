@@ -42,6 +42,10 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+        'api' => [ // the OAuth tokens Claude's connector holds (Passport), checked by App\Http\Middleware\McpAuth
+            'driver' => 'passport',
+            'provider' => 'users',
+        ],
     ],
 
     /*
