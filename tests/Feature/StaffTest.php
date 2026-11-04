@@ -38,4 +38,5 @@ test('the dashboard refresh button migrates and rebuilds the caches', function (
     Artisan::shouldReceive('call')->once()->with('migrate', ['--force' => true]);
     Artisan::shouldReceive('call')->once()->with('optimize');
     $this->actingAs(User::factory()->create())->post('/refresh')->assertRedirect('/dashboard')->assertSessionHas('status', 'app-refreshed');
+    $this->get('/refresh')->assertOk()->assertSee('Refresh after update'); // its own page: the dashboard may be down before the migration runs
 });
