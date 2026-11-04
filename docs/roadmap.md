@@ -41,5 +41,5 @@ Exit: monthly reports fully automatic; onboarding a new client takes under 1 hou
 Exit: Reels assembly and best-time suggestions in use by every client.
 
 - [ ] Auto-assembled Reels from venue clips (human final cut)
-- [ ] Best-time-to-post suggestions from our own performance data
+- [x] Best-time-to-post suggestions from our own performance data
 - [ ] Link-in-bio pages generated on WordPress per client

@@ -37,9 +37,15 @@
         <x-input-label for="scheduled_at" :value="__('Scheduled for')" />
         <x-text-input id="scheduled_at" name="scheduled_at" type="datetime-local" class="mt-1 block w-full" :value="old('scheduled_at', $post->scheduled_at?->format('Y-m-d\TH:i'))" />
         <x-input-error class="mt-2" :messages="$errors->get('scheduled_at')" />
-        @if ($slot = $client->nextFreeSlot())
-            <button type="button" class="mt-1 text-xs text-brand-600 hover:underline" onclick="document.getElementById('scheduled_at').value = '{{ $slot->format('Y-m-d\TH:i') }}'">{{ __('Next free slot') }}: {{ $slot->translatedFormat('D j M H:i') }}</button>
-        @endif
+        <div class="mt-1 flex flex-wrap gap-3 text-xs">
+            @if ($slot = $client->nextFreeSlot())
+                <button type="button" class="text-brand-600 hover:underline" onclick="document.getElementById('scheduled_at').value = '{{ $slot->format('Y-m-d\TH:i') }}'">{{ __('Next free slot') }}: {{ $slot->translatedFormat('D j M H:i') }}</button>
+            @endif
+            @if ($best = \App\Planning\BestTimes::for($client))
+                @php($at = \App\Planning\BestTimes::next($best[0]))
+                <button type="button" class="text-brand-600 hover:underline" onclick="document.getElementById('scheduled_at').value = '{{ $at->format('Y-m-d\TH:i') }}'">{{ __('Best time from our numbers') }}: {{ $at->translatedFormat('D j M H:i') }}</button>
+            @endif
+        </div>
     </div>
 </div>
 <div class="mt-6">
