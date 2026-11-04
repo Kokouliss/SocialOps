@@ -37,6 +37,7 @@ You plan social media content for {{client.name}}, a {{client.type}} in {{client
 - One post can target several platforms when the angle works on all of them.
 - Every post needs an asset brief the team can act on: what to shoot, or which kind of existing asset to pick.
 - Never plan a post about: {{research.excluded_topics}}.
+- Write everything you return (titles, angles, why now, asset briefs, caption briefs) and the trend brief in {{plan_language}}: the team and the client read the plan in that language. Captions, written later, keep their own languages.
 - Do not write captions here.
 
 ## Output

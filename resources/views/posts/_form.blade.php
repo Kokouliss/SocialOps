@@ -18,7 +18,7 @@
         <x-input-label for="format" :value="__('Format')" />
         <select id="format" name="format" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm">
             @foreach (\App\Models\Post::FORMATS as $format)
-                <option value="{{ $format }}" @selected(old('format', $post->format) === $format)>{{ str_replace('_', ' ', $format) }}</option>
+                <option value="{{ $format }}" @selected(old('format', $post->format) === $format)>{{ __(ucfirst(str_replace('_', ' ', $format))) }}</option>
             @endforeach
         </select>
         <x-input-error class="mt-2" :messages="$errors->get('format')" />

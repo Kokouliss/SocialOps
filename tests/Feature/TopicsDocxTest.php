@@ -34,7 +34,7 @@ test('the topics of a content plan download as a Word file in the client languag
 
     expect(simplexml_load_string($xml))->not->toBeFalse();
     expect($xml)->toContain($client->name)->toContain('Αναρτήσεις Νοεμβρίου 2026')->toContain('Προτεινόμενες θεματολογίες Νοεμβρίου για '.$client->name)
-        ->toContain('4/11 · Winter survival kit (Carousel)')->toContain('6/11 · Pharmacist picks (Tiktok video) #TikTok 1')
+        ->toContain('4/11 · Winter survival kit (Carousel)')->toContain('6/11 · Pharmacist picks (Βίντεο TikTok) #TikTok 1')
         ->toContain('Cold &amp; flu: what to have at home</w:t><w:br/><w:t xml:space="preserve">before the sneezing starts')
         ->toContain('Γιατί τώρα: </w:t></w:r><w:r><w:rPr></w:rPr><w:t xml:space="preserve">Τάση: flu season searches. First cold week')
         ->toContain('Υλικό: ')->toContain('Λεζάντα: ')->toContain('Πυλώνας: ')->toContain('w:fill="d9ead3"');

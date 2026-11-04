@@ -78,7 +78,7 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    'locale' => env('APP_LOCALE', 'el'),
 
     // the interface languages offered by the switch; lang/el.json holds the Greek
     'locales' => ['en' => 'English', 'el' => 'Ελληνικά'],

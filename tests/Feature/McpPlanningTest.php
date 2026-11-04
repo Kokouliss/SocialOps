@@ -19,7 +19,7 @@ test('get-planning-brief hands Claude the profile, the quota, the window and the
 
     SocialOpsServer::tool(GetPlanningBrief::class, ['client' => 'almyra', 'posts' => 10, 'from' => '2027-05-01', 'days' => 31])->assertOk()
         ->assertSee(['"window":{"start":"2027-05-01","end":"2027-05-31"}', '"count":10', '"platforms":["instagram","facebook","tiktok","linkedin"]', '"quota":{"'])
-        ->assertSee(['Almyra', '2027-05-01, label: Season opening', '2027-05-01 Πρωτομαγιά', 'Sunset cocktails (trend: Golden hour reels)', 'Research it yourself', 'instagram 2200', '#chania', 'save-plan']);
+        ->assertSee(['Almyra', '2027-05-01, label: Season opening', '2027-05-01 Πρωτομαγιά', 'Sunset cocktails (trend: Golden hour reels)', 'Research it yourself', 'in Greek', 'instagram 2200', '#chania', 'save-plan']);
 
     SocialOpsServer::tool(GetPlanningBrief::class, ['client' => 'almyra', 'posts' => 3, 'instruction' => 'Only the full moon party'])->assertOk()->assertSee('"quota":[]');
     SocialOpsServer::tool(GetPlanningBrief::class, ['client' => 'almyra', 'posts' => 99])->assertHasErrors(['between 1 and 30']);
@@ -39,7 +39,7 @@ test('save-plan files the posts as Drafts with captions, the trend brief and the
     $reel = Post::where('name', 'ALMYRA_20270518_MULTI_REEL_'.strtoupper($this->pillar).'_EL-EN_v1')->firstOrFail(); // the next Tuesday slot from the 12th
     $response->assertSee(route('posts.edit', $reel));
     expect($reel->state)->toBe(PostState::Draft)->and($reel->scheduled_at->format('Y-m-d H:i'))->toBe('2027-05-18 18:00')
-        ->and($reel->brief)->toContain('Trend: Golden hour reels')->and($reel->settings['design']['en'])->toBe('Sunset')
+        ->and($reel->brief)->toContain('Τάση: Golden hour reels')->and($reel->settings['design']['en'])->toBe('Sunset')
         ->and($reel->variants->map(fn ($v) => "{$v->platform}.{$v->lang}")->all())->toBe(['instagram.el', 'instagram.en', 'facebook.el']) // the empty English Facebook caption is skipped
         ->and($reel->variants->first()->hashtags)->toBe(['#chania']);
     $li = Post::where('platforms', 'like', '%linkedin%')->firstOrFail();
@@ -48,8 +48,8 @@ test('save-plan files the posts as Drafts with captions, the trend brief and the
     $reports = Report::orderBy('id')->get();
     expect($reports->pluck('kind')->all())->toBe(['trend_brief', 'plan'])
         ->and($reports[0]->body)->toBe('# May trends')
-        ->and($reports[1]->title)->toBe('Content batch 2027-05-12 to 2027-05-20')
-        ->and($reports[1]->body)->toContain('## 1. Sunset cocktails (2027-05-12)')->toContain('Caption brief: Mention happy hour')->toContain('Notes for reviewer: Check the hours')->toContain('# May trends')
+        ->and($reports[1]->title)->toBe('Πλάνο περιεχομένου 2027-05-12 έως 2027-05-20') // the client's first language
+        ->and($reports[1]->body)->toContain('## 1. Sunset cocktails (2027-05-12)')->toContain('Οδηγίες λεζάντας: Mention happy hour')->toContain('Σημειώσεις για τον ελεγκτή: Check the hours')->toContain('# May trends')
         ->and($reports[1]->meta['posts'][1]['name'])->toBe($li->name);
     $response->assertSee('"review_sheet":"'.route('reports.show', $reports[1]).'"');
 

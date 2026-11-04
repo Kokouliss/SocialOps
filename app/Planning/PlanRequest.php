@@ -47,6 +47,7 @@ class PlanRequest
             'platforms' => $this->platforms,
             'count' => $this->count,
             'instruction' => $this->instruction,
+            'plan_language' => ($this->profile['languages'][0] ?? null) === 'en' ? 'English' : 'Greek', // what the team and the client read the plan in; captions keep their own languages
             'holidays' => Holidays::lines($this->from, $this->to, Holidays::inCyprus($this->profile['location'] ?? null)),
         ];
     }

@@ -37,7 +37,7 @@ class TopicsDocx
         $tiktok = 0;
         foreach ($report->meta['posts'] as $post) {
             $date = CarbonImmutable::parse($post['date']);
-            $format = ucfirst(str_replace('_', ' ', $post['format']));
+            $format = __(ucfirst(str_replace('_', ' ', $post['format'])), [], $locale);
             $tag = in_array('tiktok', $post['platforms'], true) ? ' #TikTok '.++$tiktok : '';
             $trend = filled($post['trend_signal'] ?? null) ? __('Trend:', [], $locale)." {$post['trend_signal']}. " : '';
 
