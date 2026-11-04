@@ -18,11 +18,16 @@ class DashboardController extends Controller
     public function index(Request $request): View
     {
         $mine = $request->user();
+        $week = $mine->restrict(Post::with('client'))->where('state', PostState::Scheduled)->where('scheduled_at', '<=', now()->addDays(7)->endOfDay())->orderBy('scheduled_at')->get();
 
         return view('dashboard', [
-            'today' => $mine->restrict(Post::with('client'))->where('state', PostState::Scheduled)->where('scheduled_at', '<=', now()->endOfDay())->orderBy('scheduled_at')->get(),
+            'clients' => $mine->clients()->orderBy('name')->get(),
+            'week' => $week,
+            'today' => $week->filter(fn (Post $p) => $p->scheduled_at->lte(now()->endOfDay())),
+            'tomorrow' => $week->filter(fn (Post $p) => $p->scheduled_at->isTomorrow()),
+            'drafts' => $mine->restrict(Post::with('client'))->whereIn('state', [PostState::Idea, PostState::Draft, PostState::ChangesRequested])->whereBetween('scheduled_at', [now()->startOfDay(), now()->addDays(7)->endOfDay()])->orderBy('scheduled_at')->get(),
             'stuck' => $mine->restrict(Post::with('client'))->whereIn('state', [PostState::Failed, PostState::ManualNeeded])->latest('updated_at')->get(),
-            'overdue' => $mine->restrict(Review::with('client'))->whereNull('completed_at')->where('due_at', '<', now())->orderBy('due_at')->get(),
+            'waiting' => $mine->restrict(Review::with('client'))->whereNull('completed_at')->withCount('pending')->orderBy('due_at')->get(),
             'unanswered' => $mine->restrict(Comment::with('client'))->whereNull('replied_at')->whereNull('hidden_at')->selectRaw('client_id, count(*) as n')->groupBy('client_id')->get(),
             'tokens' => $mine->restrict(Account::with('client'))->where('token_expires_at', '<=', now()->addDays(CheckTokens::ALERT_DAYS))->orderBy('token_expires_at')->get(),
             'failedJobs' => DB::table('failed_jobs')->count(),
