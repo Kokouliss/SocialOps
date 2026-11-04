@@ -27,7 +27,7 @@
                                     <ul class="mt-1 space-y-1">
                                         @foreach ($posts as $post)
                                             <li><span class="font-medium text-gray-700">{{ $post->scheduled_at->format('H:i') }}</span> {!! $line($post) !!}
-                                                @if ($post->scheduled_at->lt(now()->subMinutes(10))) <span class="px-2 py-0.5 rounded text-xs bg-red-100 text-red-800">{{ __('late: is the queue running?') }}</span> @endif
+                                                @if ($post->scheduled_at->lt(now()->subMinutes(10))) <span class="px-2 py-0.5 rounded text-xs bg-red-100 text-red-800">{{ config('features.publishing') ? __('late: is the queue running?') : __('past its time: posted? Mark it published') }}</span> @endif
                                             </li>
                                         @endforeach
                                     </ul>
@@ -120,11 +120,11 @@
                     <h3 class="font-semibold text-gray-900">{{ __('Per client, the next 7 days') }}</h3>
                     <table class="mt-2 w-full text-left">
                         <thead class="text-xs uppercase tracking-wide text-gray-500">
-                            <tr><th class="py-1 pr-4 font-medium">{{ __('Client') }}</th><th class="py-1 pr-4 font-medium">{{ __('Going out') }}</th><th class="py-1 pr-4 font-medium">{{ __('Waiting for client') }}</th><th class="py-1 pr-4 font-medium">{{ __('Not sent yet') }}</th><th class="py-1 pr-4 font-medium">{{ __('Failed') }}</th><th class="py-1 font-medium">{{ __('Comments to answer') }}</th></tr>
+                            <tr><th class="py-1 pr-4 font-medium">{{ __('Client') }}</th><th class="py-1 pr-4 font-medium">{{ __('Going out') }}</th><th class="py-1 pr-4 font-medium">{{ __('Waiting for client') }}</th><th class="py-1 pr-4 font-medium">{{ __('Not sent yet') }}</th>@if (config('features.publishing'))<th class="py-1 pr-4 font-medium">{{ __('Failed') }}</th><th class="py-1 font-medium">{{ __('Comments to answer') }}</th>@endif</tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @foreach ($clients as $client)
-                                @php($cells = [[$week->where('client_id', $client->id)->count(), route('calendar', ['client' => $client->slug]), ''], [$waiting->where('client_id', $client->id)->sum('pending_count'), route('clients.reviews', $client), 'text-yellow-700'], [$drafts->where('client_id', $client->id)->count(), route('calendar', ['client' => $client->slug]), ''], [$stuck->where('client_id', $client->id)->count(), route('calendar', ['client' => $client->slug]), 'text-red-700'], [$unanswered->firstWhere('client_id', $client->id)?->n ?? 0, route('clients.comments', $client), 'text-red-700']])
+                                @php($cells = [[$week->where('client_id', $client->id)->count(), route('calendar', ['client' => $client->slug]), ''], [$waiting->where('client_id', $client->id)->sum('pending_count'), route('clients.reviews', $client), 'text-yellow-700'], [$drafts->where('client_id', $client->id)->count(), route('calendar', ['client' => $client->slug]), ''], ...(config('features.publishing') ? [[$stuck->where('client_id', $client->id)->count(), route('calendar', ['client' => $client->slug]), 'text-red-700'], [$unanswered->firstWhere('client_id', $client->id)?->n ?? 0, route('clients.comments', $client), 'text-red-700']] : [])])
                                 <tr>
                                     <td class="py-1.5 pr-4"><a class="text-brand-600 hover:underline" href="{{ route('calendar', ['client' => $client->slug]) }}">{{ $client->name }}</a></td>
                                     @foreach ($cells as [$n, $url, $color])

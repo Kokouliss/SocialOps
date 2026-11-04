@@ -67,6 +67,7 @@
     </div>
 @endif
 
+@if (config('features.publishing'))
 <fieldset class="mt-6 border rounded-md p-4 text-sm" data-for="instagram">
     <legend class="px-1 text-sm font-medium">Instagram</legend>
     <x-input-label for="ig-collab" :value="__('Collab invite: up to 3 Instagram usernames, feed, carousel and Reel only (they accept in the app, then the post shows on both profiles)')" />
@@ -109,6 +110,7 @@
     </label>
     <x-input-error class="mt-1" :messages="$errors->get('settings.tiktok.consent')" />
 </fieldset>
+@endif
 
 @php($gbp = old('settings.gbp', $post->settings['gbp'] ?? []))
 <fieldset class="mt-6 border rounded-md p-4 text-sm" data-for="google_business">

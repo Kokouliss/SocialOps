@@ -81,6 +81,12 @@ enum PostState: string
         };
     }
 
+    /** States only the publishing drivers put a post into (config/features.php): no buttons for them while posting is off. */
+    public function needsPublishing(): bool
+    {
+        return in_array($this, [self::Failed, self::ManualNeeded, self::Withdrawn], true);
+    }
+
     /** The button text for moving a post into this state. */
     public function action(): string
     {

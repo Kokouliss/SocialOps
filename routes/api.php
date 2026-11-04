@@ -10,6 +10,8 @@ Route::middleware(ApiAuth::class)->group(function () {
     Route::get('/clients/{client}/posts', [ApiController::class, 'posts']);
     Route::post('/clients/{client}/posts', [ApiController::class, 'storePost']);
     Route::get('/posts/{post}', [ApiController::class, 'post']);
-    Route::get('/clients/{client}/comments', [ApiController::class, 'comments']);
-    Route::post('/comments/{comment}/reply', [ApiController::class, 'reply']);
+    Route::middleware('feature:publishing')->group(function () {
+        Route::get('/clients/{client}/comments', [ApiController::class, 'comments']);
+        Route::post('/comments/{comment}/reply', [ApiController::class, 'reply']);
+    });
 });

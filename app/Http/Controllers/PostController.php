@@ -209,6 +209,7 @@ class PostController extends Controller
     public function transition(Request $request, Post $post): RedirectResponse
     {
         $to = PostState::from($request->validate(['state' => ['required', Rule::enum(PostState::class)]])['state']);
+        abort_if($to->needsPublishing() && ! config('features.publishing'), 404);
 
         try {
             $to === PostState::Withdrawn ? $this->withdraw($post) : $post->transitionTo($to);
