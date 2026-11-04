@@ -23,7 +23,6 @@ class CommentController extends Controller
             'attention' => $open->filter(fn (Comment $c) => $c->needsAttention()),
             'questions' => $open->where('intent', 'question'),
             'complaints' => $open->where('intent', 'complaint'),
-            'reviews' => $open->whereNotNull('rating'),
         ];
         $tab = array_key_exists($request->input('tab', ''), $tabs) ? $request->input('tab') : 'all';
         $shown = $tabs[$tab]->when($request->input('platform'), fn ($c, $p) => $c->where('platform', $p));
@@ -65,7 +64,6 @@ class CommentController extends Controller
 
     public function hide(MetaPublisher $meta, Comment $comment): RedirectResponse
     {
-        abort_if($comment->platform === 'google_business', 422, 'Google reviews cannot be hidden, only flagged in the Business Profile.');
         abort_if($comment->thread_id !== null, 422, 'A direct message cannot be hidden.');
         try {
             $meta->hide($comment->account, $comment->external_id);

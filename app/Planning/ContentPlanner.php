@@ -5,13 +5,14 @@ namespace App\Planning;
 use Anthropic\Client;
 use App\Drafting\Reply;
 use App\Models\ClaudeCall;
+use App\Models\Post;
 use Carbon\CarbonImmutable;
 use RuntimeException;
 
 /** Turns the brand profile, the trend brief and the pillar quota into one brief per post (prompts/content-plan.md). */
 class ContentPlanner
 {
-    public const FORMATS = ['feed', 'carousel', 'reel', 'story', 'tiktok_video', 'tiktok_photos', 'gbp_update', 'gbp_offer', 'gbp_event'];
+    public const FORMATS = Post::FORMATS;
 
     public function __construct(private Client $claude) {}
 

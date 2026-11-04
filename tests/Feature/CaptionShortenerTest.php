@@ -35,7 +35,7 @@ test('the post form counts the published text per platform and the shorten butto
     $post->client->update(['profile' => ['signatures' => ['facebook' => 'Call us']] + $post->client->profile]);
     $me = User::factory()->create();
     $this->actingAs($me)->get(route('posts.edit', $post))->assertOk()->assertSee('data-max="2200"', false)->assertSee('data-platform="facebook" data-max="63206" data-signature="Call us"', false)->assertSee('Shorten with Claude')->assertSee(route('posts.shorten', $post));
-    $this->actingAs($me)->get(route('posts.create', $post->client))->assertOk()->assertSee('data-max="1500"', false)->assertDontSee('Shorten with Claude');
+    $this->actingAs($me)->get(route('posts.create', $post->client))->assertOk()->assertSee('data-max="3000"', false)->assertDontSee('Shorten with Claude');
 
     $this->mock(CaptionShortener::class)->shouldReceive('shorten')->once()
         ->withArgs(fn ($profile, $platform, $captions, $hashtags) => $platform === 'instagram' && $captions === ['el' => 'μακρύ'] && $hashtags === ['chania', '#crete'])

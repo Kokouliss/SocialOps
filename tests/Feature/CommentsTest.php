@@ -66,39 +66,3 @@ test('a staff member drafts a reply with Claude, edits it, sends it, or hides th
     expect($spam->fresh()->hidden_at)->not->toBeNull();
     $this->actingAs($this->staff)->get("/clients/{$this->client->id}/comments")->assertOk()->assertSee('Nothing to answer')->assertSee('hidden');
 });
-
-test('Google reviews land in the same inbox with their stars, answered ones as history, and a reply goes to the Business Profile', function () {
-    config(['services.slack.webhook_url' => 'https://hooks.slack.com/services/t']);
-    $google = $this->client->accounts()->create(['platform' => 'google_business', 'external_id' => 'accounts/1/locations/2', 'name' => 'Almyra, Chania', 'access_token' => 'g-tok', 'refresh_token' => 'r', 'token_expires_at' => now()->addHour()]);
-    Http::fake([
-        'graph.facebook.com/*' => Http::response(['data' => []]),
-        'mybusiness.googleapis.com/v4/accounts/1/locations/2/reviews*' => Http::response(['reviews' => [
-            ['reviewId' => 'r1', 'reviewer' => ['displayName' => 'Maria K'], 'starRating' => 'FIVE', 'comment' => 'Υπέροχο ηλιοβασίλεμα και σέρβις!', 'createTime' => '2026-11-02T10:00:00Z'],
-            ['reviewId' => 'r2', 'reviewer' => ['displayName' => 'Tom'], 'starRating' => 'TWO', 'comment' => 'Slow service', 'createTime' => '2026-10-20T10:00:00Z', 'reviewReply' => ['comment' => 'Sorry Tom, we have fixed it.', 'updateTime' => '2026-10-21T09:00:00Z']],
-        ]]),
-        'hooks.slack.com/*' => Http::response('ok'),
-    ]);
-
-    $this->instance(CommentTriage::class, new CommentTriage(fakeClaude(json_encode(['comments' => [['n' => 1, 'sentiment' => 'positive', 'intent' => 'praise']]]))));
-    $this->artisan('comments:fetch')->expectsOutputToContain('Almyra google_business: 1 new, 0 need attention.')->assertSuccessful();
-
-    $reviews = Comment::where('platform', 'google_business')->orderBy('external_id')->get();
-    expect($reviews)->toHaveCount(2)
-        ->and($reviews[0])->toMatchArray(['external_id' => 'r1', 'author' => 'Maria K', 'rating' => 5, 'post_id' => null, 'replied_at' => null])
-        ->and($reviews[1]->reply)->toBe('Sorry Tom, we have fixed it.')->and($reviews[1]->replied_at)->not->toBeNull();
-    Http::assertSent(fn ($r) => str_contains($r->url(), 'hooks.slack.com') && str_contains($r['text'], 'Almyra: 1 new Google reviews'));
-
-    $page = $this->actingAs($this->staff)->get("/clients/{$this->client->id}/comments")->assertOk();
-    $page->assertSee('Google review')->assertSee('★★★★★')->assertSee('Maria K')->assertSee('Sorry Tom');
-
-    $this->instance(ReplyDrafter::class, new ReplyDrafter(fakeClaude(json_encode(['reply' => 'Ευχαριστούμε Μαρία!', 'notes' => '']))));
-    $this->actingAs($this->staff)->post("/comments/{$reviews[0]->id}/draft")->assertSessionHas('status', 'draft-ready');
-    expect(json_decode((string) claudeRequests()[0]['request']->getBody(), true)['messages'][0]['content'])->toContain('Rating: 5 of 5 stars (a Google review)');
-
-    Http::fake(['mybusiness.googleapis.com/v4/accounts/1/locations/2/reviews/r1/reply' => Http::response(['comment' => 'ok'])]);
-    $this->actingAs($this->staff)->post("/comments/{$reviews[0]->id}/reply", ['reply' => 'Ευχαριστούμε Μαρία, τα λέμε σύντομα!'])->assertSessionHas('status', 'reply-sent');
-    Http::assertSent(fn ($r) => $r->method() === 'PUT' && str_ends_with($r->url(), '/reviews/r1/reply') && $r['comment'] === 'Ευχαριστούμε Μαρία, τα λέμε σύντομα!' && $r->hasHeader('Authorization', 'Bearer g-tok'));
-    expect($reviews[0]->fresh()->replied_at)->not->toBeNull();
-
-    $this->actingAs($this->staff)->post("/comments/{$reviews[0]->id}/hide")->assertStatus(422);
-});

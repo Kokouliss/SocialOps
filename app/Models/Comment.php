@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Publishing\GbpPublisher;
 use App\Publishing\MetaPublisher;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -10,8 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Arr;
 
-/** A comment someone left under a client's post, a direct message (with a thread_id to answer to), or a Google review (platform google_business, with a rating). `reply` is a draft until `replied_at` is set. */
-#[Fillable(['account_id', 'post_id', 'platform', 'external_id', 'thread_id', 'author', 'text', 'rating', 'posted_at', 'sentiment', 'intent', 'reply', 'replied_at', 'hidden_at'])]
+/** A comment someone left under a client's post, a direct message (with a thread_id to answer to),. `reply` is a draft until `replied_at` is set. */
+#[Fillable(['account_id', 'post_id', 'platform', 'external_id', 'thread_id', 'author', 'text', 'posted_at', 'sentiment', 'intent', 'reply', 'replied_at', 'hidden_at'])]
 class Comment extends Model
 {
     protected function casts(): array
@@ -26,11 +25,10 @@ class Comment extends Model
         return $q->whereNull('replied_at')->whereNull('hidden_at');
     }
 
-    /** Send the reply on the platform (comment, direct message or Google review) and mark the comment answered. */
+    /** Send the reply on the platform (comment or direct message) and mark the comment answered. */
     public function answer(string $text): void
     {
         match (true) {
-            $this->platform === 'google_business' => app(GbpPublisher::class)->reply($this->account, $this->external_id, $text),
             $this->thread_id !== null => app(MetaPublisher::class)->message($this->account, $this->thread_id, $text),
             default => app(MetaPublisher::class)->reply($this->account, $this->external_id, $text),
         };
@@ -40,12 +38,12 @@ class Comment extends Model
     /** The comment as the JSON API and the MCP server show it. */
     public function toApiArray(): array
     {
-        return Arr::only($this->toArray(), ['id', 'post_id', 'platform', 'author', 'text', 'rating', 'posted_at', 'sentiment', 'intent', 'reply', 'replied_at', 'hidden_at']);
+        return Arr::only($this->toArray(), ['id', 'post_id', 'platform', 'author', 'text', 'posted_at', 'sentiment', 'intent', 'reply', 'replied_at', 'hidden_at']);
     }
 
     public function label(): string
     {
-        return $this->rating ? __('Google review') : ucfirst($this->platform).($this->thread_id ? ' '.__('message') : '');
+        return ucfirst($this->platform).($this->thread_id ? ' '.__('message') : '');
     }
 
     /** A complaint, a question or anything negative goes to the top of the inbox and into the Slack count. */

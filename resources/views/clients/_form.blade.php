@@ -6,7 +6,7 @@
 @php($p = fn ($key, $default = '') => old('p.'.$key, data_get($profile, $key, $default)))
 @php($text = fn ($key, $glue = ', ') => is_array($v = $p($key)) ? implode($glue, $v) : (string) $v)
 @php($flag = fn ($key) => $errors->any() ? (bool) old('p.'.$key) : (bool) data_get($profile, $key))
-@php($platforms = ['instagram' => 'Instagram', 'facebook' => 'Facebook', 'tiktok' => 'TikTok', 'google_business' => 'Google Business Profile'])
+@php($platforms = ['instagram' => 'Instagram', 'facebook' => 'Facebook', 'tiktok' => 'TikTok', 'linkedin' => 'LinkedIn'])
 
 @if ($errors->any())
     <div class="mb-6 rounded-md bg-red-50 p-4 text-sm text-red-700">

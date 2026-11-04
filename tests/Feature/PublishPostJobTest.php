@@ -74,10 +74,10 @@ test('a platform failure keeps what was published, marks the post Failed when re
 });
 
 test('a post with no connected account for a platform fails with a clear message', function () {
-    $post = Post::factory()->create(['client_id' => $this->client->id, 'state' => PostState::Scheduled, 'scheduled_at' => '2026-11-10 09:55', 'platforms' => ['google_business']]);
+    $post = Post::factory()->create(['client_id' => $this->client->id, 'state' => PostState::Scheduled, 'scheduled_at' => '2026-11-10 09:55', 'platforms' => ['linkedin']]);
 
     (new PublishPost($post))->handle();
-})->throws(PublishFailed::class, 'No google_business account is connected');
+})->throws(PublishFailed::class, 'No linkedin account is connected');
 
 test('the first comment goes under the post right after it is published, and a failure is told to Slack without failing the post', function () {
     Http::fake();

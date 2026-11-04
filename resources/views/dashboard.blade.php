@@ -89,7 +89,7 @@
 
                     @if ($unanswered->isNotEmpty())
                         <div class="bg-white p-6 shadow-sm sm:rounded-lg">
-                            <h3 class="font-semibold text-gray-900">{{ __('Comments and reviews without a reply') }}</h3>
+                            <h3 class="font-semibold text-gray-900">{{ __('Comments without a reply') }}</h3>
                             <ul class="mt-2 space-y-1">
                                 @foreach ($unanswered as $row)
                                     <li><a class="text-brand-600 hover:underline" href="{{ route('clients.comments', $row->client) }}">{{ $row->client->name }}</a> · {{ $row->n }}</li>

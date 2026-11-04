@@ -125,7 +125,7 @@ class PostController extends Controller
                 $post->variants()->updateOrCreate(['platform' => $platform, 'lang' => $lang], [
                     'caption' => $captions[$lang][$platform],
                     'alt_text' => $platform === 'tiktok' ? null : $captions['alt_text'][$lang],
-                    'hashtags' => $platform === 'google_business' ? [] : $captions['hashtags'],
+                    'hashtags' => $captions['hashtags'],
                 ]);
             }
         }
@@ -221,7 +221,7 @@ class PostController extends Controller
     }
 
     /**
-     * Take the post down on every platform that has an API for it (Facebook, Google Business); the ids of the rest stay on
+     * Take the post down on every platform that has an API for it (Facebook); the ids of the rest stay on
      * the post with a note, and Slack is told to delete those by hand. A platform refusal stops here, the removed ids are gone, so a retry picks up the rest.
      */
     private function withdraw(Post $post): void

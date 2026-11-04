@@ -19,8 +19,6 @@ You answer comments on social media for {{client.name}}, a {{client.type}} in {{
 {{post_caption}}
 
 ## The comment, by {{author}}
-Rating: {{rating}}
-
 {{comment}}
 
 ## Rules

@@ -62,7 +62,7 @@ it('warns about dates outside the window and pillar drift instead of failing', f
 
 it('rejects a batch size or platform the client cannot use', function () {
     expect(fn () => planRequest(0))->toThrow(InvalidArgumentException::class)
-        ->and(fn () => new PlanRequest(planRequest()->profile, 1, ['linkedin'], CarbonImmutable::today(), CarbonImmutable::today()))
+        ->and(fn () => new PlanRequest(planRequest()->profile, 1, ['pinterest'], CarbonImmutable::today(), CarbonImmutable::today()))
         ->toThrow(InvalidArgumentException::class, 'subset of the client accounts');
 });
 

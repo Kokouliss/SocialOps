@@ -16,7 +16,7 @@ test('the template has the client\'s columns and a filled CSV becomes Drafts on 
     $pillar = array_key_first($this->client->profile['pillars']);
     $csv = "\xEF\xBB\xBFdate;time;platforms;format;pillar;caption_el;caption_en;hashtags;alt_text;first_comment;brief\n"
         ."2027-05-12;18:00;instagram, facebook;feed;$pillar;Καλημέρα;Good morning;#chania #crete;The terrace;Book now;Sunset\n"
-        ."2027-05-13;;google_business;gbp_update;;Νέο μενού;New menu;;;;\n"
+        ."2027-05-13;;linkedin;feed;;Νέο μενού;New menu;;;;\n"
         .";;;;;;;;;;\n";
 
     $this->actingAs($this->staff)->post(route('posts.import', $this->client), ['csv' => UploadedFile::fake()->createWithContent('posts.csv', $csv)])
@@ -32,8 +32,8 @@ test('the template has the client\'s columns and a filled CSV becomes Drafts on 
             ['instagram', 'el', 'Καλημέρα', 'The terrace', ['#chania', '#crete']], ['instagram', 'en', 'Good morning', 'The terrace', ['#chania', '#crete']],
             ['facebook', 'el', 'Καλημέρα', 'The terrace', ['#chania', '#crete']], ['facebook', 'en', 'Good morning', 'The terrace', ['#chania', '#crete']],
         ]);
-    $gbp = Post::where('name', 'ALMYRA_20270513_GBP_GBPUPDATE_MISC_EL-EN_v1')->firstOrFail();
-    expect($gbp->scheduled_at->format('H:i'))->toBe('10:00')->and($gbp->settings)->toBeNull()->and(Post::count())->toBe(2);
+    $li = Post::where('name', 'ALMYRA_20270513_LI_FEED_MISC_EL-EN_v1')->firstOrFail();
+    expect($li->scheduled_at->format('H:i'))->toBe('10:00')->and($li->settings)->toBeNull()->and(Post::count())->toBe(2);
 });
 
 test('a wrong row stops the whole import and names the row', function () {
@@ -41,7 +41,7 @@ test('a wrong row stops the whole import and names the row', function () {
 
     $this->actingAs($this->staff)->post(route('posts.import', $this->client), ['csv' => UploadedFile::fake()->createWithContent('posts.csv', $csv)])
         ->assertRedirect(route('clients.edit', $this->client))
-        ->assertSessionHasErrors(['csv' => 'Row 3: platforms must be some of instagram, facebook, tiktok, google_business.']);
+        ->assertSessionHasErrors(['csv' => 'Row 3: platforms must be some of instagram, facebook, tiktok, linkedin.']);
     expect(session('errors')->get('csv'))->toHaveCount(3)->and(Post::count())->toBe(0);
 
     $this->actingAs($this->staff)->post(route('posts.import', $this->client), ['csv' => UploadedFile::fake()->createWithContent('posts.csv', "title\nx\n")])

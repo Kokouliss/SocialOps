@@ -35,8 +35,6 @@ return [
     ],
 
     'google' => [
-        'client_id' => env('GOOGLE_CLIENT_ID'),
-        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'service_account' => env('GOOGLE_SERVICE_ACCOUNT_JSON'), // path to the key file of the service account that reads shared Drive folders
     ],
 

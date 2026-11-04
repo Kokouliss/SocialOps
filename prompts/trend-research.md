@@ -35,7 +35,7 @@ Markdown only, in this shape:
 ### 1. <short name>
 - What: one or two sentences
 - Why it fits {{client.name}}: one sentence, name the pillar
-- Platforms and format: for example Instagram Reel, TikTok video, Facebook post, Google Business Profile update
+- Platforms and format: for example Instagram Reel, TikTok video, Facebook post, LinkedIn post
 - Evidence: source URL (date, engagement if reported)
 - Confidence: high | medium | low
 

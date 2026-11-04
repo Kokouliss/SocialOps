@@ -21,7 +21,7 @@ Accept: application/json
 | GET | `/api/clients/{id}/posts?from=&to=&state=` | Posts (up to 500), oldest first; `from`/`to` are dates on `scheduled_at`, `state` one of idea, draft, in_review, changes_requested, approved, scheduled, published, failed, manual_needed, withdrawn |
 | POST | `/api/clients/{id}/posts` | A new Draft, same fields and rules as the post form (below) |
 | GET | `/api/posts/{id}` | One post |
-| GET | `/api/clients/{id}/comments?open=1` | The inbox: comments, direct messages and Google reviews; `open=0` for everything |
+| GET | `/api/clients/{id}/comments?open=1` | The inbox: comments and direct messages; `open=0` for everything |
 | POST | `/api/comments/{id}/reply` | `{"text": "…"}` sends the reply on the platform and marks the comment answered |
 
 ### Creating a Draft

@@ -34,7 +34,7 @@ test('staff issue and revoke API tokens; a token reads clients, creates a Draft 
         'variants' => ['instagram' => ['el' => ['caption' => 'Λαβράκι', 'hashtags' => ['#chania', 'crete']], 'en' => ['caption' => 'Sea bass']]],
     ])->assertCreated()->assertJsonPath('name', 'ALMYRA_20270512_IG_FEED_'.strtoupper($pillar).'_EL-EN_v1')->assertJsonPath('state', 'draft')
         ->assertJsonPath('captions.instagram.el.hashtags', ['#chania', 'crete'])->assertJsonPath('captions.instagram.en.caption', 'Sea bass');
-    $this->withToken($plain)->postJson("/api/clients/{$this->a->id}/posts", ['platforms' => ['linkedin'], 'format' => 'feed'])->assertUnprocessable()->assertJsonValidationErrors(['platforms.0']);
+    $this->withToken($plain)->postJson("/api/clients/{$this->a->id}/posts", ['platforms' => ['pinterest'], 'format' => 'feed'])->assertUnprocessable()->assertJsonValidationErrors(['platforms.0']);
     $id = $created->json('id');
     $this->withToken($plain)->getJson("/api/posts/{$id}")->assertOk()->assertJsonPath('brief', 'Sea bass')->assertJsonPath('url', route('posts.edit', $id));
     $this->withToken($plain)->getJson("/api/clients/{$this->a->id}/posts?state=draft&from=2027-05-01")->assertOk()->assertJsonCount(1);

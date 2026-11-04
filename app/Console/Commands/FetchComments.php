@@ -7,7 +7,6 @@ use App\Engagement\CommentTriage;
 use App\Models\Account;
 use App\Models\Comment;
 use App\Posts\PostState;
-use App\Publishing\GbpPublisher;
 use App\Publishing\MetaPublisher;
 use App\Publishing\PublishFailed;
 use Illuminate\Console\Command;
@@ -19,14 +18,14 @@ class FetchComments extends Command
 {
     protected $signature = 'comments:fetch';
 
-    protected $description = 'Pull new Instagram and Facebook comments (last 30 days of posts), direct messages and Google Business Profile reviews into each client\'s inbox';
+    protected $description = 'Pull new Instagram and Facebook comments (last 30 days of posts) and direct messages into each client\'s inbox';
 
-    public function handle(MetaPublisher $meta, GbpPublisher $gbp, CommentTriage $triage): int
+    public function handle(MetaPublisher $meta, CommentTriage $triage): int
     {
-        $accounts = Account::with('client')->whereIn('platform', ['instagram', 'facebook', 'google_business'])->get();
+        $accounts = Account::with('client')->whereIn('platform', ['instagram', 'facebook'])->get();
         foreach ($accounts as $account) {
             try {
-                $rows = $account->platform === 'google_business' ? $this->reviews($gbp, $account) : $this->comments($meta, $account);
+                $rows = $this->comments($meta, $account);
             } catch (PublishFailed $e) {
                 $this->warn("{$account->client->name} {$account->platform}: {$e->getMessage()}");
 
@@ -37,9 +36,7 @@ class FetchComments extends Command
             foreach ($rows as $row) {
                 if (! in_array($row['external_id'], $known)) {
                     $comment = $account->client->comments()->create($row + ['account_id' => $account->id, 'platform' => $account->platform]);
-                    if (empty($row['replied_at'])) { // a review the venue answered before Social Ops is history, not work
-                        $new->push($comment);
-                    }
+                    $new->push($comment);
                 }
             }
             if ($new->isNotEmpty()) {
@@ -49,8 +46,8 @@ class FetchComments extends Command
                     $this->warn("{$account->client->name} {$account->platform}: triage failed, {$e->getMessage()}");
                 }
                 $attention = $new->filter(fn (Comment $c) => $c->fresh()->needsAttention())->count();
-                $auto = $account->platform === 'google_business' ? 0 : $this->autoReply($meta, $account, $new);
-                $what = $account->platform === 'google_business' ? 'Google reviews' : str_replace('_', ' ', $account->platform).' comments';
+                $auto = $this->autoReply($meta, $account, $new);
+                $what = str_replace('_', ' ', $account->platform).' comments';
                 $autoNote = $auto ? __(', :auto answered automatically', ['auto' => $auto]) : '';
                 $this->info("{$account->client->name} {$account->platform}: {$new->count()} new, {$attention} need attention{$autoNote}.");
                 Slack::send(__(':client: :n new :what to answer, :a need attention', ['client' => $account->client->name, 'n' => $new->count(), 'what' => $what, 'a' => $attention]).$autoNote."\n".route('clients.comments', $account->client_id));
@@ -106,14 +103,5 @@ class FetchComments extends Command
         }
 
         return $rows;
-    }
-
-    /** @return list<array> review rows; one the venue already answered arrives as answered */
-    private function reviews(GbpPublisher $gbp, Account $account): array
-    {
-        return array_map(fn ($r) => [
-            'external_id' => $r['id'], 'author' => $r['author'], 'text' => $r['text'], 'rating' => $r['rating'], 'posted_at' => $r['posted_at'],
-            'reply' => $r['reply'], 'replied_at' => $r['replied_at'],
-        ], $gbp->reviews($account));
     }
 }

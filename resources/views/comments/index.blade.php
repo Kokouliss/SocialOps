@@ -1,6 +1,6 @@
 <x-app-layout :client="$client">
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $client->name }}: {{ __('comments, messages and reviews') }}</h2>
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $client->name }}: {{ __('comments and messages') }}</h2>
     </x-slot>
 
     <div class="py-12">
@@ -14,7 +14,7 @@
                 <h3 class="font-semibold text-gray-900">{{ __('To answer') }} <span class="font-normal text-gray-500">({{ $open->count() }})</span></h3>
                 <form method="GET" class="mt-3 flex flex-wrap items-center gap-2">
                     <nav class="flex gap-1 overflow-x-auto text-sm" aria-label="{{ __('Kinds') }}">
-                        @foreach (['attention' => __('Needs attention'), 'questions' => __('Questions'), 'complaints' => __('Complaints'), 'reviews' => __('Reviews'), 'all' => __('All')] as $key => $label)
+                        @foreach (['attention' => __('Needs attention'), 'questions' => __('Questions'), 'complaints' => __('Complaints'), 'all' => __('All')] as $key => $label)
                             <a href="{{ route('clients.comments', [$client, ...request()->only('platform', 'order'), 'tab' => $key]) }}" class="whitespace-nowrap rounded-full px-3 py-1 {{ $tab === $key ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">{{ $label }} <span class="{{ $tab === $key ? 'text-gray-300' : 'text-gray-400' }}">{{ $tabs[$key] }}</span></a>
                         @endforeach
                     </nav>
@@ -30,11 +30,11 @@
                         <option value="oldest" @selected(request('order') === 'oldest')>{{ __('Oldest first') }}</option>
                     </select>
                 </form>
-                <p class="mt-1 text-gray-500">{{ __('Comments under the last 30 days of Instagram and Facebook posts, direct messages of the last 30 days, and Google reviews, fetched every hour. Claude drafts, you send. Meta takes a message reply within 24 hours of the person\'s last message.') }}</p>
+                <p class="mt-1 text-gray-500">{{ __('Comments under the last 30 days of Instagram and Facebook posts and direct messages of the last 30 days, fetched every hour. Claude drafts, you send. Meta takes a message reply within 24 hours of the person\'s last message.') }}</p>
                 @forelse ($open as $comment)
                     <div id="comment-{{ $comment->id }}" class="mt-4 border-t pt-4 grid gap-3 md:grid-cols-2">
                         <div>
-                            <p class="text-gray-500">{{ $comment->label() }} · <span class="font-medium text-gray-800">{{ $comment->author ?? '?' }}</span>@if ($comment->rating) · <span class="text-brand-600">{{ str_repeat('★', $comment->rating) }}</span>{{ str_repeat('☆', 5 - $comment->rating) }}@endif · {{ $comment->posted_at->translatedFormat('D j M, H:i') }}
+                            <p class="text-gray-500">{{ $comment->label() }} · <span class="font-medium text-gray-800">{{ $comment->author ?? '?' }}</span> · {{ $comment->posted_at->translatedFormat('D j M, H:i') }}
                                 @if ($comment->post) · <a href="{{ route('posts.edit', $comment->post) }}" class="font-mono text-xs text-brand-600 hover:underline">{{ $comment->post->name }}</a> @endif
                             </p>
                             @if ($comment->intent)
@@ -47,7 +47,7 @@
                             <p class="mt-1 whitespace-pre-line">{{ $comment->text }}</p>
                             <div class="mt-2 flex gap-3">
                                 <form method="POST" action="{{ route('comments.draft', $comment) }}" onsubmit="this.querySelector('button').disabled = true">@csrf<button class="text-brand-600 hover:underline">{{ __('Draft reply with Claude') }}</button></form>
-                                @if ($comment->platform !== 'google_business' && ! $comment->thread_id)
+                                @if (! $comment->thread_id)
                                     <form method="POST" action="{{ route('comments.hide', $comment) }}" onsubmit="return confirm('{{ __('Hide this comment on the platform?') }}')">@csrf<button class="text-gray-500 hover:underline">{{ __('Hide') }}</button></form>
                                 @endif
                             </div>
@@ -69,10 +69,10 @@
                 @empty
                     @if ($tab !== 'all' || request('platform'))
                         <x-empty-state class="mt-3" :action="__('Show everything')" :href="route('clients.comments', $client)">{{ __('Nothing here; the other tabs may still have something.') }}</x-empty-state>
-                    @elseif ($client->accounts()->whereIn('platform', ['instagram', 'facebook', 'google_business'])->doesntExist())
-                        <x-empty-state class="mt-3" :action="__('Connect an account')" :href="route('clients.accounts', $client)">{{ __('Nothing to answer yet: connect Instagram, Facebook or Google Business Profile and comments, messages and reviews arrive here every hour.') }}</x-empty-state>
+                    @elseif ($client->accounts()->whereIn('platform', ['instagram', 'facebook'])->doesntExist())
+                        <x-empty-state class="mt-3" :action="__('Connect an account')" :href="route('clients.accounts', $client)">{{ __('Nothing to answer yet: connect Instagram or Facebook and comments and messages arrive here every hour.') }}</x-empty-state>
                     @else
-                        <x-empty-state class="mt-3">{{ __('Nothing to answer. New comments, messages and reviews arrive every hour.') }}</x-empty-state>
+                        <x-empty-state class="mt-3">{{ __('Nothing to answer. New comments and messages arrive every hour.') }}</x-empty-state>
                     @endif
                 @endforelse
             </div>
@@ -82,7 +82,7 @@
                     <h3 class="font-semibold text-gray-900">{{ __('Answered or hidden, last 30 days') }}</h3>
                     @foreach ($done as $comment)
                         <div id="comment-{{ $comment->id }}" class="mt-3 border-t pt-3">
-                            <p class="text-gray-500">{{ $comment->label() }}{{ $comment->rating ? ' '.str_repeat('★', $comment->rating) : '' }} · <span class="font-medium text-gray-800">{{ $comment->author ?? '?' }}</span> · {{ $comment->posted_at->translatedFormat('D j M, H:i') }} · {{ $comment->hidden_at ? __('hidden') : __('replied :when', ['when' => $comment->replied_at->translatedFormat('D j M, H:i')]) }}</p>
+                            <p class="text-gray-500">{{ $comment->label() }} · <span class="font-medium text-gray-800">{{ $comment->author ?? '?' }}</span> · {{ $comment->posted_at->translatedFormat('D j M, H:i') }} · {{ $comment->hidden_at ? __('hidden') : __('replied :when', ['when' => $comment->replied_at->translatedFormat('D j M, H:i')]) }}</p>
                             <p class="mt-1 whitespace-pre-line">{{ $comment->text }}</p>
                             @if ($comment->replied_at)<p class="mt-1 pl-4 border-l-2 whitespace-pre-line text-gray-700">{{ $comment->reply }}</p>@endif
                         </div>

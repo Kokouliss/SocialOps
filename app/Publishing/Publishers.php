@@ -5,14 +5,14 @@ namespace App\Publishing;
 final class Publishers
 {
     /** OAuth provider => the platforms one authorisation covers. */
-    public const PROVIDERS = ['meta' => ['instagram', 'facebook'], 'tiktok' => ['tiktok'], 'google' => ['google_business']];
+    public const PROVIDERS = ['meta' => ['instagram', 'facebook'], 'tiktok' => ['tiktok']];
 
     public static function for(string $platform): Publisher
     {
         return app(match ($platform) {
             'instagram', 'facebook' => MetaPublisher::class,
             'tiktok' => TikTokPublisher::class,
-            'google_business' => GbpPublisher::class,
+            'linkedin' => throw new ManualNeeded('LinkedIn has no driver: post it in the LinkedIn app.'),
         });
     }
 

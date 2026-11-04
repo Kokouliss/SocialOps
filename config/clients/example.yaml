@@ -10,7 +10,7 @@ accounts:               # connected via OAuth in the app; never store passwords
   instagram: "@almyra.chania"
   facebook: "Almyra Beach Lounge"
   tiktok: "@almyra.chania"
-  google_business: "Almyra Beach Lounge, Chania"
+  linkedin: "almyra-beach-lounge"   # the company page slug or name
 
 languages: [el, en]     # first = primary
 extra_languages: []     # e.g. [de] for a villa with German guests
@@ -59,7 +59,7 @@ approval:
 slots: []               # weekly posting slots, e.g. [mon 10:00, wed 18:00, fri 10:00]: "Next free slot" on the post form, the planner and the low-queue warning use them
 saved_replies: []       # answers you give often, offered in the comment inbox, e.g. [{ label: Opening hours, text: "Ανοιχτά κάθε μέρα 10:00–02:00 / Open daily 10:00–02:00", keywords: [ώρες, hours] }]
                         # keywords (optional): a new Instagram or Facebook comment containing one of them gets that reply at once; complaints, questions and anything negative wait for a human
-signatures: {}          # a line added under every caption of that platform at publish time, e.g. { facebook: "Κρατήσεις / Bookings: +30 28210 00000", google_business: "almyra.gr" }
+signatures: {}          # a line added under every caption of that platform at publish time, e.g. { facebook: "Κρατήσεις / Bookings: +30 28210 00000", linkedin: "almyra.gr" }
 fields: {}              # placeholders for captions, signatures and the first comment, written as {{phone}} and filled at publish time, e.g. { phone: "+30 28210 00000", site: almyra.gr, booking: "https://almyra.gr/book" }
 webhooks: []            # HTTPS URLs that get a signed JSON POST when a post is published, fails or needs a human (docs/api.md), e.g. [{ url: "https://example.com/hook", secret: "shared-secret", events: [post.published] }]
 utm: false              # true adds utm_source=<platform>&utm_medium=social&utm_campaign=<post name> to every link in captions, first comments and Google buttons at publish time (links that already carry utm_ are left alone)

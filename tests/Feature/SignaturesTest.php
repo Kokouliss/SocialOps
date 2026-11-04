@@ -25,8 +25,8 @@ test('the platform signature goes under the caption at publish time and shows in
 });
 
 test('signatures are keyed by our platforms only', function () {
-    $yaml = preg_replace('/^signatures:.*$/m', 'signatures: { linkedin: x }', ClientProfile::templateYaml());
+    $yaml = preg_replace('/^signatures:.*$/m', 'signatures: { pinterest: x }', ClientProfile::templateYaml());
     expect(fn () => ClientProfile::parse($yaml))->toThrow(ValidationException::class)
-        ->and(ClientProfile::parse(str_replace('{ linkedin: x }', '{ facebook: "Call us" }', $yaml))['signatures'])->toBe(['facebook' => 'Call us'])
+        ->and(ClientProfile::parse(str_replace('{ pinterest: x }', '{ facebook: "Call us" }', $yaml))['signatures'])->toBe(['facebook' => 'Call us'])
         ->and(ClientProfile::parse(preg_replace('/^signatures:.*\n\n/m', '', ClientProfile::templateYaml()))['signatures'])->toBe([]); // a profile from before the section
 });

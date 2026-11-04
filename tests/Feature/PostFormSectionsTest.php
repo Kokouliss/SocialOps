@@ -8,6 +8,6 @@ test('the post form marks every platform section so only the ticked platforms sh
     $post = Post::factory()->create(['client_id' => Client::factory()->create()->id, 'platforms' => ['instagram', 'facebook']]);
 
     $this->actingAs(User::factory()->create())->get(route('posts.edit', $post))->assertOk()
-        ->assertSee('data-for="tiktok"', false)->assertSee('data-for="google_business"', false)->assertSee('data-for="instagram facebook"', false)
+        ->assertSee('data-for="tiktok"', false)->assertSee('data-for="instagram facebook"', false)
         ->assertSee('id="sync-captions"', false)->assertSee('sticky bottom-0', false);
 });

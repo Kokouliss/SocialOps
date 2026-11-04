@@ -1,4 +1,9 @@
 {
+    "comments and messages": "σχόλια και μηνύματα",
+    "Comments without a reply": "Σχόλια χωρίς απάντηση",
+    "Comments under the last 30 days of Instagram and Facebook posts and direct messages of the last 30 days, fetched every hour. Claude drafts, you send. Meta takes a message reply within 24 hours of the person's last message.": "Σχόλια κάτω από τις αναρτήσεις Instagram και Facebook των τελευταίων 30 ημερών και προσωπικά μηνύματα των τελευταίων 30 ημερών, κάθε ώρα. Το Claude προσχεδιάζει, εσύ στέλνεις. Η Meta δέχεται απάντηση σε μήνυμα μέσα σε 24 ώρες από το τελευταίο μήνυμα του ατόμου.",
+    "Nothing to answer yet: connect Instagram or Facebook and comments and messages arrive here every hour.": "Τίποτα προς απάντηση ακόμη: σύνδεσε Instagram ή Facebook και τα σχόλια και τα μηνύματα έρχονται εδώ κάθε ώρα.",
+    "Nothing to answer. New comments and messages arrive every hour.": "Τίποτα προς απάντηση. Νέα σχόλια και μηνύματα έρχονται κάθε ώρα.",
     "(as on the approval link; placeholders filled from the profile)": "(όπως στον σύνδεσμο έγκρισης· τα πεδία συμπληρώνονται από το προφίλ)",
     "(Instagram and Facebook: posted under the post right after it goes out, for hashtags or a link; also in the ZIP and the CSV)": "(Instagram και Facebook: μπαίνει κάτω από την ανάρτηση αμέσως μόλις βγει, για hashtags ή σύνδεσμο· επίσης στο ZIP και στο CSV)",
     "(only the ticked platforms are saved; Greek is reviewed by a human before approval)": "(αποθηκεύονται μόνο οι τσεκαρισμένες πλατφόρμες· τα ελληνικά τα ελέγχει άνθρωπος πριν την έγκριση)",

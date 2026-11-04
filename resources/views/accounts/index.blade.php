@@ -35,7 +35,7 @@
                                 <span class="text-gray-400">{{ __('not connected') }}</span>
                             @endif
                             @if ($loop->first)
-                                <a href="{{ route('accounts.connect', [$client, $provider]) }}" class="{{ $account ? '' : 'ml-auto' }} inline-flex items-center px-3 py-1 border rounded text-xs hover:bg-gray-100">{{ $account ? __('Reconnect') : __('Connect') }} {{ ['meta' => 'Facebook / Instagram', 'tiktok' => 'TikTok', 'google' => 'Google'][$provider] }}</a>
+                                <a href="{{ route('accounts.connect', [$client, $provider]) }}" class="{{ $account ? '' : 'ml-auto' }} inline-flex items-center px-3 py-1 border rounded text-xs hover:bg-gray-100">{{ $account ? __('Reconnect') : __('Connect') }} {{ ['meta' => 'Facebook / Instagram', 'tiktok' => 'TikTok'][$provider] }}</a>
                             @endif
                         </div>
                     @endforeach

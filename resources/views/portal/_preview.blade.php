@@ -1,10 +1,10 @@
 {{-- A lookalike of the post on one network: enough for the client to judge image, text and hashtags. Needs $post, $platform, $client and $assetUrl (closure); $live (the staff form) renders a line per language so the form can fill it as you type. --}}
 @php($asset = $post->assets->first())
 @php($vertical = in_array($post->format, ['reel', 'story', 'tiktok_video', 'tiktok_photos']))
-@php($labels = ['instagram' => 'Instagram', 'facebook' => 'Facebook', 'tiktok' => 'TikTok', 'google_business' => 'Google Business Profile'])
+@php($labels = ['instagram' => 'Instagram', 'facebook' => 'Facebook', 'tiktok' => 'TikTok', 'linkedin' => 'LinkedIn'])
 @php($variants = $post->variants->where('platform', $platform)->keyBy('lang'))
 @php($langs = ($live ?? false) ? array_merge($client->profile['languages'], $client->profile['extra_languages'] ?? []) : $variants->keys()->all())
-@php($textFirst = $platform === 'facebook' || $platform === 'google_business')
+@php($textFirst = $platform === 'facebook' || $platform === 'linkedin')
 @php($hashtags = fn ($v) => collect($v?->hashtags ?? [])->map(fn ($h) => '#'.ltrim($h, '#'))->join(' '))
 <div class="rounded-lg border border-gray-200 overflow-hidden text-sm {{ $vertical ? 'bg-black text-white' : 'bg-white' }}">
     <div class="flex items-center gap-2 px-3 py-2">
@@ -23,7 +23,7 @@
             <div class="px-3 pb-2 whitespace-pre-line opacity-80">{{ $post->signatureFor($platform) }}</div>
         @endif
     @endif
-    <div class="bg-gray-100 {{ $vertical ? 'aspect-[9/16]' : ($platform === 'google_business' ? 'aspect-video' : 'aspect-square') }} flex items-center justify-center overflow-hidden" data-preview-media data-current="{{ $asset ? $asset->kind.':'.$asset->id : '' }}">
+    <div class="bg-gray-100 {{ $vertical ? 'aspect-[9/16]' : 'aspect-square' }} flex items-center justify-center overflow-hidden" data-preview-media data-current="{{ $asset ? $asset->kind.':'.$asset->id : '' }}">
         @if (! $asset)
             <span class="text-xs text-gray-500">{{ __('Photo or video to follow') }}</span>
         @elseif ($asset->kind === 'video')
@@ -32,9 +32,6 @@
             <img src="{{ $assetUrl($asset) }}" alt="" class="h-full w-full object-cover" />
         @endif
     </div>
-    @if ($platform === 'google_business')
-        <div class="px-3 py-2 text-xs font-semibold text-blue-700">{{ __($post->format === 'gbp_offer' ? 'View offer' : (\App\Publishing\GbpPublisher::CTAS[$post->settings['gbp']['cta'] ?? 'LEARN_MORE'] ?? 'Learn more')) }}</div>
-    @endif
     @foreach ($langs as $lang)
         @php($v = $variants[$lang] ?? null)
         @if ($textFirst)

@@ -48,7 +48,7 @@ test('staff can list, create, edit and delete a client', function () {
         ->assertSessionHasNoErrors();
     expect($client->refresh()->name)->toBe('Almyra Lounge');
 
-    $this->actingAs($staff)->get('/clients')->assertSee('ALMYRA')->assertSee('instagram, facebook, tiktok, google business');
+    $this->actingAs($staff)->get('/clients')->assertSee('ALMYRA')->assertSee('instagram, facebook, tiktok, linkedin');
 
     $this->actingAs($staff)->delete("/clients/{$client->id}")->assertRedirect('/clients');
     expect(Client::count())->toBe(0);
@@ -121,7 +121,7 @@ test('plan with Claude queues a content:plan run for the chosen accounts and mai
     $this->actingAs($staff)->post("/clients/{$client->id}/plan", ['posts' => 3, 'platforms' => ['instagram'], 'from' => $from, 'days' => 14])
         ->assertRedirect("/clients/{$client->id}/edit")->assertSessionHas('status', 'plan-started');
     Bus::assertDispatched(PlanContentBatch::class, fn (PlanContentBatch $job) => $job->options['posts'] === 3 && $job->options['platforms'] === ['instagram']);
-    $this->actingAs($staff)->post("/clients/{$client->id}/plan", ['posts' => 3, 'platforms' => ['linkedin'], 'from' => '2020-01-01', 'days' => 14])
+    $this->actingAs($staff)->post("/clients/{$client->id}/plan", ['posts' => 3, 'platforms' => ['pinterest'], 'from' => '2020-01-01', 'days' => 14])
         ->assertSessionHasErrors(['platforms.0', 'from']);
 
     Artisan::shouldReceive('call')->once()->with('content:plan', ['client' => 'almyra', '--posts' => 3, '--platforms' => 'instagram', '--from' => $from, '--days' => 14]);
@@ -142,7 +142,7 @@ test('post from a prompt queues a one-post content:plan run with the instruction
     $this->actingAs($staff)->post("/clients/{$client->id}/draft", ['instruction' => 'Fresh one', 'platforms' => ['instagram'], 'date' => '2027-05-12', 'fresh' => '1', 'brief' => '# Pasted'])
         ->assertSessionHas('status', 'post-started');
     Bus::assertDispatched(PlanContentBatch::class, fn (PlanContentBatch $job) => $job->options['from'] === '2027-05-12' && $job->options['latest_brief'] === false && $job->options['brief'] === '# Pasted');
-    $this->actingAs($staff)->post("/clients/{$client->id}/draft", ['instruction' => '', 'platforms' => ['linkedin']])
+    $this->actingAs($staff)->post("/clients/{$client->id}/draft", ['instruction' => '', 'platforms' => ['pinterest']])
         ->assertSessionHasErrorsIn('draft', ['instruction', 'platforms.0']);
 
     Artisan::shouldReceive('call')->once()->with('content:plan', ['client' => 'almyra', '--posts' => 1, '--platforms' => 'instagram', '--from' => '2027-05-12', '--days' => 1, '--latest-brief' => true, '--instruction' => 'Sunset cocktails this weekend']);
