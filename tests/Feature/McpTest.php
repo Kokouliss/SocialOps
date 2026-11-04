@@ -8,6 +8,7 @@ use App\Mcp\Tools\ListComments;
 use App\Mcp\Tools\ListPosts;
 use App\Mcp\Tools\MonthNumbers;
 use App\Mcp\Tools\ReplyToComment;
+use App\Mcp\Tools\UpdatePost;
 use App\Models\ApiToken;
 use App\Models\Client;
 use App\Models\Post;
@@ -20,7 +21,7 @@ beforeEach(function () {
 });
 
 test('the MCP tools list clients, create a Draft through the post form rules, read it back and filter posts', function () {
-    SocialOpsServer::tools()->assertRegistered([ListClients::class, ListPosts::class, GetPost::class, CreateDraft::class, ListComments::class, ReplyToComment::class, MonthNumbers::class]);
+    SocialOpsServer::tools()->assertRegistered([ListClients::class, ListPosts::class, GetPost::class, CreateDraft::class, UpdatePost::class, ListComments::class, ReplyToComment::class, MonthNumbers::class]);
     SocialOpsServer::tool(ListClients::class)->assertOk()->assertSee(['Almyra', 'Blue Villa', '"pillars"']);
 
     $pillar = array_key_first($this->a->profile['pillars']);
@@ -38,6 +39,31 @@ test('the MCP tools list clients, create a Draft through the post form rules, re
     SocialOpsServer::tool(ListPosts::class, ['client' => 'almyra', 'state' => 'published'])->assertOk()->assertDontSee($post->name);
     SocialOpsServer::tool(ListPosts::class, ['client' => 'almyra', 'state' => 'gone'])->assertHasErrors();
     SocialOpsServer::tool(MonthNumbers::class, ['client' => 'almyra', 'month' => '2027-05'])->assertOk()->assertSee([$post->name, 'Totals per platform']);
+});
+
+test('update-post changes only what is sent, keeps the rest, reopens an approved post and refuses a published one', function () {
+    $pillar = array_key_first($this->a->profile['pillars']);
+    SocialOpsServer::tool(CreateDraft::class, [
+        'client' => 'almyra', 'platforms' => ['instagram', 'facebook'], 'format' => 'feed', 'pillar' => $pillar, 'brief' => 'Sea bass', 'scheduled_at' => '2027-05-12 18:00',
+        'variants' => ['instagram' => ['el' => ['caption' => 'Λαβράκι', 'hashtags' => ['#chania'], 'alt_text' => 'a fish'], 'en' => ['caption' => 'Sea bass']], 'facebook' => ['el' => ['caption' => 'Λαβράκι FB']]],
+    ])->assertOk();
+    $post = Post::sole();
+    $post->forceFill(['state' => PostState::Approved])->save();
+
+    SocialOpsServer::tool(UpdatePost::class, ['post' => $post->id, 'variants' => ['instagram' => ['el' => ['caption' => 'Φρέσκο λαβράκι']]]])->assertOk()->assertSee(['Φρέσκο λαβράκι', 'Sea bass', '"in_review"']);
+    $post->refresh();
+    $el = $post->variants->firstWhere(fn ($v) => $v->platform === 'instagram' && $v->lang === 'el');
+    expect($post->state)->toBe(PostState::InReview)
+        ->and([$el->caption, $el->hashtags, $el->alt_text])->toBe(['Φρέσκο λαβράκι', ['#chania'], 'a fish'])
+        ->and($post->variants->firstWhere(fn ($v) => $v->platform === 'facebook' && $v->lang === 'el')->caption)->toBe('Λαβράκι FB')
+        ->and([$post->platforms, $post->brief, $post->pillar, $post->scheduled_at->format('Y-m-d H:i')])->toBe([['instagram', 'facebook'], 'Sea bass', $pillar, '2027-05-12 18:00']);
+
+    SocialOpsServer::tool(UpdatePost::class, ['post' => $post->id, 'platforms' => ['facebook']])->assertOk();
+    expect($post->refresh()->platforms)->toBe(['facebook']);
+    SocialOpsServer::tool(UpdatePost::class, ['post' => $post->id, 'format' => 'poster'])->assertHasErrors(['format']);
+    SocialOpsServer::tool(UpdatePost::class, ['post' => Post::factory()->create(['client_id' => $this->b->id])->id, 'brief' => 'x'])->assertOk(); // stdio sees every client
+    $post->forceFill(['state' => PostState::Published])->save();
+    SocialOpsServer::tool(UpdatePost::class, ['post' => $post->id, 'brief' => 'x'])->assertHasErrors(['published post']);
 });
 
 test('the MCP tools read the inbox and send a reply as the inbox does', function () {

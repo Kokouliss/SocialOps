@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Alerts\Slack;
 use App\Drafting\CaptionDrafter;
+use App\Drafting\CaptionEditor;
 use App\Drafting\CaptionShortener;
 use App\Http\Requests\PostRequest;
 use App\Media\TextOverlay;
@@ -149,7 +150,34 @@ class PostController extends Controller
         }
     }
 
+    /** The "Change with Claude" box: the captions as typed for every ticked platform come back rewritten as the instruction says, for the form to show unsaved. */
+    public function rewrite(Request $request, CaptionEditor $editor, Post $post): JsonResponse
+    {
+        $languages = array_merge($post->client->profile['languages'], $post->client->profile['extra_languages'] ?? []);
+        $data = $request->validate([
+            'instruction' => ['required', 'string', 'max:1000'],
+            'brief' => ['nullable', 'string'],
+            'captions' => ['required', 'array:'.implode(',', Post::PLATFORMS)],
+            'captions.*' => ['required', 'array:'.implode(',', $languages)],
+            'captions.*.*' => ['nullable', 'string'],
+        ]);
+        $captions = array_map(fn (array $langs) => array_map(fn ($text) => trim((string) $text), $langs), $data['captions']);
+        try {
+            return response()->json($editor->rewrite($post->client->toProfileArray(), trim($data['instruction']), $captions, trim((string) ($data['brief'] ?? ''))));
+        } catch (\Exception $e) { // a malformed reply or an API error is shown next to the box, not as a 500
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
+    }
+
     public function update(PostRequest $request, Post $post): RedirectResponse
+    {
+        $this->updatePost($request, $post);
+
+        return redirect()->route('posts.edit', $post)->with('status', 'post-updated');
+    }
+
+    /** Save the form over the post; a change to the captions sends an approved post back to review. Shared with the MCP update-post tool. */
+    public function updatePost(PostRequest $request, Post $post): Post
     {
         $data = $request->validated();
 
@@ -175,7 +203,7 @@ class PostController extends Controller
             }
         });
 
-        return redirect()->route('posts.edit', $post)->with('status', 'post-updated');
+        return $post;
     }
 
     public function transition(Request $request, Post $post): RedirectResponse

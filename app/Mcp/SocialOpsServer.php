@@ -9,6 +9,7 @@ use App\Mcp\Tools\ListComments;
 use App\Mcp\Tools\ListPosts;
 use App\Mcp\Tools\MonthNumbers;
 use App\Mcp\Tools\ReplyToComment;
+use App\Mcp\Tools\UpdatePost;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
 use Laravel\Mcp\Server\Attributes\Name;
@@ -29,6 +30,7 @@ class SocialOpsServer extends Server
         ListPosts::class,
         GetPost::class,
         CreateDraft::class,
+        UpdatePost::class,
         ListComments::class,
         ReplyToComment::class,
         MonthNumbers::class,
