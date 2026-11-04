@@ -19,7 +19,8 @@ class CheckTokens extends Command
 
     public function handle(): int
     {
-        $due = Account::with('client', 'connector')->whereNull('token_alerted_at')
+        // Canva tokens last four hours and refresh themselves on use, so they are not a human's problem
+        $due = Account::with('client', 'connector')->whereNull('token_alerted_at')->where('platform', '!=', 'canva')
             ->where('token_expires_at', '<=', now()->addDays(self::ALERT_DAYS))->get();
 
         foreach ($due as $account) {

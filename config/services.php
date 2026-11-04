@@ -39,6 +39,12 @@ return [
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
     ],
 
+    // Canva Connect integration (optional): imports designs into the asset inbox
+    'canva' => [
+        'client_id' => env('CANVA_CLIENT_ID'),
+        'client_secret' => env('CANVA_CLIENT_SECRET'),
+    ],
+
     'postmark' => [
         'key' => env('POSTMARK_API_KEY'),
     ],

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Assets\AssetNamer;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Database\Factories\ClientFactory;
@@ -9,6 +10,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * A client account. Every other client-owned table (accounts, assets, posts)
@@ -30,6 +33,24 @@ class Client extends Model
     public function assets(): HasMany
     {
         return $this->hasMany(Asset::class);
+    }
+
+    /** File an upload in this client's inbox under the agency name and record it as an asset; $attrs adds pillar, tags, note, uploaded_via. */
+    public function storeAsset(UploadedFile $file, array $attrs = []): Asset
+    {
+        $disk = config('filesystems.default');
+        $name = AssetNamer::name($this, $file, $attrs['pillar'] ?? null);
+
+        return $this->assets()->create($attrs + [
+            'name' => $name,
+            'original_name' => $file->getClientOriginalName(),
+            'disk' => $disk,
+            'path' => Storage::disk($disk)->putFileAs("clients/{$this->slug}/inbox", $file, $name),
+            'mime' => $file->getMimeType(),
+            'size' => $file->getSize(),
+            'kind' => str_starts_with((string) $file->getMimeType(), 'video/') ? 'video' : 'image',
+            'uploaded_via' => 'link',
+        ]);
     }
 
     public function posts(): HasMany

@@ -2,25 +2,42 @@
 
 namespace App\Http\Controllers;
 
+use App\Media\Canva;
 use App\Models\Asset;
 use App\Models\Client;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\View\View;
+use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AssetController extends Controller
 {
     public const LINK_DAYS = 30;
 
-    public function index(Client $client): View
+    public function index(Request $request, Client $client, Canva $canva): View
     {
+        $canvaAccount = $client->accounts()->where('platform', 'canva')->first();
+        $designs = $canvaError = null;
+        if ($canvaAccount && $request->has('canva')) {
+            try {
+                $designs = $canva->designs($canvaAccount, $request->input('canva') ?: null);
+            } catch (RuntimeException $e) {
+                [$designs, $canvaError] = [[], $e->getMessage()];
+            }
+        }
+
         return view('clients.assets', [
             'client' => $client,
             'assets' => $client->assets()->latest()->get(),
             'inboxUrl' => URL::temporarySignedRoute('inbox.show', now()->addDays(self::LINK_DAYS), ['client' => $client->slug]),
+            'canva' => $canvaAccount,
+            'canvaReady' => (bool) config('services.canva.client_id'),
+            'designs' => $designs,
+            'canvaError' => $canvaError,
         ]);
     }
 

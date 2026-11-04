@@ -3,6 +3,7 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\CalendarController;
+use App\Http\Controllers\CanvaController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
@@ -41,6 +42,9 @@ Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::get('/assets/{asset}/thumb', [AssetController::class, 'thumb'])->name('assets.thumb');
     Route::get('/assets/{asset}/download', [AssetController::class, 'download'])->name('assets.download');
     Route::delete('/assets/{asset}', [AssetController::class, 'destroy'])->name('assets.destroy');
+    Route::get('/clients/{client}/canva/connect', [CanvaController::class, 'connect'])->name('canva.connect');
+    Route::post('/clients/{client}/canva/import', [CanvaController::class, 'import'])->name('canva.import');
+    Route::get('/canva/callback', [CanvaController::class, 'callback'])->name('canva.callback');
     Route::get('/clients/{client}/reviews', [ReviewController::class, 'index'])->name('clients.reviews');
     Route::post('/clients/{client}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
     Route::get('/clients/{client}/accounts', [AccountController::class, 'index'])->name('clients.accounts');

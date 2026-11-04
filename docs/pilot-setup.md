@@ -55,6 +55,21 @@ GOOGLE_CLIENT_ID=…
 GOOGLE_CLIENT_SECRET=…
 ```
 
+## 3a. Canva (optional) → `CANVA_CLIENT_ID`, `CANVA_CLIENT_SECRET`
+
+Lets staff pull finished designs from the agency's Canva into a client's asset inbox (assets page → Canva box). The Connect API is free; a private integration serves the agency's own team without Canva's review.
+
+1. https://www.canva.com/developers → **Your integrations → Create an integration**, *Private* if offered (your team only), name `Social Ops`.
+2. **Scopes**: `design:meta:read`, `design:content:read`, `profile:read`. Nothing is written to Canva.
+3. **Authentication**: redirect URL `https://YOUR-DOMAIN/canva/callback`; generate a client secret and copy **Client ID** and **Client secret** (the secret is shown once).
+4. On each client's assets page press *Connect Canva* with the agency's Canva login; the same login can be connected to every client, and a staff login limited to some clients can only connect those. A free Canva account is enough; a design that uses Pro elements exports only when the connected account is Pro.
+
+`.env`:
+```
+CANVA_CLIENT_ID=…
+CANVA_CLIENT_SECRET=…
+```
+
 ## 4. Claude → `ANTHROPIC_API_KEY`
 
 Already in hand. Only in `.env`. Rotate at https://console.anthropic.com/settings/keys if it was ever pasted anywhere.
