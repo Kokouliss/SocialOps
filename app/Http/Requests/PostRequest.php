@@ -68,7 +68,7 @@ class PostRequest extends FormRequest
     {
         return [function (Validator $validator) {
             // TikTok's terms: the creator agrees to the posting terms on every post our app makes
-            if (in_array('tiktok', (array) $this->input('platforms')) && ! $this->boolean('settings.tiktok.consent')) {
+            if (config('features.publishing') && in_array('tiktok', (array) $this->input('platforms')) && ! $this->boolean('settings.tiktok.consent')) {
                 $validator->errors()->add('settings.tiktok.consent', 'Confirm the TikTok posting terms for this post.');
             }
             $collaborators = Post::handles($this->input('settings.instagram.collaborators'));

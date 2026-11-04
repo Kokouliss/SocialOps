@@ -23,6 +23,7 @@
                         <div class="mt-3 flex flex-wrap gap-2 text-xs">
                             <a href="{{ route('calendar', ['client' => $client->slug]) }}" class="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700">{{ trans_choice('{0} nothing scheduled this week|{1} :count post this week|[2,*] :count posts this week', $client->week_count) }}</a>
                             <a href="{{ route('clients.reviews', $client) }}" class="rounded-full px-2.5 py-1 {{ $client->in_review_count ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-700' }}">{{ trans_choice('{0} nothing waiting for the client|{1} :count waiting for the client|[2,*] :count waiting for the client', $client->in_review_count) }}</a>
+                            @if (config('features.publishing'))
                             <a href="{{ route('clients.comments', $client) }}" class="rounded-full px-2.5 py-1 {{ $client->open_comments_count ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-700' }}">{{ trans_choice('{0} no comments to answer|{1} :count comment to answer|[2,*] :count comments to answer', $client->open_comments_count) }}</a>
                             @if ($client->failed_count)
                                 <a href="{{ route('calendar', ['client' => $client->slug]) }}" class="rounded-full bg-red-100 px-2.5 py-1 text-red-800">{{ trans_choice('{1} :count post failed or needs a human|[2,*] :count posts failed or need a human', $client->failed_count) }}</a>
@@ -30,13 +31,16 @@
                             @if ($client->expiring_count)
                                 <a href="{{ route('clients.accounts', $client) }}" class="rounded-full bg-red-100 px-2.5 py-1 text-red-800">{{ trans_choice('{1} :count token expiring|[2,*] :count tokens expiring', $client->expiring_count) }}</a>
                             @endif
+                            @endif
                         </div>
                         <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm border-t border-gray-100 pt-3">
                             <a href="{{ route('clients.assets', $client) }}" class="text-brand-600 hover:underline">{{ __('Assets') }}</a>
                             <a href="{{ route('clients.grid', $client) }}" class="text-brand-600 hover:underline">{{ __('Grid') }}</a>
                             <a href="{{ route('clients.reviews', $client) }}" class="text-brand-600 hover:underline">{{ __('Approvals') }}</a>
+                            @if (config('features.publishing'))
                             <a href="{{ route('clients.comments', $client) }}" class="text-brand-600 hover:underline">{{ __('Comments') }}</a>
                             <a href="{{ route('clients.accounts', $client) }}" class="text-brand-600 hover:underline">{{ __('Accounts') }}</a>
+                            @endif
                             <a href="{{ route('clients.reports', $client) }}" class="text-brand-600 hover:underline">{{ __('Reports') }}</a>
                             <a href="{{ route('clients.edit', $client) }}" class="text-brand-600 hover:underline">{{ __('Profile') }}</a>
                             <a href="{{ route('posts.create', $client) }}" class="text-brand-600 hover:underline">{{ __('New post') }}</a>

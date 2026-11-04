@@ -45,3 +45,14 @@ Exit: Reels assembly and best-time suggestions in use by every client.
 - [x] Auto-assembled Reels from venue clips (human final cut): ffmpeg on the server, "Make a Reel" on the assets page
 - [x] Best-time-to-post suggestions from our own performance data
 - [x] Link-in-bio pages generated on WordPress per client
+
+## Phase 4: Organizer (from 2026-11-04, D16)
+Exit: the team plans, briefs, approves and tracks every client's month in Social Ops and posts in the apps by hand.
+
+- [x] Organize mode: posting through the drivers and reading back from the platform APIs off behind `FEATURE_PUBLISHING`, code kept
+- [ ] Google Business Profile removed; LinkedIn added as a platform (Instagram, Facebook, TikTok, LinkedIn)
+- [ ] Claude through the MCP connector: planning brief and save-plan tools, the server-side API buttons behind a flag
+- [ ] Word export of the θεματολογία (topic plan) from a content plan
+- [ ] Profile form in tabs
+- [ ] Clients board: status, person, priority, plan due, posts per week, pending notes, links
+- [ ] Deadlines per client per month: client side and agency side, due date, done

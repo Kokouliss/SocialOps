@@ -4,6 +4,7 @@
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $client->name }} <span class="font-mono text-sm text-gray-500">{{ $post->name }}</span></h2>
             <x-state-badge :state="$post->state" />
             @foreach ($post->state->next() as $next)
+                @continue($next->needsPublishing() && ! config('features.publishing'))
                 <form method="POST" action="{{ route('posts.transition', $post) }}" @if ($next === \App\Posts\PostState::Withdrawn) onsubmit="return confirm('{{ __('Take this post down on every platform? Instagram and TikTok have no API for it, so those stay until deleted by hand.') }}')" @endif>
                     @csrf
                     <input type="hidden" name="state" value="{{ $next->value }}">

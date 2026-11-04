@@ -62,20 +62,11 @@ Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::delete('/clients/{client}/wordpress', [WordPressController::class, 'disconnect'])->name('wordpress.disconnect');
     Route::get('/clients/{client}/reviews', [ReviewController::class, 'index'])->name('clients.reviews');
     Route::post('/clients/{client}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
-    Route::get('/clients/{client}/accounts', [AccountController::class, 'index'])->name('clients.accounts');
     Route::get('/clients/{client}/reports', [ReportController::class, 'index'])->name('clients.reports');
-    Route::post('/clients/{client}/reports/monthly', [ReportController::class, 'monthly'])->name('reports.monthly');
-    Route::post('/clients/{client}/reports/listening', [ReportController::class, 'listening'])->name('reports.listening');
-    Route::get('/clients/{client}/comments', [CommentController::class, 'index'])->name('clients.comments');
-    Route::post('/comments/{comment}/draft', [CommentController::class, 'draft'])->name('comments.draft');
-    Route::post('/comments/{comment}/reply', [CommentController::class, 'reply'])->name('comments.reply');
-    Route::post('/comments/{comment}/hide', [CommentController::class, 'hide'])->name('comments.hide');
     Route::get('/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
     Route::get('/reports/{report}/download', [ReportController::class, 'download'])->name('reports.download');
     Route::post('/reports/{report}/send', [ReportController::class, 'send'])->name('reports.send');
-    Route::get('/clients/{client}/accounts/connect/{provider}', [AccountController::class, 'connect'])->name('accounts.connect');
-    Route::delete('/accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy');
-    Route::post('/accounts/{account}/import', [AccountController::class, 'import'])->name('accounts.import');
+    Route::delete('/accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy'); // also Canva, Drive, Dropbox and WordPress
     Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar');
     Route::get('/jobs', [JobController::class, 'index'])->name('jobs.index');
     Route::post('/jobs/{uuid}/retry', [JobController::class, 'retry'])->name('jobs.retry');
@@ -107,19 +98,34 @@ Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Posting through our own drivers and reading back from the platform APIs: 404 while FEATURE_PUBLISHING is off (config/features.php)
+    Route::middleware('feature:publishing')->group(function () {
+        Route::get('/clients/{client}/accounts', [AccountController::class, 'index'])->name('clients.accounts');
+        Route::get('/clients/{client}/accounts/connect/{provider}', [AccountController::class, 'connect'])->name('accounts.connect');
+        Route::post('/accounts/{account}/import', [AccountController::class, 'import'])->name('accounts.import');
+        Route::post('/clients/{client}/reports/monthly', [ReportController::class, 'monthly'])->name('reports.monthly');
+        Route::post('/clients/{client}/reports/listening', [ReportController::class, 'listening'])->name('reports.listening');
+        Route::get('/clients/{client}/comments', [CommentController::class, 'index'])->name('clients.comments');
+        Route::post('/comments/{comment}/draft', [CommentController::class, 'draft'])->name('comments.draft');
+        Route::post('/comments/{comment}/reply', [CommentController::class, 'reply'])->name('comments.reply');
+        Route::post('/comments/{comment}/hide', [CommentController::class, 'hide'])->name('comments.hide');
+    });
 });
 
 // OAuth return and the pick step: the state and candidates in the session are the credential, staff or client alike
-Route::get('/oauth/{provider}/callback', [AccountController::class, 'callback'])->name('oauth.callback');
-Route::post('/clients/{client}/accounts', [AccountController::class, 'attach'])->name('accounts.attach');
+Route::middleware('feature:publishing')->group(function () {
+    Route::get('/oauth/{provider}/callback', [AccountController::class, 'callback'])->name('oauth.callback');
+    Route::post('/clients/{client}/accounts', [AccountController::class, 'attach'])->name('accounts.attach');
+});
 
 // The link-in-bio page is public on purpose: its address sits in the client's Instagram and TikTok profile
 Route::get('/bio/{client:slug}', BioController::class)->name('bio');
 
 // Client-facing pages: no login, the signed link is the credential (GET and POST share the URL)
 Route::middleware('signed')->group(function () {
-    Route::get('/connect/{client:slug}', [AccountController::class, 'clientConnect'])->name('connect.show');
-    Route::get('/connect/{client:slug}/{provider}', [AccountController::class, 'connect'])->name('connect.start');
+    Route::get('/connect/{client:slug}', [AccountController::class, 'clientConnect'])->middleware('feature:publishing')->name('connect.show');
+    Route::get('/connect/{client:slug}/{provider}', [AccountController::class, 'connect'])->middleware('feature:publishing')->name('connect.start');
     Route::get('/calendar/{client:slug}', [CalendarController::class, 'client'])->name('calendar.client');
     Route::get('/reports/{report}/client', [ReportController::class, 'client'])->name('reports.client');
     Route::get('/inbox/{client:slug}', [InboxController::class, 'show'])->name('inbox.show');

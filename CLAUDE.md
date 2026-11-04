@@ -1,13 +1,15 @@
 # Social Ops: in-house social media system
 
 ## What this is
-An internal tool for our agency (Chania, Crete) to plan, create, approve and publish social media posts for **many client accounts**, faster. Clients are mostly hospitality: villas, hotels, beach bars/lounges, restaurants, local brands. Content is **Greek and English**.
+An internal tool for our agency (Chania, Crete) to plan, create, approve and organize social media posts for **many client accounts**, faster.
+
+**Organize mode (since 2026-11-04, D16):** the app organizes the work; the team posts in the apps by hand. Everything that posts through our drivers or reads back from the platform APIs (accounts and OAuth, publish queue, token monitor, preflight, reconcile, Withdraw, comment inbox, insights, monthly numbers, listening report) stays in the code but is off behind `FEATURE_PUBLISHING` (`config/features.php`, routes under `feature:publishing`, the scheduler, `@if (config('features.publishing'))` in the views). Tests run with the flag on (`phpunit.xml`) plus `OrganizeModeTest` for the off state. The sections below still describe the publishing features; read them as "when the flag is on". Clients are mostly hospitality: villas, hotels, beach bars/lounges, restaurants, local brands. Content is **Greek and English**.
 
 Goal: cut time from every step: asset intake, captions, translation, approvals, scheduling, reporting.
 
 ## Status
 - Research done (November 2026): `docs/research.md`. Read it before proposing architecture or features.
-- Scaffold, clients CRUD, asset inbox, posts and calendar, approval portal, AI drafting, publishing drivers done. Next: the first unticked Phase 1 item in `docs/roadmap.md`.
+- Scaffold, clients CRUD, asset inbox, posts and calendar, approval portal, AI drafting, publishing drivers done. Since 2026-11-04 the app is being converted into an organizer: Phase 4 in `docs/roadmap.md`.
 - Decisions taken so far and decisions still open: `docs/decisions.md`. **Ask the user about open decisions before writing code that depends on them.**
 
 ## Core idea

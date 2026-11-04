@@ -7,8 +7,10 @@
         [__('Assets'), route('clients.assets', $client), request()->routeIs('clients.assets'), null],
         [__('Grid'), route('clients.grid', $client), request()->routeIs('clients.grid'), null],
         [__('Approvals'), route('clients.reviews', $client), request()->routeIs('clients.reviews'), $client->posts()->where('state', \App\Posts\PostState::InReview)->count()],
-        [__('Comments'), route('clients.comments', $client), request()->routeIs('clients.comments'), $client->comments()->open()->count()],
-        [__('Accounts'), route('clients.accounts', $client), request()->routeIs('clients.accounts'), null],
+        ...(config('features.publishing') ? [
+            [__('Comments'), route('clients.comments', $client), request()->routeIs('clients.comments'), $client->comments()->open()->count()],
+            [__('Accounts'), route('clients.accounts', $client), request()->routeIs('clients.accounts'), null],
+        ] : []),
         [__('Reports'), route('clients.reports', $client), request()->routeIs('clients.reports', 'reports.show'), null],
         [__('Profile'), route('clients.edit', $client), request()->routeIs('clients.edit'), null],
     ];

@@ -10,6 +10,7 @@
                 @if (session('status') === 'report-queued')
                     <p class="mt-2 text-green-600">{{ __('Report queued. It appears below in a few minutes.') }}</p>
                 @endif
+                @if (config('features.publishing'))
                 <form method="POST" action="{{ route('reports.monthly', $client) }}" class="mt-3 flex items-end gap-3">
                     @csrf
                     <div>
@@ -27,6 +28,7 @@
                     </form>
                 @else
                     <p class="mt-3 text-gray-500">{{ __('Add hashtags_to_watch or competitors under research in the profile to get a weekly listening report.') }}</p>
+                @endif
                 @endif
                 <table class="mt-4 w-full">
                     <thead><tr class="text-left text-gray-500"><th class="py-1">{{ __('Date') }}</th><th>{{ __('Kind') }}</th><th>{{ __('Title') }}</th></tr></thead>
