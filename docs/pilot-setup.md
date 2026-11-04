@@ -165,6 +165,7 @@ Without it the box says so and nothing else changes.
 1. Clients → New client. Code `FUSE`, type `brand`. Fill in the form: accounts, voice, pillars, hashtags, approver name and e-mail, SLA (a starter profile is in the project Library, `clients/fuse-pharmacy.yaml`; `php artisan clients:import` loads such a file, or copy its values into the form).
 2. Accounts → Connect Facebook / Instagram, Google (TikTok when the app review is through) and tick the Fuse Pharmacy Page, Instagram account and location.
 3. Assets → copy the upload link and send it to the client.
-4. Calendar → create one test post for tomorrow, *Draft captions with Claude*, send it for approval to yourself first (put your own e-mail as approver for the first run), approve from your phone, watch it publish. Then put the client's approver in and start the two weeks.
+4. Link in bio → put the address shown on the client form in the Instagram and TikTok profile. Or publish it on the client's WordPress: an administrator there makes an application password (Users → Profile → Application Passwords), you enter site, user and that password in the box and press Publish; the page `/links/` appears on their site and Publish again refreshes it.
+5. Calendar → create one test post for tomorrow, *Draft captions with Claude*, send it for approval to yourself first (put your own e-mail as approver for the first run), approve from your phone, watch it publish. Then put the client's approver in and start the two weeks.
 
 What to watch during the pilot: Horizon's *Failed jobs* page, the post's red *Publishing* box, and the Manual-Needed e-mails.

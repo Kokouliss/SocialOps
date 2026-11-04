@@ -18,6 +18,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\WordPressController;
 use App\Http\Middleware\LimitClients;
 use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
@@ -56,6 +57,9 @@ Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::post('/clients/{client}/dropbox', [FolderController::class, 'watchDropbox'])->name('dropbox.watch');
     Route::get('/dropbox/callback', [FolderController::class, 'dropboxCallback'])->name('dropbox.callback');
     Route::post('/clients/{client}/folders/{platform}/pull', [FolderController::class, 'pull'])->name('folders.pull');
+    Route::post('/clients/{client}/wordpress', [WordPressController::class, 'connect'])->name('wordpress.connect');
+    Route::post('/clients/{client}/wordpress/publish', [WordPressController::class, 'publish'])->name('wordpress.publish');
+    Route::delete('/clients/{client}/wordpress', [WordPressController::class, 'disconnect'])->name('wordpress.disconnect');
     Route::get('/clients/{client}/reviews', [ReviewController::class, 'index'])->name('clients.reviews');
     Route::post('/clients/{client}/reviews', [ReviewController::class, 'store'])->name('reviews.store');
     Route::get('/clients/{client}/accounts', [AccountController::class, 'index'])->name('clients.accounts');
