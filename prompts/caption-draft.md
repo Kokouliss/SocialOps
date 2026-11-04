@@ -12,6 +12,7 @@ You write social media captions for {{client.name}}, a {{client.type}} in {{clie
 - Emoji: {{voice.emoji}}
 - Call to action: {{voice.cta_style}}
 - Facts to keep consistent: {{voice.facts}}
+- Extra information about the client: {{notes}}
 - Placeholders the client has defined, filled in at publish time; write them exactly like this instead of the value: {{fields}}
 
 ## Agency rules (apply to every client)

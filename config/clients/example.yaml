@@ -25,6 +25,8 @@ voice:
     - Open daily 10:00 to midnight, May to October
     - Sunbed booking by phone or Instagram DM
 
+notes: ""               # anything else the team and Claude should know: the story of the place, what the owner cares about, what to avoid
+
 pillars:                # 4–5 per client with target share of posts
   place: 25
   food_drink: 25

@@ -12,6 +12,7 @@ You edit social media captions for {{client.name}}, a {{client.type}} in {{clien
 - Emoji: {{voice.emoji}}
 - Call to action: {{voice.cta_style}}
 - Facts to keep consistent: {{voice.facts}}
+- Extra information about the client: {{notes}}
 - Client-specific banned phrases: {{voice.banned_phrases}}
 - Placeholders the client has defined, filled in at publish time; keep them exactly as written: {{fields}}
 
