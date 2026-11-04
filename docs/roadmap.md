@@ -42,6 +42,6 @@ Exit: monthly reports fully automatic; onboarding a new client takes under 1 hou
 ## Phase 3: Advanced AI (~6–8 weeks)
 Exit: Reels assembly and best-time suggestions in use by every client.
 
-- [ ] Auto-assembled Reels from venue clips (human final cut)
+- [x] Auto-assembled Reels from venue clips (human final cut): ffmpeg on the server, "Make a Reel" on the assets page
 - [x] Best-time-to-post suggestions from our own performance data
 - [ ] Link-in-bio pages generated on WordPress per client
