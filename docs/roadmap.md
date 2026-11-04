@@ -12,7 +12,7 @@ Tick items as they finish. Effort numbers are estimates for 1–2 developers; re
 ## Phase 1: MVP (~8–11 weeks; the four direct drivers add roughly 2 to 3 weeks over an aggregator)
 Exit: all current clients run one full month through the system.
 
-- [ ] Resolve open decisions D1–D4 in `decisions.md`
+- [x] Resolve open decisions D1–D4 in `decisions.md` (decided 2026-11-03; D5 and D6 still open)
 - [x] Project scaffold (Laravel 13, Pest, Horizon, CI) and auth for agency staff (login only, `php artisan staff:create`)
 - [ ] EU-region storage bucket (depends on D3)
 - [ ] Meta app in dev mode, TikTok sandbox app, GBP test listing, agency test accounts, so every driver is tested before approvals land
@@ -29,13 +29,13 @@ Exit: all current clients run one full month through the system.
 ## Phase 2: Scale (~6–8 weeks)
 Exit: monthly reports fully automatic; onboarding a new client takes under 1 hour.
 
-- [ ] Bulk CSV / Google Sheet import into the calendar
+- [x] Bulk CSV / Google Sheet import into the calendar ("Import posts from a spreadsheet" on the client page: the calendar's CSV columns, a Google Sheet exported as CSV; every row becomes a Draft, or nothing is imported)
 - [x] Evergreen queues with time slots (`slots` in the profile: "Next free slot" on the post form, the planner dates posts on slots, `slots:check` warns on Slack every Thursday when next week's slots are not filled)
 - [ ] Canva Brand Template autofill for repeat graphics (menus, events, offers)
 - [x] Monthly auto-report: insights pull → Claude summary (`posts:insights` daily, `reports:monthly` on the 1st; the report lives in the client's Reports page, .md download; branded PDF still open)
 - [ ] n8n intake: WhatsApp / Google Drive / Dropbox → asset inbox
-- [ ] MCP endpoint so Claude can query the calendar and draft posts
-- [ ] Content-pillar mix tracking per client, with drift warning
+- [x] MCP endpoint so Claude can query the calendar and draft posts (`routes/ai.php`, `App\Mcp\SocialOpsServer`: `/mcp` over HTTP with the API tokens, stdio for local use; never publishes)
+- [x] Content-pillar mix tracking per client, with drift warning (`App\Planning\PillarMix`: shares 30 days back and ahead on the client form and in the monthly report; "Pillar mix off target" on the dashboard and in the Thursday `slots:check` Slack line)
 
 ## Phase 3: Advanced AI (~6–8 weeks)
 Exit: Reels assembly and best-time suggestions in use by every client.

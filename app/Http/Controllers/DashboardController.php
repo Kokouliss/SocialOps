@@ -7,6 +7,7 @@ use App\Models\Account;
 use App\Models\Comment;
 use App\Models\Post;
 use App\Models\Review;
+use App\Planning\PillarMix;
 use App\Posts\PostState;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,8 +21,11 @@ class DashboardController extends Controller
         $mine = $request->user();
         $week = $mine->restrict(Post::with('client'))->where('state', PostState::Scheduled)->where('scheduled_at', '<=', now()->addDays(7)->endOfDay())->orderBy('scheduled_at')->get();
 
+        $clients = $mine->clients()->orderBy('name')->get();
+
         return view('dashboard', [
-            'clients' => $mine->clients()->orderBy('name')->get(),
+            'clients' => $clients,
+            'drift' => $clients->map(fn ($client) => ['client' => $client, 'mix' => PillarMix::for($client)])->filter(fn ($row) => $row['mix']['drifted'] !== []),
             'week' => $week,
             'today' => $week->filter(fn (Post $p) => $p->scheduled_at->lte(now()->endOfDay())),
             'tomorrow' => $week->filter(fn (Post $p) => $p->scheduled_at->isTomorrow()),

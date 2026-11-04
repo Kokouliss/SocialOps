@@ -107,6 +107,12 @@
 
 <h3 class="mt-8 font-semibold text-gray-800">{{ __('Content pillars') }}</h3>
 <p class="text-sm text-gray-500">{{ __('The topics the posts rotate through and the share of posts each gets. The shares add up to 100.') }}</p>
+@if ($client->exists)
+    @php($mix = \App\Planning\PillarMix::for($client))
+    <p class="mt-1 text-sm text-gray-500">{{ __('Posts per pillar, :days days back and ahead (:n posts):', ['days' => \App\Planning\PillarMix::DAYS, 'n' => $mix['posts']]) }}
+        @foreach ($mix['rows'] as $pillar => $row)<span class="{{ in_array($pillar, $mix['drifted']) ? 'font-medium text-red-600' : '' }}">{{ str_replace('_', ' ', $pillar) }} {{ $row['actual'] }}%</span>@if (! $loop->last) · @endif @endforeach
+    </p>
+@endif
 @php($pillars = old('p.pillars', collect($profile['pillars'] ?? [])->map(fn ($share, $name) => ['name' => str_replace('_', ' ', $name), 'share' => $share])->values()->all()))
 <div class="mt-2 grid gap-2 md:grid-cols-3">
     @foreach ($rows($pillars) as $i => $row)
