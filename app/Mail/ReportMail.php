@@ -16,7 +16,10 @@ class ReportMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Report $report, public string $url, public string $csv) {}
+    public function __construct(public Report $report, public string $url, public string $csv)
+    {
+        $this->locale($report->client->uiLocale());
+    }
 
     public function envelope(): Envelope
     {

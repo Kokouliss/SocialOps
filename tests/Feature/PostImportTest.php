@@ -24,9 +24,9 @@ test('the import button pulls in what the client posted themselves as Published 
         'graph.facebook.com/*/fb-page/posts*' => Http::response(['data' => [['id' => 'fb-page_77', 'message' => 'Open daily', 'created_time' => '2026-11-01T08:00:00+0000']]]),
     ]);
 
-    $this->actingAs($this->staff)->post("/accounts/{$this->ig->id}/import")->assertRedirect("/clients/{$this->client->id}/accounts")->assertSessionHas('status', 'imported-1-posts');
-    $this->actingAs($this->staff)->post("/accounts/{$this->ig->id}/import")->assertSessionHas('status', 'imported-0-posts');
-    $this->actingAs($this->staff)->post("/accounts/{$this->fb->id}/import")->assertSessionHas('status', 'imported-1-posts');
+    $this->actingAs($this->staff)->post("/accounts/{$this->ig->id}/import")->assertRedirect("/clients/{$this->client->id}/accounts")->assertSessionHas('status', '1 posts imported');
+    $this->actingAs($this->staff)->post("/accounts/{$this->ig->id}/import")->assertSessionHas('status', '0 posts imported');
+    $this->actingAs($this->staff)->post("/accounts/{$this->fb->id}/import")->assertSessionHas('status', '1 posts imported');
 
     $reel = Post::where('name', 'ALMYRA_20261028_IG_REEL_MISC_EL-EN_v1')->firstOrFail();
     expect($reel->state)->toBe(PostState::Published)

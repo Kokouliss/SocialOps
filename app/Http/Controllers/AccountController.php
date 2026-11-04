@@ -88,7 +88,7 @@ class AccountController extends Controller
             return redirect()->route('clients.accounts', $account->client_id)->withErrors(['connect' => $e->getMessage()]);
         }
 
-        return redirect()->route('clients.accounts', $account->client_id)->with('status', "imported-{$n}-posts");
+        return redirect()->route('clients.accounts', $account->client_id)->with('status', __(':n posts imported', ['n' => $n]));
     }
 
     public function destroy(Account $account): RedirectResponse

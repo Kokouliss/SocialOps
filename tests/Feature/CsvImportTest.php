@@ -20,7 +20,7 @@ test('the template has the client\'s columns and a filled CSV becomes Drafts on 
         .";;;;;;;;;;\n";
 
     $this->actingAs($this->staff)->post(route('posts.import', $this->client), ['csv' => UploadedFile::fake()->createWithContent('posts.csv', $csv)])
-        ->assertRedirect(route('calendar', ['client' => 'almyra']))->assertSessionHas('status', 'imported-2-drafts');
+        ->assertRedirect(route('calendar', ['client' => 'almyra']))->assertSessionHas('status', '2 drafts imported');
 
     $feed = Post::where('name', 'ALMYRA_20270512_MULTI_FEED_'.strtoupper($pillar).'_EL-EN_v1')->firstOrFail();
     expect($feed->state->value)->toBe('draft')

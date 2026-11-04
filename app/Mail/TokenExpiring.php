@@ -13,14 +13,17 @@ class TokenExpiring extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Account $account) {}
+    public function __construct(public Account $account)
+    {
+        $this->locale($account->connector?->locale ?? config('app.locale'));
+    }
 
     public function envelope(): Envelope
     {
         return new Envelope(subject: __(':client: reconnect :platform by :date', [
             'client' => $this->account->client->name,
             'platform' => str_replace('_', ' ', $this->account->platform),
-            'date' => $this->account->token_expires_at->format('j M'),
+            'date' => $this->account->token_expires_at->translatedFormat('j M'),
         ]));
     }
 

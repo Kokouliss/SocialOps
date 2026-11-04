@@ -102,6 +102,14 @@ class Client extends Model
         return null;
     }
 
+    /** The interface language of this client's own pages and mails: its first profile language when the app speaks it, else the default. */
+    public function uiLocale(): string
+    {
+        $first = $this->profile['languages'][0] ?? null;
+
+        return isset(config('app.locales')[$first]) ? $first : config('app.locale');
+    }
+
     /** Fill {{phone}}-style placeholders from the profile's fields; an unknown one stays as written. */
     public function substitute(?string $text): string
     {

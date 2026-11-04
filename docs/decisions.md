@@ -20,6 +20,7 @@
 | D7 | Laravel 13 on PHP 8.3, Pest for tests, Breeze (Blade) for staff auth without public registration, Horizon on Redis for queues | Current stable at kickoff; smallest stack that covers the scaffold proposal | 2026-11-03 |
 | D2 | Publishing layer: direct drivers built in-house (Meta Graph API, TikTok Content Posting API, Google Business Profile API); no paid service | User's call: no paid third-party services (Claude API and hosting are fine). The cost is calendar time: Phase 0 approvals become the critical path | 2026-11-03 |
 | D9 | Trend research: Claude API with its web search tool writes the trend brief the batch planner uses; no scraping services (ScrapeCreators, Apify) and no browser-cookie scrapers in the app. A brief made elsewhere (for example a `/last30days` run) can be passed in with `--brief` | Keeps D2's "no paid third-party services" rule; the last30days tool Panos shared needs ScrapeCreators for TikTok and Instagram and browser sessions for X. Official Instagram hashtag search through our own Meta app is the next source once that app exists | 2026-11-03 |
+| D10 | The interface speaks English and Greek: a switch per login (and per browser for guests), client-facing pages and mails default to the client's first profile language. Translations live in `lang/el.json`; a test fails when a string has no Greek | Panos asked for Greek with a choice to change (2026-11-04); the staff and most clients are Greek speakers, the approval links reach client owners on their phones | 2026-11-04 |
 
 
 ## Open (ask the user before building on these)

@@ -14,7 +14,10 @@ class PostNeedsHuman extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Post $post, public string $kind) {}
+    public function __construct(public Post $post, public string $kind)
+    {
+        $this->locale($post->creator?->locale ?? config('app.locale'));
+    }
 
     public function envelope(): Envelope
     {

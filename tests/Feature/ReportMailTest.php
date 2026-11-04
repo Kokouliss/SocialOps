@@ -25,7 +25,7 @@ test('"Email to client" mails the approvers a signed link to the report and the 
     $report = $this->client->reports()->create(['kind' => 'monthly', 'title' => 'Monthly report October 2026', 'body' => "## Summary\n- Reach grew.", 'meta' => ['month' => '2026-10']]);
     $staff = User::factory()->create();
 
-    $this->actingAs($staff)->post(route('reports.send', $report))->assertRedirect(route('reports.show', $report))->assertSessionHas('status', 'report-mailed-to-2');
+    $this->actingAs($staff)->post(route('reports.send', $report))->assertRedirect(route('reports.show', $report))->assertSessionHas('status', 'Report mailed to 2 approvers');
 
     Mail::assertSent(ReportMail::class, fn (ReportMail $m) => $m->hasTo('owner@almyra.gr') && $m->hasTo('manager@almyra.gr') && $m->hasSubject('Almyra: Monthly report October 2026'));
     $mail = Mail::sent(ReportMail::class)->first();
@@ -33,12 +33,12 @@ test('"Email to client" mails the approvers a signed link to the report and the 
         ->toContain('2026-10-20,ALMYRA_20261020_IG-FB_REEL_PLACE_EL-EN_v1,"instagram, facebook",reel,place,Published,1700,3000,110,8,4,15')
         ->toContain(',offers,Draft,,,,,,');
     $mail->assertHasAttachedData($mail->csv, 'monthly-report-october-2026.csv', ['mime' => 'text/csv']);
-    expect($mail->render())->toContain('Read the report')->toContain(e($mail->url));
+    expect($mail->render())->toContain('Διάβασε την αναφορά')->toContain(e($mail->url));
 
-    $this->get($mail->url)->assertOk()->assertSee('Almyra: Monthly report October 2026')->assertSee('<h2>Summary</h2>', false)->assertDontSee('Download .md');
+    $this->withSession(['locale' => 'en'])->get($mail->url)->assertOk()->assertSee('Almyra: Monthly report October 2026')->assertSee('<h2>Summary</h2>', false)->assertDontSee('Download .md');
     $this->get(route('reports.client', $report))->assertForbidden();
     $this->travel(31)->days();
-    $this->get($mail->url)->assertForbidden();
+    $this->withSession(['locale' => 'en'])->get($mail->url)->assertForbidden();
 
     $this->client->update(['profile' => ['approval' => ['policy' => 'required', 'sla_hours' => 48, 'auto_approve_on_timeout' => false, 'approvers' => []]] + $this->client->profile]);
     $this->actingAs($staff)->post(route('reports.send', $report))->assertSessionHasErrors('send');

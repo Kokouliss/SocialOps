@@ -19,12 +19,12 @@ test('the approval link shows the progress, every picture of a carousel, one nam
     $review->posts()->attach([$one->id, $two->id]);
     $url = $review->url();
 
-    $this->get($url)->assertOk()
+    $this->withSession(['locale' => 'en'])->get($url)->assertOk()
         ->assertSee('2 posts · 0 approved · 0 to rework · 2 waiting for you')
         ->assertSee('Approve all 2')->assertSee('id="reviewer-name"', false)
         ->assertSee("/asset/{$b->id}?");
 
     $this->post($url, ['post_id' => 'all', 'decision' => 'approved', 'name' => 'Maria'])->assertSessionHasNoErrors()->assertRedirect($url);
     expect($one->fresh()->state)->toBe(PostState::Scheduled)->and($two->fresh()->state)->toBe(PostState::Scheduled)->and($review->fresh()->completed_at)->not->toBeNull();
-    $this->get($url)->assertOk()->assertSee('All answered')->assertSee('2 posts · 2 approved · 0 to rework · 0 waiting for you')->assertDontSee('Approve all')->assertSee('Approved by Maria');
+    $this->withSession(['locale' => 'en'])->get($url)->assertOk()->assertSee('All answered')->assertSee('2 posts · 2 approved · 0 to rework · 0 waiting for you')->assertDontSee('Approve all')->assertSee('Approved by Maria');
 });

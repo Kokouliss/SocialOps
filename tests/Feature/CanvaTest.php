@@ -76,7 +76,7 @@ test('the assets page searches the connected Canva (refreshing the token first) 
 
     $pillar = array_key_first($this->client->profile['pillars']);
     $this->actingAs($this->user)->post(route('canva.import', $this->client), ['designs' => ['DAF1'], 'titles' => ['DAF1' => 'Summer menu'], 'vertical' => ['DAF1' => 1], 'type' => 'png', 'pillar' => $pillar])
-        ->assertRedirect(route('clients.assets', $this->client))->assertSessionHas('status', 'queued-1-canva-imports');
+        ->assertRedirect(route('clients.assets', $this->client))->assertSessionHas('status', '1 Canva imports queued');
     Http::assertSent(fn ($r) => str_ends_with($r->url(), '/exports') && $r['design_id'] === 'DAF1' && $r['format'] === ['type' => 'png']);
 
     $assets = $this->client->assets()->orderBy('id')->get();

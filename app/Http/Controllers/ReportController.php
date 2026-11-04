@@ -52,7 +52,7 @@ class ReportController extends Controller
         $n = $reports->mail($report);
 
         return $n
-            ? redirect()->route('reports.show', $report)->with('status', "report-mailed-to-{$n}")
+            ? redirect()->route('reports.show', $report)->with('status', __('Report mailed to :n approvers', ['n' => $n]))
             : redirect()->route('reports.show', $report)->withErrors(['send' => __('The profile has no approver with an email address.')]);
     }
 
