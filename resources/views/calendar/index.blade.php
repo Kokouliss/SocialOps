@@ -18,6 +18,7 @@
             <a class="px-2 py-1 border rounded" href="{{ route('calendar', ['view' => $view, 'client' => $clientSlug, 'date' => $date->copy()->add($step)->toDateString()]) }}">&rarr;</a>
             <a class="px-2 py-1 border rounded {{ $view === 'month' ? 'bg-gray-800 text-white' : '' }}" href="{{ route('calendar', ['view' => 'month', 'client' => $clientSlug, 'date' => $date->toDateString()]) }}">{{ __('Month') }}</a>
             <a class="px-2 py-1 border rounded {{ $view === 'week' ? 'bg-gray-800 text-white' : '' }}" href="{{ route('calendar', ['view' => 'week', 'client' => $clientSlug, 'date' => $date->toDateString()]) }}">{{ __('Week') }}</a>
+            <a class="px-2 py-1 border rounded {{ $view === 'list' ? 'bg-gray-800 text-white' : '' }}" href="{{ route('calendar', ['view' => 'list', 'client' => $clientSlug, 'date' => $date->toDateString()]) }}">{{ __('List') }}</a>
             @if ($clientSlug)
                 <a class="px-2 py-1 border rounded" href="{{ route('posts.csv', [$clients->firstWhere('slug', $clientSlug), 'view' => $view, 'date' => $date->toDateString()]) }}" title="{{ __('The posts shown, one row per platform, for Canva Bulk Create or a spreadsheet') }}">{{ __('Export CSV') }}</a>
                 <a class="ml-auto inline-flex items-center px-4 py-2 bg-brand-500 rounded-full font-semibold text-xs text-white uppercase tracking-widest hover:bg-brand-600" href="{{ route('posts.create', $clients->firstWhere('slug', $clientSlug)) }}">{{ __('New post') }}</a>
@@ -38,7 +39,8 @@
                 </div>
             @endif
 
-            <div class="grid grid-cols-7 gap-px bg-gray-200 border border-gray-200 text-xs">
+            @if ($view !== 'list')
+            <div class="hidden sm:grid grid-cols-7 gap-px bg-gray-200 border border-gray-200 text-xs">
                 @foreach (['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $dow)
                     <div class="bg-gray-50 px-2 py-1 font-medium text-gray-600">{{ __($dow) }}</div>
                 @endforeach
@@ -61,7 +63,7 @@
                 @endforeach
             </div>
 
-            <div class="day bg-white border border-dashed border-gray-300 p-3 text-xs" data-date="">
+            <div class="day hidden sm:block bg-white border border-dashed border-gray-300 p-3 text-xs" data-date="">
                 <p class="font-medium text-gray-600 mb-1">{{ __('No date yet (drag onto a day to schedule)') }}</p>
                 @forelse ($unscheduled as $post)
                     @include('calendar._chip', ['post' => $post])
@@ -69,6 +71,8 @@
                     <span class="text-gray-400">{{ __('None') }}</span>
                 @endforelse
             </div>
+            @endif
+            @include('calendar._list', ['class' => $view === 'list' ? '' : 'sm:hidden'])
         </div>
     </div>
 

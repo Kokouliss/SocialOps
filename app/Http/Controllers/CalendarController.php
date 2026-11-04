@@ -23,14 +23,14 @@ class CalendarController extends Controller
         [$view, $date, $start, $end] = $this->range($request);
         $clientSlug = $request->input('client');
 
-        $posts = $request->user()->restrict(Post::with('client'))
+        $posts = $request->user()->restrict(Post::with('client', 'assets'))
             ->when($clientSlug, fn ($q) => $q->whereRelation('client', 'slug', $clientSlug))
             ->whereBetween('scheduled_at', [$start, $end])
             ->orderBy('scheduled_at')
             ->get()
             ->groupBy(fn (Post $p) => $p->scheduled_at->toDateString());
 
-        $unscheduled = $request->user()->restrict(Post::with('client'))
+        $unscheduled = $request->user()->restrict(Post::with('client', 'assets'))
             ->when($clientSlug, fn ($q) => $q->whereRelation('client', 'slug', $clientSlug))
             ->whereNull('scheduled_at')
             ->latest()
@@ -101,11 +101,13 @@ class CalendarController extends Controller
     /** @return array{string, Carbon, Carbon, Carbon} view, the date shown, first and last day shown */
     private function range(Request $request): array
     {
-        $view = $request->input('view') === 'week' ? 'week' : 'month';
+        $view = in_array($request->input('view'), ['week', 'list']) ? $request->input('view') : 'month';
         $date = Carbon::parse($request->input('date', 'today'))->startOfDay();
 
-        return $view === 'week'
-            ? [$view, $date, $date->copy()->startOfWeek(), $date->copy()->endOfWeek()]
-            : [$view, $date, $date->copy()->startOfMonth()->startOfWeek(), $date->copy()->endOfMonth()->endOfWeek()];
+        return match ($view) {
+            'week' => [$view, $date, $date->copy()->startOfWeek(), $date->copy()->endOfWeek()],
+            'list' => [$view, $date, $date->copy()->startOfMonth(), $date->copy()->endOfMonth()],
+            default => [$view, $date, $date->copy()->startOfMonth()->startOfWeek(), $date->copy()->endOfMonth()->endOfWeek()],
+        };
     }
 }
