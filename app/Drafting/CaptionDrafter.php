@@ -13,7 +13,7 @@ use RuntimeException;
  */
 class CaptionDrafter
 {
-    public const MAX_LENGTH = ['instagram' => 2200, 'facebook' => 63206, 'tiktok' => 2200, 'google_business' => 1500];
+    public const MAX_LENGTH = ['instagram' => 2200, 'facebook' => 63206, 'tiktok' => 2200, 'linkedin' => 3000];
 
     public function __construct(private Client $claude) {}
 

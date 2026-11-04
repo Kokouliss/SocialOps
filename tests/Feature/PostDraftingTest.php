@@ -12,8 +12,8 @@ use Illuminate\Support\Facades\Storage;
 function draftReply(): array
 {
     return [
-        'el' => ['instagram' => 'Ηλιοβασίλεμα με κοκτέιλ', 'google_business' => 'Ανοιχτά ως αργά'],
-        'en' => ['instagram' => 'Sunset cocktails', 'google_business' => 'Open late'],
+        'el' => ['instagram' => 'Ηλιοβασίλεμα με κοκτέιλ', 'linkedin' => 'Ανοιχτά ως αργά'],
+        'en' => ['instagram' => 'Sunset cocktails', 'linkedin' => 'Open late'],
         'hashtags' => ['#chania', '#crete'],
         'alt_text' => ['el' => 'Μπαρ στο ηλιοβασίλεμα', 'en' => 'Bar at sunset'],
         'design' => ['el' => 'Ηλιοβασίλεμα, κάθε βράδυ', 'en' => 'Sunset, every evening'],
@@ -24,7 +24,7 @@ function draftReply(): array
 beforeEach(function () {
     $this->user = User::factory()->create();
     $this->client = Client::factory()->create();
-    $this->post = Post::factory()->create(['client_id' => $this->client->id, 'platforms' => ['instagram', 'google_business'], 'brief' => 'Sunset cocktails']);
+    $this->post = Post::factory()->create(['client_id' => $this->client->id, 'platforms' => ['instagram', 'linkedin'], 'brief' => 'Sunset cocktails']);
 });
 
 test('Claude drafts the captions into the post with the client\'s approved captions as examples, and the reviewer notes show', function () {
@@ -34,7 +34,7 @@ test('Claude drafts the captions into the post with the client\'s approved capti
 
     $this->mock(CaptionDrafter::class)->shouldReceive('draft')->once()
         ->withArgs(fn (array $profile, array $post, array $examples) => $profile['slug'] === $this->client->slug
-            && $post['platforms'] === ['instagram', 'google_business'] && $post['brief'] === 'Sunset cocktails' && $examples === ['Last summer at the bar'])
+            && $post['platforms'] === ['instagram', 'linkedin'] && $post['brief'] === 'Sunset cocktails' && $examples === ['Last summer at the bar'])
         ->andReturn(draftReply());
 
     $this->actingAs($this->user)->post(route('posts.draft', $this->post))
@@ -45,7 +45,7 @@ test('Claude drafts the captions into the post with the client\'s approved capti
         ->and($variants['instagram.el']->caption)->toBe('Ηλιοβασίλεμα με κοκτέιλ')
         ->and($variants['instagram.en']->hashtags)->toBe(['#chania', '#crete'])
         ->and($variants['instagram.en']->alt_text)->toBe('Bar at sunset')
-        ->and($variants['google_business.en']->hashtags)->toBe([])
+        ->and($variants['linkedin.en']->hashtags)->toBe(['#chania', '#crete'])
         ->and($this->post->fresh()->settings['design']['en'])->toBe('Sunset, every evening')
         ->and($this->post->fresh()->state)->toBe(PostState::Draft);
 

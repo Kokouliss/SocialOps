@@ -32,7 +32,7 @@ class CommentTriage
             model: config('services.anthropic.model'),
             maxTokens: 4000,
             messages: [['role' => 'user', 'content' => Prompt::render('comment-triage', Prompt::profileVars($profile) + [
-                'comments' => $comments->map(fn (Comment $c, int $i) => ($i + 1).'. ('.str_replace('_', ' ', $c->platform).($c->rating ? ", {$c->rating} stars" : '').') '.($c->author ?? '?').': '.str_replace("\n", ' ', $c->text))->join("\n"),
+                'comments' => $comments->map(fn (Comment $c, int $i) => ($i + 1).'. ('.str_replace('_', ' ', $c->platform).''.') '.($c->author ?? '?').': '.str_replace("\n", ' ', $c->text))->join("\n"),
             ])]],
             outputConfig: ['format' => ['type' => 'json_schema', 'schema' => [
                 'type' => 'object',

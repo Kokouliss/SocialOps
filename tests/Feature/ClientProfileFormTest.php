@@ -7,7 +7,7 @@ use App\Models\User;
 function profileForm(array $over = []): array
 {
     return array_replace_recursive([
-        'accounts' => ['instagram' => '@almyra.chania', 'facebook' => '', 'tiktok' => '', 'google_business' => 'Almyra, Chania'],
+        'accounts' => ['instagram' => '@almyra.chania', 'facebook' => '', 'tiktok' => '', 'linkedin' => 'almyra-beach'],
         'languages' => 'el, en, de', 'extra_languages' => '',
         'voice' => ['tone' => 'warm', 'person' => 'we', 'emoji' => 'none', 'cta_style' => 'soft', 'banned_phrases' => "Don't miss out\n\n", 'facts' => "Open daily\r\nBooking by phone"],
         'notes' => ' Family business since 1987. ',
@@ -17,7 +17,7 @@ function profileForm(array $over = []): array
         'approval' => ['policy' => 'optional', 'sla_hours' => '24', 'auto_approve_on_timeout' => '1', 'email_monthly_report' => '1', 'approvers' => [['name' => 'Eleni', 'email' => 'eleni@example.com', 'phone' => ''], ['name' => '', 'email' => '', 'phone' => '']]],
         'slots' => [['day' => 'wed', 'time' => '18:00'], ['day' => '', 'time' => '']],
         'key_dates' => [['date' => '2027-05-01', 'label' => 'Season opening'], ['date' => '', 'label' => '']],
-        'signatures' => ['instagram' => '', 'facebook' => 'Κρατήσεις: {{phone}}', 'tiktok' => '', 'google_business' => ''],
+        'signatures' => ['instagram' => '', 'facebook' => 'Κρατήσεις: {{phone}}', 'tiktok' => '', 'linkedin' => ''],
         'fields' => [['key' => 'phone', 'value' => '+30 28210 00000'], ['key' => '', 'value' => '']],
         'saved_replies' => [['label' => 'Hours', 'text' => 'Open daily', 'keywords' => 'ώρες, hours'], ['label' => '', 'text' => '', 'keywords' => '']],
         'utm' => '1',
@@ -43,7 +43,7 @@ test('every profile section is edited as a form field, without a YAML box', func
         ->assertSessionHasNoErrors()->assertRedirect(route('clients.edit', $client));
 
     $profile = $client->fresh()->profile;
-    expect($profile['accounts'])->toEqual(['instagram' => '@almyra.chania', 'facebook' => '', 'tiktok' => '', 'google_business' => 'Almyra, Chania'])
+    expect($profile['accounts'])->toEqual(['instagram' => '@almyra.chania', 'facebook' => '', 'tiktok' => '', 'linkedin' => 'almyra-beach'])
         ->and($profile['languages'])->toBe(['el', 'en', 'de'])->and($profile['extra_languages'])->toBe([])
         ->and($profile['voice'])->toEqual(['tone' => 'warm', 'person' => 'we', 'emoji' => 'none', 'cta_style' => 'soft', 'banned_phrases' => ["Don't miss out"], 'facts' => ['Open daily', 'Booking by phone']])
         ->and($profile['notes'])->toBe('Family business since 1987.')

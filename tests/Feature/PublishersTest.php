@@ -5,7 +5,6 @@ use App\Models\Asset;
 use App\Models\Client;
 use App\Models\Post;
 use App\Models\User;
-use App\Publishing\GbpPublisher;
 use App\Publishing\ManualNeeded;
 use App\Publishing\MetaPublisher;
 use App\Publishing\PublishFailed;
@@ -22,15 +21,14 @@ function account(Client $client, string $platform, array $extra = []): Account
 beforeEach(function () {
     Storage::fake('local');
     Sleep::fake();
-    config(['services.meta.app_id' => 'app', 'services.meta.app_secret' => 'secret', 'services.tiktok.client_key' => 'key', 'services.tiktok.client_secret' => 'secret', 'services.google.client_id' => 'gid', 'services.google.client_secret' => 'gsecret']);
+    config(['services.meta.app_id' => 'app', 'services.meta.app_secret' => 'secret', 'services.tiktok.client_key' => 'key', 'services.tiktok.client_secret' => 'secret']);
     $this->client = Client::factory()->create();
-    $this->post = Post::factory()->create(['client_id' => $this->client->id, 'platforms' => ['instagram', 'facebook', 'tiktok', 'google_business'], 'scheduled_at' => '2026-11-10 10:00']);
+    $this->post = Post::factory()->create(['client_id' => $this->client->id, 'platforms' => ['instagram', 'facebook', 'tiktok'], 'scheduled_at' => '2026-11-10 10:00']);
     $this->post->variants()->createMany([
         ['platform' => 'instagram', 'lang' => 'el', 'caption' => 'Ηλιοβασίλεμα', 'alt_text' => 'Μπαρ', 'hashtags' => ['#chania']],
         ['platform' => 'instagram', 'lang' => 'en', 'caption' => 'Sunset', 'alt_text' => 'Bar', 'hashtags' => ['chania', '#crete']],
         ['platform' => 'facebook', 'lang' => 'el', 'caption' => 'Ηλιοβασίλεμα FB', 'hashtags' => []],
         ['platform' => 'tiktok', 'lang' => 'en', 'caption' => 'Sunset TT', 'hashtags' => ['#fyp']],
-        ['platform' => 'google_business', 'lang' => 'el', 'caption' => 'Ανοιχτά ως αργά', 'hashtags' => []],
     ]);
     $this->photo = Asset::factory()->create(['client_id' => $this->client->id, 'path' => 'clients/x/photo.jpg']);
     $this->video = Asset::factory()->create(['client_id' => $this->client->id, 'path' => 'clients/x/clip.mp4', 'kind' => 'video', 'mime' => 'video/mp4']);
@@ -102,33 +100,6 @@ test('TikTok: public posts go to Manual-Needed until the audit; a private test p
         && $r['post_info']['privacy_level'] === 'SELF_ONLY' && $r['post_info']['disable_comment'] === true && $r['post_info']['disable_duet'] === false
         && $r['post_info']['brand_organic_toggle'] === true && $r['post_info']['brand_content_toggle'] === false
         && $r['post_info']['title'] === "Sunset TT\n\n#fyp" && str_contains($r['source_info']['video_url'], 'clip.mp4'));
-});
-
-test('Google Business: an event post carries title, dates, photo and link with a refreshed token; videos need a human', function () {
-    $this->post->assets()->attach($this->photo);
-    $this->post->update(['format' => 'gbp_event', 'settings' => ['gbp' => ['title' => 'Opening party', 'start' => '2027-05-01', 'end' => '2027-05-02', 'link' => 'https://almyra.gr/party']]]);
-    $account = account($this->client, 'google_business', ['external_id' => 'accounts/1/locations/2', 'refresh_token' => 'refresh', 'token_expires_at' => now()->subMinute()]);
-    Http::fake([
-        'oauth2.googleapis.com/token' => Http::response(['access_token' => 'g-new', 'expires_in' => 3600]),
-        'mybusiness.googleapis.com/v4/accounts/1/locations/2/localPosts' => Http::response(['name' => 'accounts/1/locations/2/localPosts/99', 'state' => 'LIVE']),
-    ]);
-
-    expect((new GbpPublisher)->publish($this->post->fresh(), $account))->toBe('accounts/1/locations/2/localPosts/99')
-        ->and($account->fresh()->access_token)->toBe('g-new');
-    Http::assertSent(fn ($r) => str_ends_with($r->url(), '/localPosts') && $r->hasHeader('Authorization', 'Bearer g-new')
-        && $r['topicType'] === 'EVENT' && $r['languageCode'] === 'el' && $r['summary'] === 'Ανοιχτά ως αργά'
-        && $r['event'] === ['title' => 'Opening party', 'schedule' => ['startDate' => ['year' => 2027, 'month' => 5, 'day' => 1], 'endDate' => ['year' => 2027, 'month' => 5, 'day' => 2]]]
-        && $r['callToAction'] === ['actionType' => 'LEARN_MORE', 'url' => 'https://almyra.gr/party'] && str_contains($r['media'][0]['sourceUrl'], 'photo.jpg'));
-
-    $this->post->update(['settings' => ['gbp' => ['title' => 'Opening party', 'start' => '2027-05-01', 'link' => 'https://almyra.gr/party', 'cta' => 'BOOK']]]);
-    (new GbpPublisher)->publish($this->post->fresh(), $account->fresh());
-    Http::assertSent(fn ($r) => str_ends_with($r->url(), '/localPosts') && $r['callToAction'] === ['actionType' => 'BOOK', 'url' => 'https://almyra.gr/party']);
-    $this->post->update(['settings' => ['gbp' => ['title' => 'Opening party', 'start' => '2027-05-01', 'cta' => 'CALL']]]);
-    (new GbpPublisher)->publish($this->post->fresh(), $account->fresh());
-    Http::assertSent(fn ($r) => str_ends_with($r->url(), '/localPosts') && $r['callToAction'] === ['actionType' => 'CALL']);
-
-    $this->post->assets()->sync([$this->video->id]);
-    expect(fn () => (new GbpPublisher)->publish($this->post->fresh(), $account->fresh()))->toThrow(ManualNeeded::class, 'photos only');
 });
 
 test('Instagram: collaborators go on the container for feed posts, never on a Story, and at most three are accepted', function () {

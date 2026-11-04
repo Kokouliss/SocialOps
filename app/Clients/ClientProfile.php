@@ -17,7 +17,7 @@ final class ClientProfile
 {
     public const SECTIONS = ['accounts', 'languages', 'extra_languages', 'voice', 'notes', 'pillars', 'hashtags', 'research', 'approval', 'slots', 'saved_replies', 'signatures', 'fields', 'utm', 'webhooks', 'key_dates'];
 
-    public const PLATFORMS = ['instagram', 'facebook', 'tiktok', 'google_business'];
+    public const PLATFORMS = ['instagram', 'facebook', 'tiktok', 'linkedin'];
 
     /**
      * The nested sections (everything but slug, code, name, type, location), validated.
@@ -180,7 +180,7 @@ final class ClientProfile
             'accounts.instagram' => ['nullable', 'string'],
             'accounts.facebook' => ['nullable', 'string'],
             'accounts.tiktok' => ['nullable', 'string'],
-            'accounts.google_business' => ['nullable', 'string'],
+            'accounts.linkedin' => ['nullable', 'string'],
             'languages' => ['required', 'array', 'min:1'],
             'languages.*' => ['string', 'size:2'],
             'extra_languages' => ['present', 'array'],

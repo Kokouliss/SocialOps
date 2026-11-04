@@ -25,7 +25,7 @@ test('the MCP tools list clients, create a Draft through the post form rules, re
     SocialOpsServer::tool(ListClients::class)->assertOk()->assertSee(['Almyra', 'Blue Villa', '"pillars"']);
 
     $pillar = array_key_first($this->a->profile['pillars']);
-    SocialOpsServer::tool(CreateDraft::class, ['client' => 'almyra', 'platforms' => ['linkedin'], 'format' => 'feed'])->assertHasErrors(['platforms.0']);
+    SocialOpsServer::tool(CreateDraft::class, ['client' => 'almyra', 'platforms' => ['pinterest'], 'format' => 'feed'])->assertHasErrors(['platforms.0']);
     SocialOpsServer::tool(CreateDraft::class, ['client' => 'nobody', 'platforms' => ['instagram'], 'format' => 'feed'])->assertHasErrors(['No client "nobody"']);
     SocialOpsServer::tool(CreateDraft::class, [
         'client' => 'almyra', 'platforms' => ['instagram'], 'format' => 'feed', 'pillar' => $pillar, 'brief' => 'Sea bass', 'scheduled_at' => '2027-05-12 18:00',

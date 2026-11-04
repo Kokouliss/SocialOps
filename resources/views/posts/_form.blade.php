@@ -112,24 +112,6 @@
 </fieldset>
 @endif
 
-@php($gbp = old('settings.gbp', $post->settings['gbp'] ?? []))
-<fieldset class="mt-6 border rounded-md p-4 text-sm" data-for="google_business">
-    <legend class="px-1 text-sm font-medium">Google Business Profile <span class="text-gray-400">({{ __('title and dates for events and offers') }})</span></legend>
-    <div class="grid gap-4 md:grid-cols-5">
-        <div><x-input-label for="gbp-title" :value="__('Title')" /><x-text-input id="gbp-title" name="settings[gbp][title]" type="text" maxlength="58" class="mt-1 block w-full" :value="$gbp['title'] ?? ''" /><x-input-error class="mt-1" :messages="$errors->get('settings.gbp.title')" /></div>
-        <div><x-input-label for="gbp-start" :value="__('Starts')" /><x-text-input id="gbp-start" name="settings[gbp][start]" type="date" class="mt-1 block w-full" :value="$gbp['start'] ?? ''" /></div>
-        <div><x-input-label for="gbp-end" :value="__('Ends')" /><x-text-input id="gbp-end" name="settings[gbp][end]" type="date" class="mt-1 block w-full" :value="$gbp['end'] ?? ''" /><x-input-error class="mt-1" :messages="$errors->get('settings.gbp.end')" /></div>
-        <div><x-input-label for="gbp-cta" :value="__('Button')" />
-            <select id="gbp-cta" name="settings[gbp][cta]" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                @foreach (\App\Publishing\GbpPublisher::CTAS as $cta => $label)
-                    <option value="{{ $cta }}" @selected(($gbp['cta'] ?? 'LEARN_MORE') === $cta)>{{ __($label) }}</option>
-                @endforeach
-            </select>
-        </div>
-        <div><x-input-label for="gbp-link" :value="__('Button link (Call needs none)')" /><x-text-input id="gbp-link" name="settings[gbp][link]" type="url" class="mt-1 block w-full" :value="$gbp['link'] ?? ''" /><x-input-error class="mt-1" :messages="$errors->get('settings.gbp.link')" /></div>
-        <div><x-input-label for="gbp-coupon" :value="__('Coupon code (offers)')" /><x-text-input id="gbp-coupon" name="settings[gbp][coupon]" type="text" class="mt-1 block w-full" :value="$gbp['coupon'] ?? ''" /></div>
-    </div>
-</fieldset>
 
 <div data-for="instagram facebook">
 <h3 class="mt-8 font-semibold text-gray-800">{{ __('First comment') }} <span class="text-sm font-normal text-gray-500">{{ __('(Instagram and Facebook: posted under the post right after it goes out, for hashtags or a link; also in the ZIP and the CSV)') }}</span></h3>
@@ -171,9 +153,7 @@
                     <x-input-label :value="strtoupper($lang)" />
                     <textarea name="variants[{{ $platform }}][{{ $lang }}][caption]" data-lang="{{ $lang }}" rows="5" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">{{ old("variants.$platform.$lang.caption", $v?->caption) }}</textarea>
                     <x-input-error class="mt-1" :messages="$errors->get(\"variants.$platform.$lang.caption\")" />
-                    @if ($platform !== 'google_business')
-                        <x-text-input name="variants[{{ $platform }}][{{ $lang }}][hashtags]" type="text" class="mt-2 block w-full text-sm" placeholder="#chania #crete" :value="old('variants.'.$platform.'.'.$lang.'.hashtags', implode(' ', $v?->hashtags ?? []))" />
-                    @endif
+                    <x-text-input name="variants[{{ $platform }}][{{ $lang }}][hashtags]" type="text" class="mt-2 block w-full text-sm" placeholder="#chania #crete" :value="old('variants.'.$platform.'.'.$lang.'.hashtags', implode(' ', $v?->hashtags ?? []))" />
                     @if ($platform !== 'tiktok')
                         <x-text-input name="variants[{{ $platform }}][{{ $lang }}][alt_text]" type="text" class="mt-2 block w-full text-sm" placeholder="{{ __('Alt text') }}" :value="old('variants.'.$platform.'.'.$lang.'.alt_text', $v?->alt_text)" />
                     @endif

@@ -10,7 +10,7 @@ use Laravel\Mcp\Response;
 use Laravel\Mcp\Server\Attributes\Description;
 use Laravel\Mcp\Server\Tool;
 
-#[Description('A client\'s numbers for one month, as the monthly report builds them: every post with its reach, views, likes, comments, shares and saves, totals per platform, and the Google Business Profile listing.')]
+#[Description('A client\'s numbers for one month, as the monthly report builds them: every post with its reach, views, likes, comments, shares and saves, and totals per platform.')]
 class MonthNumbers extends Tool
 {
     use ScopedToToken;

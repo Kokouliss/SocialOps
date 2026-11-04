@@ -40,41 +40,15 @@ TIKTOK_AUDITED=false     # set true the day TikTok approves the audit
 
 Until the audit passes, Social Ops publishes a TikTok post only when its privacy is *Only me* (a test); public posts go to Manual-Needed and you post them in the TikTok app.
 
-## 3. Google Business Profile → `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+## 3. Google Business Profile
 
-1. Go to https://console.cloud.google.com with the agency Google account → **New project** `Social Ops`.
-2. **APIs & Services → Library**: enable *My Business Account Management API*, *My Business Business Information API* and *Google My Business API* (v4, used for posts). Enabling is allowed, calling is not until Google grants access (step 5).
-3. **OAuth consent screen**: *External*, app name `Social Ops`, support e-mail, the app's domain and privacy policy URL; scope `https://www.googleapis.com/auth/business.manage`. Publishing status can stay *Testing* for the pilot: add the staff Google accounts under *Test users* (test refresh tokens expire after 7 days while in Testing; set the app to *In production* before the pilot ends, which for this scope needs Google's verification).
-4. **Credentials → Create credentials → OAuth client ID** → *Web application* → *Authorised redirect URIs*: `https://YOUR-DOMAIN/oauth/google/callback`. Copy **Client ID** and **Client secret**.
-5. **Request API access**: fill in the Business Profile API access form at https://developers.google.com/my-business/content/prereqs (link "Request access") with the project number and the agency's business details. Quota is 0 until they approve; it usually takes days to a couple of weeks.
-6. The staff Google account must be an *Owner* or *Manager* of the client's Business Profile location (Fuse Pharmacy) in https://business.google.com, or the location will not appear after Connect.
-
-`.env`:
-```
-GOOGLE_CLIENT_ID=…
-GOOGLE_CLIENT_SECRET=…
-```
-
-## 3a. Canva (optional) → `CANVA_CLIENT_ID`, `CANVA_CLIENT_SECRET`
-
-Lets staff pull finished designs from the agency's Canva into a client's asset inbox (assets page → Canva box). The Connect API is free; a private integration serves the agency's own team without Canva's review.
-
-1. https://www.canva.com/developers → **Your integrations → Create an integration**, *Private* if offered (your team only), name `Social Ops`.
-2. **Scopes**: `design:meta:read`, `design:content:read`, `profile:read`. Nothing is written to Canva.
-3. **Authentication**: redirect URL `https://YOUR-DOMAIN/canva/callback`; generate a client secret and copy **Client ID** and **Client secret** (the secret is shown once).
-4. On each client's assets page press *Connect Canva* with the agency's Canva login; the same login can be connected to every client, and a staff login limited to some clients can only connect those. A free Canva account is enough; a design that uses Pro elements exports only when the connected account is Pro.
-
-`.env`:
-```
-CANVA_CLIENT_ID=…
-CANVA_CLIENT_SECRET=…
-```
+Removed on 2026-11-04 (D17): the platforms are Instagram, Facebook, TikTok and LinkedIn. LinkedIn has no driver; the team posts there by hand.
 
 ## 3b. Google Drive folders (optional) → `GOOGLE_SERVICE_ACCOUNT_JSON`
 
 Lets a client drop photos and videos in a shared Google Drive folder; Social Ops files them in the client's inbox every hour (assets page → Google Drive box). The Drive API is free, and a service account needs no consent screen, no Google review and no token renewal.
 
-1. In the Google Cloud project of step 3: **APIs & Services → Library** → enable *Google Drive API*.
+1. In a Google Cloud project of the agency: **APIs & Services → Library** → enable *Google Drive API*.
 2. **IAM & Admin → Service accounts → Create service account**: name `social-ops-drive`, no roles, **Done**.
 3. Open it → **Keys → Add key → Create new key → JSON**. The file downloads once. It is a credential: keep it out of the repository and out of `public/`.
 4. Upload it to the server next to the app (not inside it), point `.env` at it, then **Refresh after update** on the dashboard (or `php artisan config:clear`).
@@ -163,7 +137,7 @@ Without it the box says so and nothing else changes.
 ## 6. First client: Fuse Pharmacy (decision D4)
 
 1. Clients → New client. Code `FUSE`, type `brand`. Fill in the form: accounts, voice, pillars, hashtags, approver name and e-mail, SLA (a starter profile is in the project Library, `clients/fuse-pharmacy.yaml`; `php artisan clients:import` loads such a file, or copy its values into the form).
-2. Accounts → Connect Facebook / Instagram, Google (TikTok when the app review is through) and tick the Fuse Pharmacy Page, Instagram account and location.
+2. Accounts → Connect Facebook / Instagram (TikTok when the app review is through) and tick the Fuse Pharmacy Page and Instagram account.
 3. Assets → copy the upload link and send it to the client.
 4. Link in bio → put the address shown on the client form in the Instagram and TikTok profile. Or publish it on the client's WordPress: an administrator there makes an application password (Users → Profile → Application Passwords), you enter site, user and that password in the box and press Publish; the page `/links/` appears on their site and Publish again refreshes it.
 5. Calendar → create one test post for tomorrow, *Draft captions with Claude*, send it for approval to yourself first (put your own e-mail as approver for the first run), approve from your phone, watch it publish. Then put the client's approver in and start the two weeks.

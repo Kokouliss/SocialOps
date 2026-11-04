@@ -12,7 +12,7 @@ test('accounts:check-tokens warns once, ten days ahead, the person who connected
     $client = Client::factory()->create();
     $soon = $client->accounts()->create(['platform' => 'instagram', 'external_id' => 'ig', 'name' => '@almyra', 'access_token' => 't', 'token_expires_at' => '2026-11-12 10:00', 'connected_by' => $user->id]);
     $client->accounts()->create(['platform' => 'facebook', 'external_id' => 'fb', 'name' => 'Almyra', 'access_token' => 't', 'token_expires_at' => '2026-12-01 10:00', 'connected_by' => $user->id]);
-    $client->accounts()->create(['platform' => 'google_business', 'external_id' => 'g', 'name' => 'Almyra', 'access_token' => 't', 'token_expires_at' => null]);
+    $client->accounts()->create(['platform' => 'wordpress', 'external_id' => 'wp', 'name' => 'Almyra', 'access_token' => 't', 'token_expires_at' => null]);
 
     $this->artisan('accounts:check-tokens');
     $this->artisan('accounts:check-tokens');

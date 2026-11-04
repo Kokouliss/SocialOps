@@ -9,7 +9,7 @@ use Carbon\CarbonInterface;
 /** Builds CLIENT_YYYYMMDD_PLATFORM_FORMAT_PILLAR_LANG_v# for a post. */
 final class PostNamer
 {
-    public const PLATFORM_CODES = ['instagram' => 'IG', 'facebook' => 'FB', 'tiktok' => 'TT', 'google_business' => 'GBP'];
+    public const PLATFORM_CODES = ['instagram' => 'IG', 'facebook' => 'FB', 'tiktok' => 'TT', 'linkedin' => 'LI'];
 
     /** @param  list<string>  $platforms */
     public static function name(Client $client, array $platforms, string $format, ?string $pillar, CarbonInterface $date): string

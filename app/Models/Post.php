@@ -23,9 +23,10 @@ class Post extends Model
     /** @use HasFactory<PostFactory> */
     use HasFactory;
 
-    public const PLATFORMS = ['instagram', 'facebook', 'tiktok', 'google_business'];
+    public const PLATFORMS = ['instagram', 'facebook', 'tiktok', 'linkedin'];
 
-    public const FORMATS = ['feed', 'carousel', 'reel', 'story', 'tiktok_video', 'tiktok_photos', 'gbp_update', 'gbp_offer', 'gbp_event'];
+    /** LinkedIn posts use feed (image or text), carousel (images or a document) and reel (video). */
+    public const FORMATS = ['feed', 'carousel', 'reel', 'story', 'tiktok_video', 'tiktok_photos'];
 
     /** Changing any of these on a locked post sends it back to review. */
     public const CONTENT_FIELDS = ['platforms', 'format', 'pillar', 'brief', 'settings'];

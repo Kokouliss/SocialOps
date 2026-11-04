@@ -8,7 +8,7 @@ test('the public bio page lists the profile links, phone and accounts in the cli
     $client = Client::factory()->create(['name' => 'Almyra Beach Lounge', 'slug' => 'almyra']);
     $profile = $client->profile;
     $profile['fields'] = ['phone' => '+30 28210 00000', 'site' => 'almyra.gr', 'booking' => 'https://almyra.gr/book', 'menu' => 'https://almyra.gr/menu.pdf', 'whatsapp' => '+30 6900000000', 'email' => 'hello@almyra.gr', 'promo_code' => 'SUMMER10'];
-    $profile['accounts'] = ['instagram' => '@almyra.chania', 'facebook' => 'Almyra', 'tiktok' => 'almyra.chania', 'google_business' => ''];
+    $profile['accounts'] = ['instagram' => '@almyra.chania', 'facebook' => 'Almyra', 'tiktok' => 'almyra.chania', 'linkedin' => ''];
     $client->forceFill(['profile' => $profile])->save();
     $client->accounts()->create(['platform' => 'facebook', 'external_id' => '1234567890', 'name' => 'Almyra', 'access_token' => 't']);
 

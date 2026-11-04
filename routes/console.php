@@ -17,7 +17,6 @@ if (config('features.publishing')) {
     Schedule::command('posts:publish-due')->everyMinute();
     Schedule::command('accounts:check-tokens')->dailyAt('08:00');
     Schedule::command('posts:preflight')->hourlyAt(30);
-    Schedule::command('posts:reconcile')->hourlyAt(45);
     Schedule::command('comments:fetch')->hourly();
     Schedule::command('posts:insights')->dailyAt('06:00');
     Schedule::command('reports:monthly')->monthlyOn(1, '07:00');

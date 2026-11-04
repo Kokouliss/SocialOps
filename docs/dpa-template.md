@@ -59,8 +59,8 @@ For the Controller: ________________  For the Processor: ________________
 |---|---|
 | **Subject matter** | Social media management for the Controller: planning, drafting (Greek and English, with AI assistance), approval, scheduling, publishing, engagement and reporting for the accounts in the brand profile. |
 | **Duration** | The term of the Services Agreement. |
-| **Nature and purposes** | Storing the Controller's media and brand information; drafting and translating captions with Claude (Anthropic); collecting approvals; publishing to Instagram, Facebook, TikTok and Google Business Profile; reading comments, direct messages and reviews and drafting replies; reading publishing statistics; monthly reports. |
-| **Categories of data subjects** | The Controller's staff and approvers; customers and guests who appear in photos and videos (user-generated content, venue clips); people who comment on, message or review the Controller's accounts; people named in captions. |
+| **Nature and purposes** | Storing the Controller's media and brand information; drafting and translating captions with Claude (Anthropic); collecting approvals; publishing to Instagram, Facebook and TikTok (LinkedIn is posted by hand); reading comments and direct messages and drafting replies; reading publishing statistics; monthly reports. |
+| **Categories of data subjects** | The Controller's staff and approvers; customers and guests who appear in photos and videos (user-generated content, venue clips); people who comment on or message the Controller's accounts; people named in captions. |
 | **Categories of personal data** | Names, e-mail addresses and phone numbers of approvers and staff; photos and videos, including faces, with the consent and repost-permission records the Controller gives; social media profile names and the text of comments, messages and reviews, with a sentiment and intent tag; access tokens for the Controller's accounts (encrypted); publishing statistics (aggregated numbers); captions and notes. |
 | **Special categories** | None intended. The Controller does not provide content revealing health, religion or similar data (for example a customer's prescription in a pharmacy photo); the Processor flags such content to the Controller instead of using it. |
 | **Retention in Social Ops** | Media and posts: until the Controller deletes them or the services end. Comments, messages and reviews: read from the networks for the last 30 days and kept until deleted. AI call records: [12] months, with the cost and size of each call. Access logs: [6] months. |
@@ -77,7 +77,7 @@ For the Controller: ________________  For the Processor: ________________
 | Google LLC (Google Drive), only where the Controller shares a folder with the Processor's service account | Reading the shared folder into the inbox | The files the Controller places in the folder | EU/USA under Google's terms. |
 | Canva Pty Ltd, Australia, only where the Processor imports designs from its own Canva | Export of finished designs into the inbox | Design files, no personal data beyond what the design shows | Australia, under Canva's terms. |
 
-Not sub-processors (the Controller's own providers): Meta Platforms Ireland (Instagram, Facebook), TikTok Technology Limited, Google Ireland (Business Profile).
+Not sub-processors (the Controller's own providers): Meta Platforms Ireland (Instagram, Facebook), TikTok Technology Limited, LinkedIn Ireland.
 
 ## Annex 3: Technical and organisational measures (as built in Social Ops)
 

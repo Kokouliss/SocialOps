@@ -31,6 +31,6 @@ test('the post form has the "Change with Claude" box and the rewrite endpoint va
     $this->actingAs($me)->postJson(route('posts.rewrite', $post), ['instruction' => ' Shorter ', 'brief' => 'Sea bass', 'captions' => ['instagram' => ['el' => ' μακρύ ', 'en' => null]]])
         ->assertOk()->assertExactJson(['instagram' => ['el' => 'κοντό', 'en' => 'short']]);
     $this->actingAs($me)->postJson(route('posts.rewrite', $post), ['instruction' => '', 'captions' => ['instagram' => ['el' => 'x']]])->assertStatus(422)->assertJsonValidationErrors('instruction');
-    $this->actingAs($me)->postJson(route('posts.rewrite', $post), ['instruction' => 'x', 'captions' => ['linkedin' => ['el' => 'x']]])->assertStatus(422)->assertJsonValidationErrors('captions');
+    $this->actingAs($me)->postJson(route('posts.rewrite', $post), ['instruction' => 'x', 'captions' => ['pinterest' => ['el' => 'x']]])->assertStatus(422)->assertJsonValidationErrors('captions');
     $this->actingAs($me)->postJson(route('posts.rewrite', $post), ['instruction' => 'x', 'captions' => ['instagram' => ['de' => 'x']]])->assertStatus(422)->assertJsonValidationErrors('captions.instagram');
 });
