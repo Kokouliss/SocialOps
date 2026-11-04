@@ -14,7 +14,7 @@
                         <span class="ml-auto rounded px-2 py-0.5 text-xs {{ $post->state->value === 'published' ? 'bg-green-100 text-green-800' : ($post->state->value === 'in_review' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-700') }}">{{ __(\App\Http\Controllers\CalendarController::CLIENT_STATES[$post->state->value]) }}</span>
                     </div>
                     @if ($caption = $post->variants->firstWhere('lang', $lang)?->caption)
-                        <p class="mt-1 text-gray-600 line-clamp-2">{{ $caption }}</p>
+                        <p class="mt-1 text-gray-600 line-clamp-2">{{ $client->substitute($caption) }}</p>
                     @endif
                 </li>
             @endforeach

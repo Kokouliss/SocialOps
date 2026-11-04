@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :client="$client">
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $client->name }}: {{ __('comments, messages and reviews') }}</h2>
     </x-slot>
@@ -12,6 +12,24 @@
 
             <div class="bg-white p-6 shadow-sm sm:rounded-lg">
                 <h3 class="font-semibold text-gray-900">{{ __('To answer') }} <span class="font-normal text-gray-500">({{ $open->count() }})</span></h3>
+                <form method="GET" class="mt-3 flex flex-wrap items-center gap-2">
+                    <nav class="flex gap-1 overflow-x-auto text-sm" aria-label="{{ __('Kinds') }}">
+                        @foreach (['attention' => __('Needs attention'), 'questions' => __('Questions'), 'complaints' => __('Complaints'), 'reviews' => __('Reviews'), 'all' => __('All')] as $key => $label)
+                            <a href="{{ route('clients.comments', [$client, ...request()->only('platform', 'order'), 'tab' => $key]) }}" class="whitespace-nowrap rounded-full px-3 py-1 {{ $tab === $key ? 'bg-gray-800 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">{{ $label }} <span class="{{ $tab === $key ? 'text-gray-300' : 'text-gray-400' }}">{{ $tabs[$key] }}</span></a>
+                        @endforeach
+                    </nav>
+                    <input type="hidden" name="tab" value="{{ $tab }}">
+                    <select name="platform" onchange="this.form.submit()" class="ml-auto border-gray-300 rounded-md shadow-sm text-sm">
+                        <option value="">{{ __('Any platform') }}</option>
+                        @foreach ($platforms as $platform)
+                            <option value="{{ $platform }}" @selected(request('platform') === $platform)>{{ str_replace('_', ' ', ucfirst($platform)) }}</option>
+                        @endforeach
+                    </select>
+                    <select name="order" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm">
+                        <option value="">{{ __('Needs attention first, then newest') }}</option>
+                        <option value="oldest" @selected(request('order') === 'oldest')>{{ __('Oldest first') }}</option>
+                    </select>
+                </form>
                 <p class="mt-1 text-gray-500">{{ __('Comments under the last 30 days of Instagram and Facebook posts, direct messages of the last 30 days, and Google reviews, fetched every hour. Claude drafts, you send. Meta takes a message reply within 24 hours of the person\'s last message.') }}</p>
                 @forelse ($open as $comment)
                     <div id="comment-{{ $comment->id }}" class="mt-4 border-t pt-4 grid gap-3 md:grid-cols-2">
@@ -49,7 +67,7 @@
                         </form>
                     </div>
                 @empty
-                    <p class="mt-3 text-gray-500">{{ __('Nothing to answer.') }}</p>
+                    <p class="mt-3 text-gray-500">{{ $tab === 'all' && ! request('platform') ? __('Nothing to answer.') : __('Nothing here; the other tabs may still have something.') }}</p>
                 @endforelse
             </div>
 

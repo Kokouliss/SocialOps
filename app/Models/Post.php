@@ -114,12 +114,14 @@ class Post extends Model
         return self::handles($this->settings['instagram']['collaborators'] ?? null);
     }
 
-    /** The date range and state filters of the JSON API and the MCP server. */
+    /** The date range and state filters of the JSON API and the MCP server, plus the calendar's platform and pillar. */
     public function scopeFilter(Builder $q, array $filters): Builder
     {
         return $q->when($filters['from'] ?? null, fn ($q, $d) => $q->where('scheduled_at', '>=', $d))
             ->when($filters['to'] ?? null, fn ($q, $d) => $q->where('scheduled_at', '<=', $d))
-            ->when($filters['state'] ?? null, fn ($q, $s) => $q->where('state', $s));
+            ->when($filters['state'] ?? null, fn ($q, $s) => $q->where('state', $s))
+            ->when($filters['platform'] ?? null, fn ($q, $p) => $q->whereJsonContains('platforms', $p))
+            ->when($filters['pillar'] ?? null, fn ($q, $p) => $q->where('pillar', $p));
     }
 
     /** The post as the JSON API and the webhooks show it (docs/api.md). */

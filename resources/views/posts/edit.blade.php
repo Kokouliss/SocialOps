@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :client="$client">
     <x-slot name="header">
         <div class="flex flex-wrap items-center gap-3">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $client->name }} <span class="font-mono text-sm text-gray-500">{{ $post->name }}</span></h2>
@@ -65,13 +65,18 @@
             @foreach ($post->reviews()->wherePivotNotNull('comment')->get() as $review)
                 <p class="text-sm text-orange-800 bg-orange-50 rounded-md p-3"><span class="font-semibold">{{ $review->pivot->decided_by }}</span> ({{ $review->pivot->decided_at }}): {{ $review->pivot->comment }}</p>
             @endforeach
+            <div class="lg:grid lg:grid-cols-3 lg:gap-6 lg:items-start">
+            <div class="lg:col-span-2">
             @if ($post->state !== \App\Posts\PostState::Published)
-                <form method="POST" action="{{ route('posts.update', $post) }}" class="bg-white p-6 shadow-sm sm:rounded-lg">
+                <form id="post-form" method="POST" action="{{ route('posts.update', $post) }}" class="bg-white p-6 shadow-sm sm:rounded-lg">
                     @method('PATCH')
                     @include('posts._form')
                 </form>
             @endif
+            </div>
 
+            <div class="mt-4 lg:mt-0 space-y-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
+            @include('posts._preview')
             <div id="notes" class="bg-white p-6 shadow-sm sm:rounded-lg text-sm">
                 <h3 class="font-medium">{{ __('Team notes') }} <span class="text-gray-400 font-normal">({{ __('internal, the client never sees them; @FirstName pings a colleague on Slack') }})</span></h3>
                 @foreach ($post->notes as $note)
@@ -83,6 +88,8 @@
                     <x-input-error class="mt-1" :messages="$errors->get('body')" />
                     <x-primary-button class="mt-2">{{ __('Add note') }}</x-primary-button>
                 </form>
+            </div>
+            </div>
             </div>
         </div>
     </div>

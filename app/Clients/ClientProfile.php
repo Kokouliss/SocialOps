@@ -49,6 +49,38 @@ final class ClientProfile
         return array_replace(array_fill_keys(self::SECTIONS, null), $validator->validate());
     }
 
+    /**
+     * The form fields of the common sections (languages, approval, hashtags, signatures, placeholders, saved replies) written over a parsed profile; the YAML keeps everything else.
+     *
+     * @param  array<string, mixed>  $data
+     * @param  array<string, mixed>  $form
+     * @return array<string, mixed>
+     */
+    public static function applyForm(array $data, array $form): array
+    {
+        $list = fn ($s) => array_values(array_filter(array_map('trim', preg_split('/[\s,]+/', (string) $s))));
+        $tags = fn ($s) => array_map(fn ($h) => '#'.ltrim($h, '#'), $list($s));
+        $rows = fn ($rows, $keep) => array_values(array_filter(array_map(fn ($r) => array_map('trim', (array) $r), (array) $rows), $keep));
+
+        $data['languages'] = $list($form['languages'] ?? '');
+        $data['extra_languages'] = $list($form['extra_languages'] ?? '');
+        $data['approval'] = array_replace($data['approval'] ?? [], [
+            'policy' => $form['approval']['policy'] ?? null,
+            'sla_hours' => (int) ($form['approval']['sla_hours'] ?? 0),
+            'approvers' => $rows($form['approval']['approvers'] ?? [], fn ($r) => ($r['name'] ?? '') !== '' || ($r['email'] ?? '') !== ''),
+        ]);
+        $data['hashtags'] = array_replace($data['hashtags'] ?? [], [
+            'always' => $tags($form['hashtags']['always'] ?? ''),
+            'pool' => $tags($form['hashtags']['pool'] ?? ''),
+            'max_per_post' => (int) ($form['hashtags']['max_per_post'] ?? 0),
+        ]);
+        $data['signatures'] = array_filter(array_map('trim', (array) ($form['signatures'] ?? [])));
+        $data['fields'] = collect($rows($form['fields'] ?? [], fn ($r) => ($r['key'] ?? '') !== ''))->mapWithKeys(fn ($r) => [$r['key'] => $r['value'] ?? ''])->all();
+        $data['saved_replies'] = array_map(fn ($r) => ['label' => $r['label'], 'text' => $r['text'], 'keywords' => $list($r['keywords'] ?? '')], $rows($form['saved_replies'] ?? [], fn ($r) => ($r['label'] ?? '') !== '' && ($r['text'] ?? '') !== ''));
+
+        return $data;
+    }
+
     /** The template sections from config/clients/example.yaml, as YAML for a new client form. */
     public static function templateYaml(): string
     {
@@ -62,7 +94,7 @@ final class ClientProfile
      *
      * @throws ValidationException
      */
-    private static function parseYaml(string $yaml): array
+    public static function parseYaml(string $yaml): array
     {
         try {
             // unquoted dates like 2027-05-01 would otherwise become Unix timestamps

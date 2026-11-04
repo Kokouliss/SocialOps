@@ -22,16 +22,19 @@ class CalendarController extends Controller
     {
         [$view, $date, $start, $end] = $this->range($request);
         $clientSlug = $request->input('client');
+        $filters = $request->only(['state', 'platform', 'pillar']);
 
-        $posts = $request->user()->restrict(Post::with('client'))
+        $posts = $request->user()->restrict(Post::with('client', 'assets'))
             ->when($clientSlug, fn ($q) => $q->whereRelation('client', 'slug', $clientSlug))
+            ->filter($filters)
             ->whereBetween('scheduled_at', [$start, $end])
             ->orderBy('scheduled_at')
             ->get()
             ->groupBy(fn (Post $p) => $p->scheduled_at->toDateString());
 
-        $unscheduled = $request->user()->restrict(Post::with('client'))
+        $unscheduled = $request->user()->restrict(Post::with('client', 'assets'))
             ->when($clientSlug, fn ($q) => $q->whereRelation('client', 'slug', $clientSlug))
+            ->filter($filters)
             ->whereNull('scheduled_at')
             ->latest()
             ->get();
@@ -49,6 +52,8 @@ class CalendarController extends Controller
         }
 
         return view('calendar.index', [
+            'filters' => $filters,
+            'pillars' => ($client ? collect([$client]) : $clients)->flatMap(fn ($c) => array_keys($c->profile['pillars'] ?? []))->unique()->sort()->values(),
             'marks' => $marks,
             'view' => $view,
             'date' => $date,
@@ -57,6 +62,7 @@ class CalendarController extends Controller
             'unscheduled' => $unscheduled,
             'clients' => $clients,
             'clientSlug' => $clientSlug,
+            'client' => $client,
             'clientUrl' => $client ? URL::temporarySignedRoute('calendar.client', now()->addDays(self::LINK_DAYS), ['client' => $client->slug]) : null,
         ]);
     }
@@ -101,11 +107,13 @@ class CalendarController extends Controller
     /** @return array{string, Carbon, Carbon, Carbon} view, the date shown, first and last day shown */
     private function range(Request $request): array
     {
-        $view = $request->input('view') === 'week' ? 'week' : 'month';
+        $view = in_array($request->input('view'), ['week', 'list']) ? $request->input('view') : 'month';
         $date = Carbon::parse($request->input('date', 'today'))->startOfDay();
 
-        return $view === 'week'
-            ? [$view, $date, $date->copy()->startOfWeek(), $date->copy()->endOfWeek()]
-            : [$view, $date, $date->copy()->startOfMonth()->startOfWeek(), $date->copy()->endOfMonth()->endOfWeek()];
+        return match ($view) {
+            'week' => [$view, $date, $date->copy()->startOfWeek(), $date->copy()->endOfWeek()],
+            'list' => [$view, $date, $date->copy()->startOfMonth(), $date->copy()->endOfMonth()],
+            default => [$view, $date, $date->copy()->startOfMonth()->startOfWeek(), $date->copy()->endOfMonth()->endOfWeek()],
+        };
     }
 }

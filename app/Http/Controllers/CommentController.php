@@ -15,12 +15,27 @@ use RuntimeException;
 /** The comment inbox: Claude drafts a reply, a staff member edits and sends it, or hides the comment. */
 class CommentController extends Controller
 {
-    public function index(Client $client): View
+    public function index(Request $request, Client $client): View
     {
+        $open = $client->comments()->with('post')->whereNull('replied_at')->whereNull('hidden_at')->get();
+        $tabs = [
+            'all' => $open,
+            'attention' => $open->filter(fn (Comment $c) => $c->needsAttention()),
+            'questions' => $open->where('intent', 'question'),
+            'complaints' => $open->where('intent', 'complaint'),
+            'reviews' => $open->whereNotNull('rating'),
+        ];
+        $tab = array_key_exists($request->input('tab', ''), $tabs) ? $request->input('tab') : 'all';
+        $shown = $tabs[$tab]->when($request->input('platform'), fn ($c, $p) => $c->where('platform', $p));
+
         return view('comments.index', [
             'client' => $client,
-            'open' => $client->comments()->with('post')->whereNull('replied_at')->whereNull('hidden_at')->latest('posted_at')->get()
-                ->sortByDesc(fn (Comment $c) => ($c->needsAttention() ? '1' : '0').$c->posted_at->timestamp)->values(), // needs attention first, newest first within
+            'tabs' => array_map(fn ($c) => $c->count(), $tabs),
+            'tab' => $tab,
+            'platforms' => $open->pluck('platform')->unique()->sort()->values(),
+            'open' => $request->input('order') === 'oldest'
+                ? $shown->sortBy('posted_at')->values()
+                : $shown->sortByDesc(fn (Comment $c) => ($c->needsAttention() ? '1' : '0').$c->posted_at->timestamp)->values(), // needs attention first, newest first within
             'done' => $client->comments()->with('post')->where(fn ($q) => $q->whereNotNull('replied_at')->orWhereNotNull('hidden_at'))->where('posted_at', '>=', now()->subDays(30))->latest('posted_at')->get(),
         ]);
     }

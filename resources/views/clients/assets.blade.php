@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :client="$client">
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $client->name }}: {{ __('assets') }}</h2>
     </x-slot>
@@ -67,45 +67,57 @@
                 @endif
             </div>
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <table class="min-w-full text-sm">
-                    <thead class="bg-gray-50 text-left text-gray-600">
-                        <tr>
-                            <th class="px-6 py-3">{{ __('Name') }}</th>
-                            <th class="px-6 py-3">{{ __('Kind') }}</th>
-                            <th class="px-6 py-3">{{ __('Pillar') }}</th>
-                            <th class="px-6 py-3">{{ __('Tags') }}</th>
-                            <th class="px-6 py-3">{{ __('Uploaded') }}</th>
-                            <th class="px-6 py-3"></th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @forelse ($assets as $asset)
-                            <tr>
-                                <td class="px-6 py-3 font-mono text-xs text-gray-900">{{ $asset->name }}<span class="block text-gray-500">{{ $asset->original_name }} · {{ number_format($asset->size / 1048576, 1) }} MB</span></td>
-                                <td class="px-6 py-3">{{ $asset->kind }}</td>
-                                <td class="px-6 py-3">{{ $asset->pillar ? str_replace('_', ' ', $asset->pillar) : '—' }}</td>
-                                <td class="px-6 py-3 text-xs">
-                                    @if ($asset->season) <span class="mr-2">{{ $asset->season }}</span> @endif
-                                    @if ($asset->people_consent) <span class="mr-2 text-green-700">{{ __('consent') }}</span> @endif
-                                    @if ($asset->ugc_permission) <span class="mr-2 text-green-700">{{ __('UGC ok') }}</span> @endif
-                                    @if ($asset->note) <span class="block text-gray-500">{{ $asset->note }}</span> @endif
-                                </td>
-                                <td class="px-6 py-3 whitespace-nowrap">{{ $asset->created_at->format('Y-m-d H:i') }}</td>
-                                <td class="px-6 py-3 text-right whitespace-nowrap">
-                                    <a href="{{ route('assets.download', $asset) }}" class="text-brand-600 hover:underline">{{ __('Download') }}</a>
-                                    <form method="POST" action="{{ route('assets.destroy', $asset) }}" class="inline ml-3" onsubmit="return confirm('{{ __('Delete this file?') }}')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:underline">{{ __('Delete') }}</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="6" class="px-6 py-6 text-gray-500">{{ __('Nothing uploaded yet.') }}</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+                <form method="GET" action="{{ route('clients.assets', $client) }}" class="flex flex-wrap items-center gap-2 text-sm">
+                    <h3 class="font-semibold text-gray-900 mr-2">{{ __('Files') }} <span class="font-normal text-gray-500">({{ $assets->count() }})</span></h3>
+                    <select name="kind" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm">
+                        <option value="">{{ __('Photos and videos') }}</option>
+                        <option value="image" @selected(request('kind') === 'image')>{{ __('Photos') }}</option>
+                        <option value="video" @selected(request('kind') === 'video')>{{ __('Videos') }}</option>
+                    </select>
+                    <select name="pillar" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm">
+                        <option value="">{{ __('Any pillar') }}</option>
+                        @foreach (array_keys($client->profile['pillars']) as $pillar)
+                            <option value="{{ $pillar }}" @selected(request('pillar') === $pillar)>{{ ucfirst(str_replace('_', ' ', $pillar)) }}</option>
+                        @endforeach
+                    </select>
+                </form>
+                <div class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                    @forelse ($assets as $asset)
+                        <div class="text-xs" data-asset="{{ $asset->id }}">
+                            <a href="{{ route('assets.download', $asset) }}" class="block aspect-square overflow-hidden rounded bg-gray-900" title="{{ $asset->original_name }} · {{ number_format($asset->size / 1048576, 1) }} MB">
+                                @if ($asset->kind === 'image')
+                                    <img src="{{ route('assets.thumb', $asset) }}" alt="" loading="lazy" class="h-full w-full object-cover">
+                                @else
+                                    <span class="flex h-full w-full items-center justify-center text-gray-300">▶ {{ __('video') }}</span>
+                                @endif
+                            </a>
+                            <p class="mt-1 truncate font-mono text-gray-900" title="{{ $asset->name }}">{{ $asset->name }}</p>
+                            <p class="text-gray-500">
+                                {{ $asset->pillar ? str_replace('_', ' ', $asset->pillar) : __('no pillar') }} · {{ $asset->created_at->format('j M') }}
+                                @if ($asset->season) · {{ $asset->season }} @endif
+                                @if ($asset->people_consent) · <span class="text-green-700">{{ __('consent') }}</span> @endif
+                                @if ($asset->ugc_permission) · <span class="text-green-700">{{ __('UGC ok') }}</span> @endif
+                            </p>
+                            @if ($asset->note) <p class="text-gray-500">{{ $asset->note }}</p> @endif
+                            <p class="mt-1">
+                                @forelse ($asset->posts as $post)
+                                    <a href="{{ route('posts.edit', $post) }}" class="block truncate text-brand-600 hover:underline" title="{{ $post->name }}">{{ __('In') }} {{ $post->name }}</a>
+                                @empty
+                                    <span class="text-gray-400">{{ __('Not used in a post yet') }}</span>
+                                @endforelse
+                            </p>
+                            <form method="POST" action="{{ route('assets.destroy', $asset) }}" class="mt-1" onsubmit="return confirm('{{ __('Delete this file?') }}')">
+                                @csrf
+                                @method('DELETE')
+                                <a href="{{ route('assets.download', $asset) }}" class="text-brand-600 hover:underline">{{ __('Download') }}</a>
+                                <button type="submit" class="ml-2 text-red-600 hover:underline">{{ __('Delete') }}</button>
+                            </form>
+                        </div>
+                    @empty
+                        <p class="col-span-full text-sm text-gray-500">{{ request()->hasAny(['kind', 'pillar']) ? __('Nothing matches these filters.') : __('Nothing uploaded yet. Send the client the upload link above, or import from Canva.') }}</p>
+                    @endforelse
+                </div>
             </div>
         </div>
     </div>
