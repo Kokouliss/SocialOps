@@ -34,7 +34,7 @@
                 @forelse ($open as $comment)
                     <div id="comment-{{ $comment->id }}" class="mt-4 border-t pt-4 grid gap-3 md:grid-cols-2">
                         <div>
-                            <p class="text-gray-500">{{ $comment->label() }} · <span class="font-medium text-gray-800">{{ $comment->author ?? '?' }}</span>@if ($comment->rating) · <span class="text-brand-600">{{ str_repeat('★', $comment->rating) }}</span>{{ str_repeat('☆', 5 - $comment->rating) }}@endif · {{ $comment->posted_at->format('D j M, H:i') }}
+                            <p class="text-gray-500">{{ $comment->label() }} · <span class="font-medium text-gray-800">{{ $comment->author ?? '?' }}</span>@if ($comment->rating) · <span class="text-brand-600">{{ str_repeat('★', $comment->rating) }}</span>{{ str_repeat('☆', 5 - $comment->rating) }}@endif · {{ $comment->posted_at->translatedFormat('D j M, H:i') }}
                                 @if ($comment->post) · <a href="{{ route('posts.edit', $comment->post) }}" class="font-mono text-xs text-brand-600 hover:underline">{{ $comment->post->name }}</a> @endif
                             </p>
                             @if ($comment->intent)
@@ -82,7 +82,7 @@
                     <h3 class="font-semibold text-gray-900">{{ __('Answered or hidden, last 30 days') }}</h3>
                     @foreach ($done as $comment)
                         <div id="comment-{{ $comment->id }}" class="mt-3 border-t pt-3">
-                            <p class="text-gray-500">{{ $comment->label() }}{{ $comment->rating ? ' '.str_repeat('★', $comment->rating) : '' }} · <span class="font-medium text-gray-800">{{ $comment->author ?? '?' }}</span> · {{ $comment->posted_at->format('D j M, H:i') }} · {{ $comment->hidden_at ? __('hidden') : __('replied :when', ['when' => $comment->replied_at->format('D j M, H:i')]) }}</p>
+                            <p class="text-gray-500">{{ $comment->label() }}{{ $comment->rating ? ' '.str_repeat('★', $comment->rating) : '' }} · <span class="font-medium text-gray-800">{{ $comment->author ?? '?' }}</span> · {{ $comment->posted_at->translatedFormat('D j M, H:i') }} · {{ $comment->hidden_at ? __('hidden') : __('replied :when', ['when' => $comment->replied_at->translatedFormat('D j M, H:i')]) }}</p>
                             <p class="mt-1 whitespace-pre-line">{{ $comment->text }}</p>
                             @if ($comment->replied_at)<p class="mt-1 pl-4 border-l-2 whitespace-pre-line text-gray-700">{{ $comment->reply }}</p>@endif
                         </div>

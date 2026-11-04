@@ -15,7 +15,7 @@
             <div class="grid grid-cols-3 gap-px bg-gray-200">
                 @foreach ($posts as $post)
                     @php($asset = $post->assets->first())
-                    <a href="{{ route('posts.edit', $post) }}" class="relative block aspect-square bg-gray-900 overflow-hidden" title="{{ $post->name }}: {{ $post->state->label() }}">
+                    <a href="{{ route('posts.edit', $post) }}" class="relative block aspect-square bg-gray-900 overflow-hidden" title="{{ $post->name }}: {{ __($post->state->label()) }}">
                         @if ($asset?->kind === 'image')
                             <img src="{{ route('assets.thumb', $asset) }}" alt="" class="w-full h-full object-cover" loading="lazy">
                         @else
@@ -24,7 +24,7 @@
                         @if ($post->format !== 'feed')
                             <span class="absolute top-1 right-1 rounded bg-black/60 px-1 text-[10px] text-white">{{ $post->format === 'reel' ? '▶' : '▣' }}</span>
                         @endif
-                        <span class="absolute bottom-0 inset-x-0 flex items-center justify-between gap-1 bg-black/60 px-1 py-0.5 text-[10px] text-white"><span class="whitespace-nowrap">{{ $post->scheduled_at->format('j M') }}</span> <x-state-badge :state="$post->state" class="min-w-0 truncate" /></span>
+                        <span class="absolute bottom-0 inset-x-0 flex items-center justify-between gap-1 bg-black/60 px-1 py-0.5 text-[10px] text-white"><span class="whitespace-nowrap">{{ $post->scheduled_at->translatedFormat('j M') }}</span> <x-state-badge :state="$post->state" class="min-w-0 truncate" /></span>
                     </a>
                 @endforeach
             </div>

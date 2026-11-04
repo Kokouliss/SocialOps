@@ -56,7 +56,7 @@ test('a client connects their own accounts through the signed link, without a lo
     $page = URL::temporarySignedRoute('connect.show', now()->addDay(), ['client' => $this->client->slug]);
 
     $this->get(route('connect.show', $this->client))->assertForbidden(); // unsigned
-    $start = $this->get($page)->assertOk()->assertSee('Facebook / Instagram')->assertSee('not connected')->assertDontSee('Disconnect')
+    $start = $this->withSession(['locale' => 'en'])->get($page)->assertOk()->assertSee('Facebook / Instagram')->assertSee('not connected')->assertDontSee('Disconnect')
         ->viewData('links')['meta'];
     $this->get($start)->assertRedirectContains('https://www.facebook.com/');
 
@@ -69,6 +69,6 @@ test('a client connects their own accounts through the signed link, without a lo
 
     $accounts = $this->client->accounts()->orderBy('platform')->get();
     expect($accounts->pluck('platform')->all())->toBe(['facebook', 'instagram'])->and($accounts[0]->connected_by)->toBeNull();
-    $this->get($page)->assertOk()->assertSee('@almyra.chania')->assertSee('Reconnect');
+    $this->withSession(['locale' => 'en'])->get($page)->assertOk()->assertSee('@almyra.chania')->assertSee('Reconnect');
     $this->actingAs($this->user)->get(route('clients.accounts', $this->client))->assertOk()->assertSee('/connect/'.$this->client->slug); // staff see the link to send (actingAs sticks, so last)
 });

@@ -9,6 +9,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\JobController;
+use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\PortalController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
@@ -23,6 +24,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', fn () => redirect(User::count() ? '/dashboard' : '/setup'));
 Route::get('/setup', [StaffController::class, 'setup'])->name('setup');
 Route::post('/setup', [StaffController::class, 'finishSetup'])->name('setup.store');
+Route::post('/locale', LocaleController::class)->name('locale'); // staff and guests alike
 
 Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified', LimitClients::class])->name('dashboard');
 

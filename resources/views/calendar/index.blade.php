@@ -32,7 +32,7 @@
             </form>
             @php($step = $view === 'week' ? '1 week' : '1 month')
             <a class="px-2 py-1 border rounded" href="{{ route('calendar', [...$filters, 'view' => $view, 'client' => $clientSlug, 'date' => $date->copy()->sub($step)->toDateString()]) }}">&larr;</a>
-            <span class="font-medium">{{ $view === 'week' ? $date->copy()->startOfWeek()->format('j M').' – '.$date->copy()->endOfWeek()->format('j M Y') : $date->format('F Y') }}</span>
+            <span class="font-medium">{{ $view === 'week' ? $date->copy()->startOfWeek()->translatedFormat('j M').' – '.$date->copy()->endOfWeek()->translatedFormat('j M Y') : $date->translatedFormat('F Y') }}</span>
             <a class="px-2 py-1 border rounded" href="{{ route('calendar', [...$filters, 'view' => $view, 'client' => $clientSlug, 'date' => $date->copy()->add($step)->toDateString()]) }}">&rarr;</a>
             <a class="px-2 py-1 border rounded {{ $view === 'month' ? 'bg-gray-800 text-white' : '' }}" href="{{ route('calendar', [...$filters, 'view' => 'month', 'client' => $clientSlug, 'date' => $date->toDateString()]) }}">{{ __('Month') }}</a>
             <a class="px-2 py-1 border rounded {{ $view === 'week' ? 'bg-gray-800 text-white' : '' }}" href="{{ route('calendar', [...$filters, 'view' => 'week', 'client' => $clientSlug, 'date' => $date->toDateString()]) }}">{{ __('Week') }}</a>

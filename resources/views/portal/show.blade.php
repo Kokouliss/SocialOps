@@ -6,7 +6,7 @@
         @if ($pending->isEmpty())
             {{ __('All answered, thank you! We take it from here.') }}
         @else
-            {{ __('Approve each one by :due, or tell us what to change.', ['due' => $review->due_at->format('D j M, H:i')]) }}
+            {{ __('Approve each one by :due, or tell us what to change.', ['due' => $review->due_at->translatedFormat('D j M, H:i')]) }}
         @endif
     </p>
     <p class="mt-3 text-sm font-medium text-gray-800">{{ trans_choice('{1} :count post|[2,*] :count posts', $posts->count()) }} · {{ $approved }} {{ __('approved') }} · {{ $posts->count() - $approved - $pending->count() }} {{ __('to rework') }} · {{ $pending->count() }} {{ __('waiting for you') }}</p>
@@ -40,7 +40,7 @@
         @foreach ($posts as $post)
             <section id="post-{{ $post->id }}" class="space-y-3 {{ $post->pivot->decision ? 'opacity-70' : '' }}">
                 <p class="text-xs text-gray-500">
-                    {{ $post->scheduled_at ? __('Planned for :date', ['date' => $post->scheduled_at->format('D j M, H:i')]) : __('Date to be set') }}
+                    {{ $post->scheduled_at ? __('Planned for :date', ['date' => $post->scheduled_at->translatedFormat('D j M, H:i')]) : __('Date to be set') }}
                     · {{ str_replace('_', ' ', $post->format) }}
                 </p>
                 @foreach ($post->platforms as $platform)

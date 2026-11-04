@@ -14,7 +14,11 @@ class ReviewMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public Review $review, public string $kind) {}
+    public function __construct(public Review $review, public string $kind)
+    {
+        // completed and overdue go to the colleague who sent the review, the rest to the client's approvers
+        $this->locale(in_array($kind, ['completed', 'overdue']) ? ($review->creator?->locale ?? config('app.locale')) : $review->client->uiLocale());
+    }
 
     public function envelope(): Envelope
     {

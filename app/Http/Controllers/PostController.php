@@ -86,7 +86,7 @@ class PostController extends Controller
             return redirect()->route('clients.edit', $client)->withErrors(['csv' => $result['errors']]);
         }
 
-        return redirect()->route('calendar', ['client' => $client->slug])->with('status', "imported-{$result['imported']}-drafts");
+        return redirect()->route('calendar', ['client' => $client->slug])->with('status', __(':n drafts imported', ['n' => $result['imported']]));
     }
 
     public function edit(Post $post): View
@@ -188,7 +188,7 @@ class PostController extends Controller
             return back()->withErrors(['state' => $e->getMessage()]);
         }
 
-        return redirect()->route('posts.edit', $post)->with('status', 'post-'.$post->state->value);
+        return redirect()->route('posts.edit', $post)->with('status', 'post-'.str_replace('_', '-', $post->state->value));
     }
 
     /**

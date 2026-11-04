@@ -17,7 +17,7 @@ test('the view-only calendar link shows the client their own posts in their own 
     Post::factory()->create(['client_id' => $other->id, 'state' => PostState::Scheduled, 'scheduled_at' => '2026-11-12 10:00', 'name' => 'OTHER_20261112_IG_FEED_MISC_EL-EN_v1']);
 
     $this->get(route('calendar.client', $client))->assertForbidden();
-    $this->get(URL::temporarySignedRoute('calendar.client', now()->addDay(), ['client' => $client->slug]))->assertOk()
+    $this->withSession(['locale' => 'en'])->get(URL::temporarySignedRoute('calendar.client', now()->addDay(), ['client' => $client->slug]))->assertOk()
         ->assertSeeInOrder(['Tuesday 10 November', '18:00', 'Instagram, Facebook', 'Waiting for your approval', 'Καλημέρα από την παραλία', 'Thursday 24 December', 'Published'])
         ->assertDontSee('January')->assertDontSee('OTHER_')->assertDontSee('In review');
 
@@ -31,6 +31,6 @@ test('the client calendar fills the profile placeholders in captions', function 
     $post = Post::factory()->create(['client_id' => $client->id, 'state' => PostState::Scheduled, 'scheduled_at' => now()->addDays(3)]);
     $post->variants()->create(['platform' => 'instagram', 'lang' => 'el', 'caption' => 'Κράτηση: {{booking}}', 'hashtags' => []]);
 
-    $this->get(URL::temporarySignedRoute('calendar.client', now()->addDay(), ['client' => $client->slug]))
+    $this->withSession(['locale' => 'en'])->get(URL::temporarySignedRoute('calendar.client', now()->addDay(), ['client' => $client->slug]))
         ->assertOk()->assertSee('Κράτηση: https://example.com/book')->assertDontSee('{{booking}}');
 });

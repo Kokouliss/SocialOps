@@ -61,6 +61,6 @@ class CanvaController extends Controller
             ImportCanvaDesign::dispatch($account, $id, (string) ($data['titles'][$id] ?? ''), $data['type'], (bool) ($data['vertical'][$id] ?? false), $data['pillar'] ?? null);
         }
 
-        return redirect()->route('clients.assets', $client)->with('status', 'queued-'.count($data['designs']).'-canva-imports');
+        return redirect()->route('clients.assets', $client)->with('status', __(':n Canva imports queued', ['n' => count($data['designs'])]));
     }
 }

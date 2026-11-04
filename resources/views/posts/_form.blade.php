@@ -38,7 +38,7 @@
         <x-text-input id="scheduled_at" name="scheduled_at" type="datetime-local" class="mt-1 block w-full" :value="old('scheduled_at', $post->scheduled_at?->format('Y-m-d\TH:i'))" />
         <x-input-error class="mt-2" :messages="$errors->get('scheduled_at')" />
         @if ($slot = $client->nextFreeSlot())
-            <button type="button" class="mt-1 text-xs text-brand-600 hover:underline" onclick="document.getElementById('scheduled_at').value = '{{ $slot->format('Y-m-d\TH:i') }}'">{{ __('Next free slot') }}: {{ $slot->format('D j M H:i') }}</button>
+            <button type="button" class="mt-1 text-xs text-brand-600 hover:underline" onclick="document.getElementById('scheduled_at').value = '{{ $slot->format('Y-m-d\TH:i') }}'">{{ __('Next free slot') }}: {{ $slot->translatedFormat('D j M H:i') }}</button>
         @endif
     </div>
 </div>
