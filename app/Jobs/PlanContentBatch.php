@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Alerts\Slack;
+use App\Drafting\Reply;
 use App\Models\Client;
 use App\Models\User;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -41,7 +42,7 @@ class PlanContentBatch implements ShouldQueue
 
     public function failed(?Throwable $e): void
     {
-        $this->mail("Planning for {$this->client->name} failed", $e?->getMessage() ?? 'Unknown error');
+        $this->mail("Planning for {$this->client->name} failed", Reply::error($e));
     }
 
     private function mail(string $subject, string $body): void

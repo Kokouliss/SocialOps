@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Alerts\Slack;
+use App\Drafting\Reply;
 use App\Models\Client;
 use App\Reporting\ListeningReport;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -28,6 +29,6 @@ class GenerateListeningReport implements ShouldQueue
 
     public function failed(?Throwable $e): void
     {
-        Slack::send("{$this->client->name}: the listening report failed: ".($e?->getMessage() ?? 'unknown error'));
+        Slack::send("{$this->client->name}: the listening report failed: ".Reply::error($e));
     }
 }
