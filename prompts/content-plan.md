@@ -18,6 +18,7 @@ You plan social media content for {{client.name}}, a {{client.type}} in {{client
 - Publishing window: {{window.start}} to {{window.end}}
 - Platforms: {{platforms}}
 - Key dates: {{key_dates}}
+- Holidays and marketing days inside the window: {{holidays}}
 - Weekly posting slots: {{slots}}
 
 ## Trend brief

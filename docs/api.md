@@ -82,4 +82,14 @@ claude mcp add --transport http socialops https://<host>/mcp --header "Authoriza
 php artisan mcp:start socialops
 ```
 
-Tools: `list-clients`, `list-posts` (client, from, to, state), `get-post` (post), `create-draft` (client, platforms, format, pillar, brief, scheduled_at, variants, settings, assets: the fields of the post form above), `update-post` (post, plus any of those fields: only what is sent changes, a caption per platform and language replaces that one, an approved post goes back to In Review, a published one is refused), `list-comments` (client, open), `reply-to-comment` (comment, text), `month-numbers` (client, month YYYY-MM). Validation errors come back as tool errors with the field messages.
+Tools: `list-clients`, `list-posts` (client, from, to, state), `get-post` (post), `create-draft` (client, platforms, format, pillar, brief, scheduled_at, variants, settings, assets: the fields of the post form above), `update-post` (post, plus any of those fields: only what is sent changes, a caption per platform and language replaces that one, an approved post goes back to In Review, a published one is refused), `get-planning-brief` and `save-plan` (below). While `FEATURE_PUBLISHING` is on, also `list-comments` (client, open), `reply-to-comment` (comment, text), `month-numbers` (client, month YYYY-MM). Validation errors come back as tool errors with the field messages.
+
+### Planning a batch through the connector (D18)
+
+Since organize mode Claude plans from the chat, not from the server: the "Plan with Claude" box on the client page writes the request to paste. The recipe:
+
+1. `get-planning-brief` (client, posts, from, days, platforms, instruction): the brand profile, the pillar quota for the batch (or the team's instruction instead), the window with its key dates, holidays and posting slots, the recent posts not to repeat, the formats, the caption rules and the exact prompt the planner used to follow. Claude researches the current trends itself (the last30days skill, or web search) with the profile's research sources and exclusions.
+2. Claude plans the posts and writes the captions in the profile languages.
+3. `save-plan` (client, trend_brief, posts: date, platforms, format, pillar, title, angle, trend_signal, why_now, asset_brief, caption_brief, captions per platform and language): files every post as a Draft on the calendar at the client's next free slot of that day, the trend brief and a plan review sheet under Reports, and answers with the post links. Nothing is published; the Drafts go through review and approval like any other.
+
+The server-side buttons ("Plan with Claude", "Post from a prompt", "Draft captions", "Shorten", "Change with Claude") and the research inside `content:plan` call the Claude API with `ANTHROPIC_API_KEY`; they are off while `FEATURE_CLAUDE_API` is off (`config/features.php`).

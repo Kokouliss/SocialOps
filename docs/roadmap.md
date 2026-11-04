@@ -51,7 +51,7 @@ Exit: the team plans, briefs, approves and tracks every client's month in Social
 
 - [x] Organize mode: posting through the drivers and reading back from the platform APIs off behind `FEATURE_PUBLISHING`, code kept
 - [x] Google Business Profile removed; LinkedIn added as a platform (Instagram, Facebook, TikTok, LinkedIn)
-- [ ] Claude through the MCP connector: planning brief and save-plan tools, the server-side API buttons behind a flag
+- [x] Claude through the MCP connector: planning brief and save-plan tools, the server-side API buttons behind `FEATURE_CLAUDE_API`
 - [ ] Word export of the θεματολογία (topic plan) from a content plan
 - [ ] Profile form in tabs
 - [ ] Clients board: status, person, priority, plan due, posts per week, pending notes, links

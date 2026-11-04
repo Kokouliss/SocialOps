@@ -41,8 +41,6 @@ Route::post('/refresh', function () {
 
 Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::resource('clients', ClientController::class)->except('show');
-    Route::post('/clients/{client}/plan', [ClientController::class, 'plan'])->name('clients.plan');
-    Route::post('/clients/{client}/draft', [ClientController::class, 'draft'])->name('clients.draft');
     Route::get('/clients/{client}/assets', [AssetController::class, 'index'])->name('clients.assets');
     Route::get('/clients/{client}/grid', [ClientController::class, 'grid'])->name('clients.grid');
     Route::get('/assets/{asset}/thumb', [AssetController::class, 'thumb'])->name('assets.thumb');
@@ -75,9 +73,6 @@ Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::post('/clients/{client}/posts', [PostController::class, 'store'])->name('posts.store');
     Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
     Route::patch('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
-    Route::post('/posts/{post}/draft', [PostController::class, 'draft'])->name('posts.draft');
-    Route::post('/posts/{post}/shorten', [PostController::class, 'shorten'])->name('posts.shorten');
-    Route::post('/posts/{post}/rewrite', [PostController::class, 'rewrite'])->name('posts.rewrite');
     Route::post('/posts/{post}/transition', [PostController::class, 'transition'])->name('posts.transition');
     Route::post('/posts/bulk', [PostController::class, 'bulk'])->name('posts.bulk');
     Route::post('/posts/{post}/duplicate', [PostController::class, 'duplicate'])->name('posts.duplicate');
@@ -98,6 +93,15 @@ Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Claude called from the server: 404 while FEATURE_CLAUDE_API is off (config/features.php); Claude works through the MCP connector instead
+    Route::middleware('feature:claude_api')->group(function () {
+        Route::post('/clients/{client}/plan', [ClientController::class, 'plan'])->name('clients.plan');
+        Route::post('/clients/{client}/draft', [ClientController::class, 'draft'])->name('clients.draft');
+        Route::post('/posts/{post}/draft', [PostController::class, 'draft'])->name('posts.draft');
+        Route::post('/posts/{post}/shorten', [PostController::class, 'shorten'])->name('posts.shorten');
+        Route::post('/posts/{post}/rewrite', [PostController::class, 'rewrite'])->name('posts.rewrite');
+    });
 
     // Posting through our own drivers and reading back from the platform APIs: 404 while FEATURE_PUBLISHING is off (config/features.php)
     Route::middleware('feature:publishing')->group(function () {

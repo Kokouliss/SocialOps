@@ -8,4 +8,12 @@ return [
     | organizes the work and the team posts in the apps by hand. The code stays for the day it comes back.
     */
     'publishing' => (bool) env('FEATURE_PUBLISHING', false),
+
+    /*
+    | Claude called from the server with ANTHROPIC_API_KEY: the "Plan with Claude", "Post from a prompt", "Draft captions",
+    | "Shorten" and "Change with Claude" buttons and the content:plan command's research and captions. Off since 2026-11-04
+    | (D18): Claude works through the MCP connector instead (docs/api.md), the planning tools hand it the brief and file
+    | its plan. Back on when the team wants the buttons again.
+    */
+    'claude_api' => (bool) env('FEATURE_CLAUDE_API', false),
 ];
