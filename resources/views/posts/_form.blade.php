@@ -54,14 +54,14 @@
         @php($chosen = old('assets', $post->exists ? $post->assets->pluck('id')->map(fn ($id) => (string) $id)->all() : []))
         <div class="mt-2 grid gap-1 md:grid-cols-2 text-xs font-mono">
             @foreach ($client->assets as $asset)
-                <label class="flex items-center gap-2"><input type="checkbox" name="assets[]" value="{{ $asset->id }}" class="rounded border-gray-300" @checked(in_array((string) $asset->id, $chosen)) /> {{ $asset->name }}</label>
+                <label class="flex items-center gap-2"><input type="checkbox" name="assets[]" value="{{ $asset->id }}" class="rounded border-gray-300" @checked(in_array((string) $asset->id, $chosen)) />@if ($asset->kind === 'image')<img src="{{ route('assets.thumb', $asset) }}" alt="" loading="lazy" class="h-10 w-10 rounded object-cover">@endif {{ $asset->name }}</label>
             @endforeach
         </div>
         <x-input-error class="mt-2" :messages="$errors->get('assets')" />
     </div>
 @endif
 
-<fieldset class="mt-6 border rounded-md p-4 text-sm">
+<fieldset class="mt-6 border rounded-md p-4 text-sm" data-for="instagram">
     <legend class="px-1 text-sm font-medium">Instagram</legend>
     <x-input-label for="ig-collab" :value="__('Collab invite: up to 3 Instagram usernames, feed, carousel and Reel only (they accept in the app, then the post shows on both profiles)')" />
     <x-text-input id="ig-collab" name="settings[instagram][collaborators]" type="text" class="mt-1 block w-full" placeholder="@hotel, @chef" :value="old('settings.instagram.collaborators', $post->settings['instagram']['collaborators'] ?? '')" />
@@ -70,7 +70,7 @@
 
 @php($tiktok = $client->accounts->firstWhere('platform', 'tiktok'))
 @php($tt = old('settings.tiktok', $post->settings['tiktok'] ?? []))
-<fieldset class="mt-6 border rounded-md p-4 text-sm">
+<fieldset class="mt-6 border rounded-md p-4 text-sm" data-for="tiktok">
     <legend class="px-1 text-sm font-medium">TikTok {{ $tiktok ? __('(posting as :name)', ['name' => $tiktok->name]) : '' }}</legend>
     <div class="grid gap-4 md:grid-cols-3">
         <div>
@@ -105,7 +105,7 @@
 </fieldset>
 
 @php($gbp = old('settings.gbp', $post->settings['gbp'] ?? []))
-<fieldset class="mt-6 border rounded-md p-4 text-sm">
+<fieldset class="mt-6 border rounded-md p-4 text-sm" data-for="google_business">
     <legend class="px-1 text-sm font-medium">Google Business Profile <span class="text-gray-400">({{ __('title and dates for events and offers') }})</span></legend>
     <div class="grid gap-4 md:grid-cols-5">
         <div><x-input-label for="gbp-title" :value="__('Title')" /><x-text-input id="gbp-title" name="settings[gbp][title]" type="text" maxlength="58" class="mt-1 block w-full" :value="$gbp['title'] ?? ''" /><x-input-error class="mt-1" :messages="$errors->get('settings.gbp.title')" /></div>
@@ -123,9 +123,11 @@
     </div>
 </fieldset>
 
+<div data-for="instagram facebook">
 <h3 class="mt-8 font-semibold text-gray-800">{{ __('First comment') }} <span class="text-sm font-normal text-gray-500">{{ __('(Instagram and Facebook: posted under the post right after it goes out, for hashtags or a link; also in the ZIP and the CSV)') }}</span></h3>
 <textarea name="settings[first_comment]" rows="2" class="mt-2 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">{{ old('settings.first_comment', $post->settings['first_comment'] ?? '') }}</textarea>
 <x-input-error class="mt-1" :messages="$errors->get('settings.first_comment')" />
+</div>
 
 @php($design = old('settings.design', $post->settings['design'] ?? []))
 <h3 class="mt-8 font-semibold text-gray-800">{{ __('Design text') }} <span class="text-sm font-normal text-gray-500">{{ __('(what goes on the graphic or in the video: headline, slide texts or Reel script; it travels with the ZIP and the Canva CSV)') }}</span></h3>
@@ -139,8 +141,9 @@
 </div>
 
 <h3 class="mt-8 font-semibold text-gray-800">{{ __('Captions') }} <span class="text-sm font-normal text-gray-500">{{ __('(only the ticked platforms are saved; Greek is reviewed by a human before approval)') }}</span></h3>
+<label class="mt-2 flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" id="sync-captions" class="rounded border-gray-300"> {{ __('Same text on every platform: type it once, it copies to the other ticked platforms; untick to customise per platform') }}</label>
 @foreach (\App\Models\Post::PLATFORMS as $platform)
-    <fieldset class="mt-4 border rounded-md p-4" data-platform="{{ $platform }}" data-max="{{ \App\Http\Requests\PostRequest::CAPTION_MAX[$platform] }}" data-signature="{{ trim($client->profile['signatures'][$platform] ?? '') }}" data-fields="{{ json_encode((object) ($client->profile['fields'] ?? [])) }}">
+    <fieldset class="mt-4 border rounded-md p-4" data-for="{{ $platform }}" data-platform="{{ $platform }}" data-max="{{ \App\Http\Requests\PostRequest::CAPTION_MAX[$platform] }}" data-signature="{{ trim($client->profile['signatures'][$platform] ?? '') }}" data-fields="{{ json_encode((object) ($client->profile['fields'] ?? [])) }}">
         <legend class="px-1 text-sm font-medium">{{ str_replace('_', ' ', $platform) }} <span class="count text-gray-400" title="{{ __('Characters of the published text: every language, then the hashtags') }}"></span>
             @if ($post->exists)
                 <button type="button" class="shorten ml-2 text-xs text-brand-600 hover:underline" data-url="{{ route('posts.shorten', $post) }}">{{ __('Shorten with Claude') }}</button>
@@ -198,9 +201,30 @@
             button.disabled = false;
         });
     });
+
+    // Only the ticked platforms' settings and captions are shown; with "Same text on every platform" on, a caption typed once is copied to the other ticked platforms.
+    const boxes = [...document.querySelectorAll('input[name="platforms[]"]')], sync = document.getElementById('sync-captions');
+    const ticked = () => boxes.filter(b => b.checked).map(b => b.value);
+    const sets = () => [...document.querySelectorAll('fieldset[data-max]')].filter(s => !s.classList.contains('hidden'));
+    const showSections = () => { const on = ticked(); document.querySelectorAll('[data-for]').forEach(el => el.classList.toggle('hidden', !el.dataset.for.split(' ').some(p => on.includes(p)))); };
+    const copyFrom = field => {
+        const suffix = field.name.replace(/^variants\[[^\]]+\]/, '');
+        sets().forEach(s => {
+            const target = s.contains(field) ? null : s.querySelector(`[name$="${suffix}"]`);
+            if (target && target.value !== field.value) { target.value = field.value; target.dispatchEvent(new Event('input', { bubbles: true })); }
+        });
+    };
+    const copyAll = () => sets()[0]?.querySelectorAll('textarea, input[type=text]').forEach(copyFrom);
+    boxes.forEach(b => b.addEventListener('change', () => { showSections(); if (sync.checked) copyAll(); }));
+    document.querySelectorAll('fieldset[data-max]').forEach(s => s.addEventListener('input', e => { if (sync.checked && e.isTrusted) copyFrom(e.target); }));
+    sync.addEventListener('change', () => sync.checked && copyAll());
+    showSections();
+    // On by default when the ticked platforms already share the same text (a new post, or one never customised).
+    const texts = sets().map(s => [...s.querySelectorAll('textarea')].map(t => t.value.trim()).join('\u0001'));
+    sync.checked = texts.every(t => t === texts[0]);
 </script>
 
-<div class="mt-6 flex items-center gap-4">
+<div class="sticky bottom-0 -mx-6 -mb-6 mt-6 flex items-center gap-4 border-t border-gray-100 bg-white/95 px-6 py-3 backdrop-blur sm:rounded-b-lg">
     <x-primary-button>{{ __('Save') }}</x-primary-button>
     <a href="{{ route('calendar', ['client' => $client->slug]) }}" class="text-sm text-gray-600 hover:underline">{{ __('Back to calendar') }}</a>
 </div>
