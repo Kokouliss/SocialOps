@@ -85,6 +85,14 @@ class Client extends Model
      * @return array<string, mixed>
      */
     /** The first weekly posting slot after $after (default now) with no post of this client on it; null when the profile has no slots. */
+    /** Titles and trend signals of the last 90 days of posts, so a planner does not repeat an angle or a signal. */
+    public function recentTopics(): array
+    {
+        return $this->posts()->where('scheduled_at', '>=', now()->subDays(90))->orderByDesc('scheduled_at')->limit(60)->pluck('brief')
+            ->map(fn (?string $brief) => strtok((string) $brief, "\n").(preg_match('/^Trend: ([^.]+)/m', (string) $brief, $m) ? " (trend: {$m[1]})" : ''))
+            ->filter()->values()->all();
+    }
+
     public function nextFreeSlot(?CarbonInterface $after = null): ?CarbonImmutable
     {
         $after = CarbonImmutable::instance($after ?? now());

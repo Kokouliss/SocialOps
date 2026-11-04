@@ -9,6 +9,7 @@
                 @include('clients._form')
             </form>
 
+            @if (config('features.claude_api'))
             <div class="bg-white p-6 shadow-sm sm:rounded-lg mt-6">
                 <h3 class="font-semibold text-lg text-gray-800">{{ __('Post from a prompt') }}</h3>
                 <p class="mt-1 text-sm text-gray-500">{{ __('Write what the post should be about. Claude combines your words with the brand profile and the latest trend research and puts one post on the calendar as a Draft, with captions in both languages. You get an email with the link; from the post page you can download it or send it for approval.') }}</p>
@@ -90,6 +91,22 @@
                 @endif
             </div>
 
+            @else
+            <div class="bg-white p-6 shadow-sm sm:rounded-lg mt-6" x-data="{ posts: 12, from: '{{ now()->addMonthNoOverflow()->startOfMonth()->toDateString() }}', days: 30, instruction: '', copied: false,
+                text() { return `{{ __('Plan :posts posts for :client (client ":slug") from :from for :days days.', ['posts' => '${this.posts}', 'client' => $client->name, 'slug' => $client->slug, 'from' => '${this.from}', 'days' => '${this.days}']) }}` + (this.instruction.trim() ? ' {{ __('About:') }} ' + this.instruction.trim() + '.' : '') + ` {{ __('Use the Social Ops tools: get-planning-brief first, research the current trends for this client (the last30days skill or web search), plan the posts and write the captions in :languages, then save-plan. Publish nothing.', ['languages' => strtoupper(implode(' + ', array_merge($client->profile['languages'], $client->profile['extra_languages'] ?? [])))]) }}`; },
+                copy() { navigator.clipboard.writeText(this.text()).then(() => { this.copied = true; setTimeout(() => this.copied = false, 2000) }) } }">
+                <h3 class="font-semibold text-lg text-gray-800">{{ __('Plan with Claude') }}</h3>
+                <p class="mt-1 text-sm text-gray-500">{{ __('Claude plans through the Social Ops connector: it reads this profile, researches the current trends, plans the posts with captions and files them on the calendar as Drafts with a review sheet in Reports. Fill in the fields, copy the request and paste it to Claude.') }} <a href="{{ route('staff.index') }}" class="text-brand-600 hover:underline">{{ __('Connector key: Staff page, API tokens') }}</a></p>
+                <div class="mt-4 grid gap-4 sm:grid-cols-4">
+                    <div><x-input-label for="mcp-posts" :value="__('Posts')" /><x-text-input id="mcp-posts" type="number" min="1" max="{{ \App\Planning\PlanRequest::MAX_POSTS }}" class="mt-1 block w-full" x-model="posts" /></div>
+                    <div><x-input-label for="mcp-from" :value="__('From')" /><x-text-input id="mcp-from" type="date" class="mt-1 block w-full" x-model="from" /></div>
+                    <div><x-input-label for="mcp-days" :value="__('Days')" /><x-text-input id="mcp-days" type="number" min="1" max="92" class="mt-1 block w-full" x-model="days" /></div>
+                    <div class="sm:col-span-4"><x-input-label for="mcp-instruction" :value="__('What the posts are about (optional)')" /><textarea id="mcp-instruction" rows="2" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm" x-model="instruction" placeholder="{{ __('e.g. December: gifts, Christmas opening hours, the New Year party') }}"></textarea></div>
+                    <div class="sm:col-span-4 rounded-md bg-gray-50 p-3 text-sm text-gray-700" x-text="text()"></div>
+                    <div class="sm:col-span-4"><x-primary-button type="button" x-on:click="copy()"><span x-text="copied ? '{{ __('Copied') }}' : '{{ __('Copy the request') }}'"></span></x-primary-button></div>
+                </div>
+            </div>
+            @endif
             <div class="bg-white p-6 shadow-sm sm:rounded-lg mt-6">
                 <h3 class="font-semibold text-lg text-gray-800">{{ __('Import posts from a spreadsheet') }}</h3>
                 <p class="mt-1 text-sm text-gray-500">{{ __('One row per post, the same columns as the calendar\'s CSV export. Every row becomes a Draft on the calendar; if any row is wrong, nothing is imported and the errors are listed here.') }} <a href="{{ route('posts.import.template', $client) }}" class="text-brand-600 hover:underline">{{ __('Download the template') }}</a></p>

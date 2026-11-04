@@ -3,25 +3,28 @@
 namespace App\Mcp;
 
 use App\Mcp\Tools\CreateDraft;
+use App\Mcp\Tools\GetPlanningBrief;
 use App\Mcp\Tools\GetPost;
 use App\Mcp\Tools\ListClients;
 use App\Mcp\Tools\ListComments;
 use App\Mcp\Tools\ListPosts;
 use App\Mcp\Tools\MonthNumbers;
 use App\Mcp\Tools\ReplyToComment;
+use App\Mcp\Tools\SavePlan;
 use App\Mcp\Tools\UpdatePost;
 use Laravel\Mcp\Server;
 use Laravel\Mcp\Server\Attributes\Instructions;
 use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Attributes\Version;
 
-/** The MCP server (docs/api.md): the same reads and writes as the JSON API, for Claude Code and Claude Desktop. Never publishes. */
+/** The MCP server (docs/api.md): the same reads and writes as the JSON API plus the planning tools, for Claude Code, Claude Desktop and the Claude.ai connector. Never publishes. */
 #[Name('Social Ops')]
 #[Version('1.0.0')]
 #[Instructions(<<<'MD'
-Social Ops plans, drafts, approves and publishes social media posts for an agency's clients (hospitality in Crete and Cyprus, Greek and English).
+Social Ops organizes the social media work of an agency's clients (hospitality and local brands in Crete and Cyprus, Greek and English): the team plans, briefs, approves and tracks every post here and posts it in the apps by hand.
 Start with list-clients, then use the client's id or slug in the other tools. Captions go per platform and language under variants.
-A Draft you create still goes through human review and approval in the app; nothing here publishes. Greek captions are reviewed by a person.
+To plan a month: get-planning-brief (the profile, the quota, the window, the recent posts), research the current trends yourself (the last30days skill or web search), plan the posts and write their captions, then save-plan files them as Drafts with a review sheet.
+A Draft still goes through human review and approval in the app; nothing here publishes. Greek captions are reviewed by a person.
 MD)]
 class SocialOpsServer extends Server
 {
@@ -31,8 +34,18 @@ class SocialOpsServer extends Server
         GetPost::class,
         CreateDraft::class,
         UpdatePost::class,
+        GetPlanningBrief::class,
+        SavePlan::class,
         ListComments::class,
         ReplyToComment::class,
         MonthNumbers::class,
     ];
+
+    /** Comments and numbers come from the platform APIs: no such tools while publishing is off (config/features.php). */
+    protected function boot(): void
+    {
+        if (! config('features.publishing')) {
+            $this->tools = array_values(array_diff($this->tools, [ListComments::class, ReplyToComment::class, MonthNumbers::class]));
+        }
+    }
 }

@@ -658,5 +658,14 @@
     "{0} nothing waiting for the client|{1} :count waiting for the client|[2,*] :count waiting for the client": "{0} τίποτα δεν περιμένει τον πελάτη|{1} :count περιμένει τον πελάτη|[2,*] :count περιμένουν τον πελάτη",
     "{1} :count post failed or needs a human|[2,*] :count posts failed or need a human": "{1} :count ανάρτηση απέτυχε ή χρειάζεται άνθρωπο|[2,*] :count αναρτήσεις απέτυχαν ή χρειάζονται άνθρωπο",
     "{1} :count post|[2,*] :count posts": "{1} :count ανάρτηση|[2,*] :count αναρτήσεις",
-    "{1} :count token expiring|[2,*] :count tokens expiring": "{1} :count σύνδεση λήγει|[2,*] :count συνδέσεις λήγουν"
+    "{1} :count token expiring|[2,*] :count tokens expiring": "{1} :count σύνδεση λήγει|[2,*] :count συνδέσεις λήγουν",
+    "Plan :posts posts for :client (client \":slug\") from :from for :days days.": "Σχεδίασε :posts αναρτήσεις για :client (πελάτης \":slug\") από :from για :days ημέρες.",
+    "About:": "Θέμα:",
+    "Use the Social Ops tools: get-planning-brief first, research the current trends for this client (the last30days skill or web search), plan the posts and write the captions in :languages, then save-plan. Publish nothing.": "Χρησιμοποίησε τα εργαλεία του Social Ops: πρώτα get-planning-brief, ερεύνησε τις τρέχουσες τάσεις για αυτόν τον πελάτη (το skill last30days ή αναζήτηση στο web), σχεδίασε τις αναρτήσεις και γράψε τις λεζάντες σε :languages, μετά save-plan. Μη δημοσιεύσεις τίποτα.",
+    "Claude plans through the Social Ops connector: it reads this profile, researches the current trends, plans the posts with captions and files them on the calendar as Drafts with a review sheet in Reports. Fill in the fields, copy the request and paste it to Claude.": "Ο Claude σχεδιάζει μέσω της σύνδεσης Social Ops: διαβάζει αυτό το προφίλ, ερευνά τις τρέχουσες τάσεις, σχεδιάζει τις αναρτήσεις με λεζάντες και τις καταχωρεί στο ημερολόγιο ως Πρόχειρα με ένα φύλλο ελέγχου στις Αναφορές. Συμπλήρωσε τα πεδία, αντίγραψε το αίτημα και επικόλλησέ το στον Claude.",
+    "Connector key: Staff page, API tokens": "Κλειδί σύνδεσης: σελίδα Προσωπικό, κλειδιά API",
+    "What the posts are about (optional)": "Το θέμα των αναρτήσεων (προαιρετικό)",
+    "e.g. December: gifts, Christmas opening hours, the New Year party": "π.χ. Δεκέμβριος: δώρα, ωράριο Χριστουγέννων, το πάρτι της Πρωτοχρονιάς",
+    "Copied": "Αντιγράφηκε",
+    "Copy the request": "Αντιγραφή αιτήματος"
 }

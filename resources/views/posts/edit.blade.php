@@ -32,10 +32,12 @@
                 @endforeach
             @endif
             @if ($post->state !== \App\Posts\PostState::Published)
+                @if (config('features.claude_api'))
                 <form method="POST" action="{{ route('posts.draft', $post) }}" onsubmit="this.querySelector('button').disabled = true">
                     @csrf
                     <button type="submit" class="px-3 py-1 border border-brand-300 rounded text-xs text-brand-700 hover:bg-brand-50">{{ __('Draft captions with Claude') }}</button>
                 </form>
+                @endif
                 <form method="POST" action="{{ route('posts.destroy', $post) }}" class="ml-auto" onsubmit="return confirm('{{ __('Delete this post?') }}')">
                     @csrf
                     @method('DELETE')

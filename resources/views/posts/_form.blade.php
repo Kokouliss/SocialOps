@@ -132,7 +132,7 @@
 
 <h3 class="mt-8 font-semibold text-gray-800">{{ __('Captions') }} <span class="text-sm font-normal text-gray-500">{{ __('(only the ticked platforms are saved; Greek is reviewed by a human before approval)') }}</span></h3>
 <label class="mt-2 flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" id="sync-captions" class="rounded border-gray-300"> {{ __('Same text on every platform: type it once, it copies to the other ticked platforms; untick to customise per platform') }}</label>
-@if ($post->exists)
+@if ($post->exists && config('features.claude_api'))
     <div class="mt-3 flex gap-2">
         <x-text-input id="instruction" type="text" class="block w-full text-sm" placeholder="{{ __('e.g. make it shorter and more playful, add the opening hours, mention the full moon party on Saturday') }}" onkeydown="if (event.key === 'Enter') { event.preventDefault(); document.getElementById('rewrite').click(); }" />
         <x-secondary-button type="button" id="rewrite" class="whitespace-nowrap" data-url="{{ route('posts.rewrite', $post) }}">{{ __('Change with Claude') }}</x-secondary-button>
@@ -142,7 +142,7 @@
 @foreach (\App\Models\Post::PLATFORMS as $platform)
     <fieldset class="mt-4 border rounded-md p-4" data-for="{{ $platform }}" data-platform="{{ $platform }}" data-max="{{ \App\Http\Requests\PostRequest::CAPTION_MAX[$platform] }}" data-signature="{{ trim($client->profile['signatures'][$platform] ?? '') }}" data-fields="{{ json_encode((object) ($client->profile['fields'] ?? [])) }}">
         <legend class="px-1 text-sm font-medium">{{ str_replace('_', ' ', $platform) }} <span class="count text-gray-400" title="{{ __('Characters of the published text: every language, then the hashtags') }}"></span>
-            @if ($post->exists)
+            @if ($post->exists && config('features.claude_api'))
                 <button type="button" class="shorten ml-2 text-xs text-brand-600 hover:underline" data-url="{{ route('posts.shorten', $post) }}">{{ __('Shorten with Claude') }}</button>
             @endif
         </legend>
