@@ -11,6 +11,20 @@
                 </form>
             @endforeach
             <a class="px-3 py-1 border rounded text-xs hover:bg-gray-100" href="{{ route('posts.export', $post) }}" title="{{ __('Media files plus a captions.txt, to post by hand or design in Canva') }}">{{ __('Export ZIP') }}</a>
+            <details class="relative">
+                <summary class="cursor-pointer list-none px-3 py-1 border rounded text-xs hover:bg-gray-100">{{ __('Duplicate') }}</summary>
+                <form method="POST" action="{{ route('posts.duplicate', $post) }}" class="absolute left-0 z-10 mt-1 w-72 space-y-2 rounded-md border border-gray-200 bg-white p-3 text-sm shadow-lg">
+                    @csrf
+                    <select name="client_id" class="block w-full border-gray-300 rounded-md shadow-sm text-sm">
+                        @foreach (auth()->user()->clients()->get() as $other)
+                            <option value="{{ $other->id }}" @selected($other->is($client))>{{ $other->name }}</option>
+                        @endforeach
+                    </select>
+                    <input type="date" name="date" class="block w-full border-gray-300 rounded-md shadow-sm text-sm">
+                    <p class="text-xs text-gray-500">{{ __('A Draft with the captions and settings; the media comes along only within the same client.') }}</p>
+                    <x-primary-button>{{ __('Duplicate') }}</x-primary-button>
+                </form>
+            </details>
             @if ($post->assets->firstWhere('kind', 'image'))
                 @foreach (array_keys(array_filter($post->settings['design'] ?? [])) as $lang)
                     <a class="px-3 py-1 border rounded text-xs hover:bg-gray-100" href="{{ route('posts.image', [$post, $lang]) }}" title="{{ __('The first photo with the design text burned in, ready to post') }}">{{ __('Image :lang', ['lang' => strtoupper($lang)]) }}</a>

@@ -7,6 +7,7 @@ use App\Posts\InvalidTransition;
 use App\Posts\PostNamer;
 use App\Posts\PostState;
 use App\Publishing\PublishFailed;
+use Carbon\CarbonInterface;
 use Database\Factories\PostFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
@@ -181,9 +182,16 @@ class Post extends Model
         if (! $repeat || ! $this->scheduled_at) {
             return null;
         }
-        $date = $repeat === 'weekly' ? $this->scheduled_at->copy()->addWeek() : $this->scheduled_at->copy()->addMonthNoOverflow();
-        $next = $this->client->posts()->create([
-            'name' => PostNamer::name($this->client, $this->platforms, $this->format, $this->pillar, $date),
+
+        return $this->duplicate(null, $repeat === 'weekly' ? $this->scheduled_at->copy()->addWeek() : $this->scheduled_at->copy()->addMonthNoOverflow());
+    }
+
+    /** A Draft copy with the captions and settings: for the same client with its media too, for another client without (the media stays with its owner). */
+    public function duplicate(?Client $client = null, ?CarbonInterface $date = null): Post
+    {
+        $client ??= $this->client;
+        $copy = $client->posts()->create([
+            'name' => PostNamer::name($client, $this->platforms, $this->format, $this->pillar, $date ?? now()),
             'state' => PostState::Draft,
             'platforms' => $this->platforms,
             'format' => $this->format,
@@ -191,12 +199,14 @@ class Post extends Model
             'brief' => $this->brief,
             'settings' => $this->settings,
             'scheduled_at' => $date,
-            'created_by' => $this->created_by,
+            'created_by' => auth()->id() ?? $this->created_by,
         ]);
-        $next->variants()->createMany($this->variants->map(fn (PostVariant $v) => $v->only(['platform', 'lang', 'caption', 'alt_text', 'hashtags']))->all());
-        $next->assets()->sync($this->assets->mapWithKeys(fn (Asset $a) => [$a->id => ['position' => $a->pivot->position]])->all());
+        $copy->variants()->createMany($this->variants->map(fn (PostVariant $v) => $v->only(['platform', 'lang', 'caption', 'alt_text', 'hashtags']))->all());
+        if ($client->is($this->client)) {
+            $copy->assets()->sync($this->assets->mapWithKeys(fn (Asset $a) => [$a->id => ['position' => $a->pivot->position]])->all());
+        }
 
-        return $next;
+        return $copy;
     }
 
     public function reopenForReview(): void
