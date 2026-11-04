@@ -100,6 +100,15 @@ class ClientController extends Controller
         return redirect()->route('clients.edit', $client)->with('status', 'post-started');
     }
 
+    /** A plan request for the scheduled Claude worker (list-claude-jobs); save-plan removes it. */
+    public function queueClaude(Request $request, Client $client): RedirectResponse
+    {
+        $fields = $request->validateWithBag('job', ['posts' => ['required', 'integer', 'min:1', 'max:'.PlanRequest::MAX_POSTS], 'from' => ['required', 'date_format:Y-m-d'], 'days' => ['required', 'integer', 'min:1', 'max:92'], 'instruction' => ['nullable', 'string', 'max:5000']]);
+        $client->reports()->create(['kind' => 'claude_job', 'title' => __('Plan :posts posts from :from', $fields, $client->uiLocale()), 'body' => (string) ($fields['instruction'] ?? ''), 'meta' => $fields]);
+
+        return redirect()->route('clients.edit', $client)->with('status', 'job-queued');
+    }
+
     public function update(ClientRequest $request, Client $client): RedirectResponse
     {
         $client->update($request->clientAttributes());
