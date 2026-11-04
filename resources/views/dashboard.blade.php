@@ -3,7 +3,7 @@
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('Needs attention') }}</h2>
     </x-slot>
 
-    @php($quiet = $week->isEmpty() && $drafts->isEmpty() && $stuck->isEmpty() && $waiting->isEmpty() && $unanswered->isEmpty() && $tokens->isEmpty() && $drift->isEmpty() && ! $failedJobs)
+    @php($quiet = $week->isEmpty() && $drafts->isEmpty() && $stuck->isEmpty() && $waiting->isEmpty() && $deadlines->isEmpty() && $unanswered->isEmpty() && $tokens->isEmpty() && $drift->isEmpty() && ! $failedJobs)
     @php($line = fn ($post) => '<a class="text-brand-600 hover:underline" href="'.route('posts.edit', $post).'">'.e($post->name).'</a> <span class="text-gray-500">'.e($post->client->code.' · '.collect($post->platforms)->map(fn ($p) => str_replace('_', ' ', ucfirst($p)))->join(', ')).'</span>')
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-4 text-sm">
@@ -74,6 +74,20 @@
                 </div>
 
                 <div class="space-y-4">
+                    @if ($deadlines->isNotEmpty())
+                        <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+                            <h3 class="font-semibold text-gray-900">{{ __('Deadlines in the next 7 days') }}</h3>
+                            <ul class="mt-2 space-y-1">
+                                @foreach ($deadlines as $deadline)
+                                    <li><span class="{{ $deadline->due_on->lt(today()) ? 'rounded bg-red-100 px-2 py-0.5 text-xs text-red-800' : 'font-medium text-gray-700' }}">{{ $deadline->due_on->translatedFormat('D j M') }}</span>
+                                        <a class="text-brand-600 hover:underline" href="{{ route('clients.deadlines', $deadline->client) }}">{{ $deadline->client->name }}</a> · {{ $deadline->title }}
+                                        <span class="rounded px-2 py-0.5 text-xs {{ $deadline->side === 'client' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800' }}">{{ __(\App\Models\Deadline::SIDES[$deadline->side]) }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     @if ($waiting->isNotEmpty())
                         <div class="bg-white p-6 shadow-sm sm:rounded-lg">
                             <h3 class="font-semibold text-gray-900">{{ __('Waiting for the client') }}</h3>

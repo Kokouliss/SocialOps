@@ -55,4 +55,4 @@ Exit: the team plans, briefs, approves and tracks every client's month in Social
 - [x] Word export of the θεματολογία (topic plan) from a content plan
 - [x] Profile form in tabs (Basics, Voice and content, Approval and timing, Research, Replies and webhooks)
 - [x] Clients board: status, person, priority, plan due, posts per week, pending notes, links (the Agency tab of the profile form)
-- [ ] Deadlines per client per month: client side and agency side, due date, done
+- [x] Deadlines per client per month: client side and agency side, due date, done (Deadlines tab, due this week on the dashboard)

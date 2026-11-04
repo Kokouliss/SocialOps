@@ -1,12 +1,13 @@
 @php
     // Same tab row on every page of a client; the switcher keeps the page when the route is client-scoped.
     $name = request()->route()->getName();
-    $switch = fn ($c) => in_array($name, ['clients.assets', 'clients.grid', 'clients.reviews', 'clients.comments', 'clients.accounts', 'clients.reports', 'clients.edit', 'posts.create']) ? route($name, $c) : route('calendar', ['client' => $c->slug]);
+    $switch = fn ($c) => in_array($name, ['clients.assets', 'clients.grid', 'clients.reviews', 'clients.deadlines', 'clients.comments', 'clients.accounts', 'clients.reports', 'clients.edit', 'posts.create']) ? route($name, $c) : route('calendar', ['client' => $c->slug]);
     $tabs = [
         [__('Calendar'), route('calendar', ['client' => $client->slug]), request()->routeIs('calendar', 'posts.*'), null],
         [__('Assets'), route('clients.assets', $client), request()->routeIs('clients.assets'), null],
         [__('Grid'), route('clients.grid', $client), request()->routeIs('clients.grid'), null],
         [__('Approvals'), route('clients.reviews', $client), request()->routeIs('clients.reviews'), $client->posts()->where('state', \App\Posts\PostState::InReview)->count()],
+        [__('Deadlines'), route('clients.deadlines', $client), request()->routeIs('clients.deadlines'), $client->deadlines()->dueSoon()->count()],
         ...(config('features.publishing') ? [
             [__('Comments'), route('clients.comments', $client), request()->routeIs('clients.comments'), $client->comments()->open()->count()],
             [__('Accounts'), route('clients.accounts', $client), request()->routeIs('clients.accounts'), null],
