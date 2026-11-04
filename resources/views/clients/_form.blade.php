@@ -182,6 +182,9 @@
                 <x-text-input name="p[slots][{{ $i }}][time]" type="time" class="text-sm" :value="$row['time'] ?? ''" />
             </div>
         @endforeach
+        @if ($client->exists && ($best = \App\Planning\BestTimes::for($client)))
+            <p class="mt-2 text-xs text-gray-500">{{ __('Best hours from our numbers of the last :days days: :list', ['days' => \App\Planning\BestTimes::DAYS, 'list' => collect($best)->map(fn ($s) => $days[$s['day']].' '.sprintf('%02d:00', $s['hour']).' ('.__(':n posts, :avg interactions each', ['n' => $s['posts'], 'avg' => $s['avg']]).')')->join(', ')]) }}</p>
+        @endif
     </div>
     <div>
         <x-input-label :value="__('Key dates (openings, events, anniversaries)')" />
