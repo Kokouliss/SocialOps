@@ -57,6 +57,7 @@ class CalendarController extends Controller
             'unscheduled' => $unscheduled,
             'clients' => $clients,
             'clientSlug' => $clientSlug,
+            'client' => $client,
             'clientUrl' => $client ? URL::temporarySignedRoute('calendar.client', now()->addDays(self::LINK_DAYS), ['client' => $client->slug]) : null,
         ]);
     }

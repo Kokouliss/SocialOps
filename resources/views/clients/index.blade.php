@@ -11,46 +11,45 @@
             @if (session('status'))
                 <p class="mb-4 text-sm text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <table class="min-w-full text-sm">
-                    <thead class="bg-gray-50 text-left text-gray-600">
-                        <tr>
-                            <th class="px-6 py-3">{{ __('Name') }}</th>
-                            <th class="px-6 py-3">{{ __('Code') }}</th>
-                            <th class="px-6 py-3">{{ __('Type') }}</th>
-                            <th class="px-6 py-3">{{ __('Platforms') }}</th>
-                            <th class="px-6 py-3">{{ __('Approval') }}</th>
-                            <th class="px-6 py-3"></th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @forelse ($clients as $client)
-                            <tr>
-                                <td class="px-6 py-3 font-medium text-gray-900">{{ $client->name }}<span class="block text-xs text-gray-500">{{ $client->location }}</span></td>
-                                <td class="px-6 py-3 font-mono">{{ $client->code }}</td>
-                                <td class="px-6 py-3">{{ str_replace('_', ' ', $client->type) }}</td>
-                                <td class="px-6 py-3">{{ collect($client->profile['accounts'])->filter()->keys()->map(fn ($p) => str_replace('_', ' ', $p))->join(', ') ?: '—' }}</td>
-                                <td class="px-6 py-3">{{ $client->profile['approval']['policy'] }}</td>
-                                <td class="px-6 py-3 text-right whitespace-nowrap">
-                                    <a href="{{ route('clients.assets', $client) }}" class="text-brand-600 hover:underline mr-3">{{ __('Assets') }}</a>
-                                    <a href="{{ route('clients.grid', $client) }}" class="text-brand-600 hover:underline mr-3">{{ __('Grid') }}</a>
-                                    <a href="{{ route('clients.reviews', $client) }}" class="text-brand-600 hover:underline mr-3">{{ __('Approvals') }}</a>
-                                    <a href="{{ route('clients.accounts', $client) }}" class="text-brand-600 hover:underline mr-3">{{ __('Accounts') }}</a>
-                                    <a href="{{ route('clients.reports', $client) }}" class="text-brand-600 hover:underline mr-3">{{ __('Reports') }}</a>
-                                    <a href="{{ route('clients.comments', $client) }}" class="text-brand-600 hover:underline mr-3">{{ __('Comments & reviews') }}</a>
-                                    <a href="{{ route('clients.edit', $client) }}" class="text-brand-600 hover:underline">{{ __('Edit') }}</a>
-                                    <form method="POST" action="{{ route('clients.destroy', $client) }}" class="inline ml-3" onsubmit="return confirm('{{ __('Delete this client and everything it owns?') }}')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:underline">{{ __('Delete') }}</button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="6" class="px-6 py-6 text-gray-500">{{ __('No clients yet.') }}</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+            <div class="grid gap-4 md:grid-cols-2">
+                @forelse ($clients as $client)
+                    <div class="bg-white shadow-sm sm:rounded-lg p-5">
+                        <div class="flex flex-wrap items-baseline gap-x-3">
+                            <a href="{{ route('calendar', ['client' => $client->slug]) }}" class="text-lg font-semibold text-gray-900 hover:underline">{{ $client->name }}</a>
+                            <span class="font-mono text-sm text-gray-500">{{ $client->code }}</span>
+                            <span class="text-sm text-gray-500">{{ str_replace('_', ' ', $client->type) }} · {{ $client->location }}</span>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">{{ collect($client->profile['accounts'])->filter()->keys()->map(fn ($p) => str_replace('_', ' ', $p))->join(', ') ?: '—' }} · {{ __('approval') }} {{ $client->profile['approval']['policy'] }}</p>
+                        <div class="mt-3 flex flex-wrap gap-2 text-xs">
+                            <a href="{{ route('calendar', ['client' => $client->slug]) }}" class="rounded-full bg-gray-100 px-2.5 py-1 text-gray-700">{{ trans_choice('{0} nothing scheduled this week|{1} :count post this week|[2,*] :count posts this week', $client->week_count) }}</a>
+                            <a href="{{ route('clients.reviews', $client) }}" class="rounded-full px-2.5 py-1 {{ $client->in_review_count ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-700' }}">{{ trans_choice('{0} nothing waiting for the client|{1} :count waiting for the client|[2,*] :count waiting for the client', $client->in_review_count) }}</a>
+                            <a href="{{ route('clients.comments', $client) }}" class="rounded-full px-2.5 py-1 {{ $client->open_comments_count ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-700' }}">{{ trans_choice('{0} no comments to answer|{1} :count comment to answer|[2,*] :count comments to answer', $client->open_comments_count) }}</a>
+                            @if ($client->failed_count)
+                                <a href="{{ route('calendar', ['client' => $client->slug]) }}" class="rounded-full bg-red-100 px-2.5 py-1 text-red-800">{{ trans_choice('{1} :count post failed or needs a human|[2,*] :count posts failed or need a human', $client->failed_count) }}</a>
+                            @endif
+                            @if ($client->expiring_count)
+                                <a href="{{ route('clients.accounts', $client) }}" class="rounded-full bg-red-100 px-2.5 py-1 text-red-800">{{ trans_choice('{1} :count token expiring|[2,*] :count tokens expiring', $client->expiring_count) }}</a>
+                            @endif
+                        </div>
+                        <div class="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm border-t border-gray-100 pt-3">
+                            <a href="{{ route('clients.assets', $client) }}" class="text-brand-600 hover:underline">{{ __('Assets') }}</a>
+                            <a href="{{ route('clients.grid', $client) }}" class="text-brand-600 hover:underline">{{ __('Grid') }}</a>
+                            <a href="{{ route('clients.reviews', $client) }}" class="text-brand-600 hover:underline">{{ __('Approvals') }}</a>
+                            <a href="{{ route('clients.comments', $client) }}" class="text-brand-600 hover:underline">{{ __('Comments') }}</a>
+                            <a href="{{ route('clients.accounts', $client) }}" class="text-brand-600 hover:underline">{{ __('Accounts') }}</a>
+                            <a href="{{ route('clients.reports', $client) }}" class="text-brand-600 hover:underline">{{ __('Reports') }}</a>
+                            <a href="{{ route('clients.edit', $client) }}" class="text-brand-600 hover:underline">{{ __('Profile') }}</a>
+                            <a href="{{ route('posts.create', $client) }}" class="text-brand-600 hover:underline">{{ __('New post') }}</a>
+                            <form method="POST" action="{{ route('clients.destroy', $client) }}" class="ml-auto" onsubmit="return confirm('{{ __('Delete this client and everything it owns?') }}')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-600 hover:underline">{{ __('Delete') }}</button>
+                            </form>
+                        </div>
+                    </div>
+                @empty
+                    <div class="bg-white shadow-sm sm:rounded-lg p-6 text-gray-500 md:col-span-2">{{ __('No clients yet.') }} <a href="{{ route('clients.create') }}" class="text-brand-600 hover:underline">{{ __('Add the first one') }}</a>.</div>
+                @endforelse
             </div>
         </div>
     </div>
