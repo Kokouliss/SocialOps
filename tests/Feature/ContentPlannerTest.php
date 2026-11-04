@@ -34,6 +34,18 @@ it('plans posts through Claude with the pillar quota and a JSON schema', functio
     expect($plan['posts'])->toHaveCount(2)->and($plan['warnings'])->toBe([]);
 });
 
+it('lets an instruction from the team decide the topic instead of the pillar quota', function () {
+    $claude = fakeClaude(json_encode(['posts' => [plannedPost(['pillar' => 'offers', 'date' => '2027-05-02'])]]));
+    $request = new PlanRequest(planRequest()->profile, 1, ['instagram'], CarbonImmutable::parse('2027-05-02'), CarbonImmutable::parse('2027-05-02'), 'A Reel about the sunset cocktails');
+
+    $plan = (new ContentPlanner($claude))->plan($request, '# Trend brief');
+
+    $body = json_decode((string) claudeRequests()[0]['request']->getBody(), true);
+    expect($plan['posts'][0]['pillar'])->toBe('offers')->and($plan['warnings'])->toBe([])
+        ->and($body['messages'][0]['content'])->toContain('Instruction from the team: A Reel about the sunset cocktails')->toContain('Posts per pillar (exact): none, the instruction decides')
+        ->and($body['output_config']['format']['schema']['properties']['posts']['items']['properties']['pillar']['enum'])->toBe(['place', 'food_drink', 'people', 'guests_ugc', 'offers']);
+});
+
 it('fails when Claude returns the wrong number of posts', function () {
     ContentPlanner::check([plannedPost()], planRequest(2), ['place' => 1, 'food_drink' => 1]);
 })->throws(RuntimeException::class, 'planned 1 posts, asked for 2');
