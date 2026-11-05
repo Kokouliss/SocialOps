@@ -46,6 +46,11 @@ Out of MVP: CSV import, evergreen queues, Canva autofill, auto-reports, auto-Ree
 - Client data and media in EU-region storage. Log UGC repost permission and consent for people in assets.
 - Each client is isolated: accounts, media, users, data.
 
+## Working rules (from the Cowork project, 2026-11-05)
+- Panos (Kokouliss on GitHub, agency in Chania) writes in Greek or English; answer in the language he used. Whatever can be Greek in the app is Greek (lang/el.json, LocaleTest).
+- One branch per thread, one PR at a time, restarted from main after each merge; Pint and the full test suite before every push; PR body with an "After merging" block (Plesk "Pull now", then /refresh); assign Panos, one reply per PR with the link.
+- Never write the Anthropic key anywhere but .env. Hard rules in CLAUDE.md (OAuth only, human approval gate, per-client isolation, EU storage).
+
 ## Dev setup
 `composer install && cp .env.example .env && php artisan key:generate && php artisan migrate && npm install && npm run build`. The first staff login is created on `/setup` (only while there are no users) or with `php artisan staff:create "Name" email`; more logins on the Staff page (no public registration). A login can be limited to some clients there (`users.client_ids`, enforced by `App\Http\Middleware\LimitClients` on every staff page and in the lists): it sees only those clients and cannot manage logins. Run `php artisan test` and `vendor/bin/pint --test` before every commit; CI runs both. On the server, `/refresh` (the "Refresh after update" page, linked in the side navigation for admins) runs the migrations and `optimize` after a pull. Reminders and escalations need the scheduler (`php artisan schedule:work` locally, cron in production).
 
@@ -96,3 +101,4 @@ Out of MVP: CSV import, evergreen queues, Canva autofill, auto-reports, auto-Ree
 - `docs/api.md`: the JSON API and the outgoing webhooks.
 - `docs/dpa-template.md`: data processing agreement template with the sub-processor list and the security measures as built; keep it in step with the features.
 - `.claude/commands/`: `/kickoff` (first session), `/next` (continue the roadmap).
+- `docs/cowork-project/`: everything the Cowork project "Social Ops" held, moved here on 2026-11-05: its instructions, the project memory, the handoff, the hourly worker prompt and the last handover notes. Background only; where it disagrees with this file or `docs/`, they win. Its `README.md` says what each file is.
