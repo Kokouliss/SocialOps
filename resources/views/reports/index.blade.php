@@ -3,48 +3,51 @@
         <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ $client->name }}: {{ __('reports') }}</h2>
     </x-slot>
 
+    @php($about = __('Every trend brief, content plan and monthly report for this client, newest first.').(config('features.publishing') ? ' '.__('Monthly reports are built on the 1st for last month; ask for another month here.') : ''))
+    @php($noReports = __('No reports yet. "Monthly report" above writes the first one from last month\'s numbers; "Plan with Claude" on the client page files its trend brief and content plan here.'))
     <div class="py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-white p-6 rounded-xl border border-gray-200 text-sm">
-                <p class="text-gray-500">{{ __('Every trend brief, content plan and monthly report for this client, newest first. Monthly reports are built on the 1st for last month; ask for another month here.') }}</p>
+            <x-section :title="__('Reports')" :description="$about" flush class="text-sm">
                 @if (session('status') === 'report-queued')
-                    <p class="mt-2 text-green-600">{{ __('Report queued. It appears below in a few minutes.') }}</p>
+                    <p class="px-6 py-3 text-green-600">{{ __('Report queued. It appears below in a few minutes.') }}</p>
                 @endif
                 @if (config('features.publishing'))
-                <form method="POST" action="{{ route('reports.monthly', $client) }}" class="mt-3 flex items-end gap-3">
-                    @csrf
-                    <div>
-                        <x-input-label for="month" :value="__('Month')" />
-                        <x-text-input id="month" name="month" type="month" max="{{ now()->subMonth()->format('Y-m') }}" class="mt-1 block" :value="old('month', now()->subMonth()->format('Y-m'))" />
-                    </div>
-                    <x-primary-button>{{ __('Monthly report') }}</x-primary-button>
-                    <x-input-error :messages="$errors->get('month')" />
-                </form>
-                @if (\App\Reporting\ListeningReport::watches($client))
-                    <form method="POST" action="{{ route('reports.listening', $client) }}" class="mt-3">
+                <div class="space-y-3 px-6 py-4">
+                    <form method="POST" action="{{ route('reports.monthly', $client) }}" class="flex items-end gap-3">
                         @csrf
-                        <x-secondary-button type="submit">{{ __('Listening report now') }}</x-secondary-button>
-                        <span class="ml-2 text-gray-500">{{ __('Runs every Monday for the hashtags and competitors in the profile.') }}</span>
+                        <div>
+                            <x-input-label for="month" :value="__('Month')" />
+                            <x-text-input id="month" name="month" type="month" max="{{ now()->subMonth()->format('Y-m') }}" class="mt-1 block" :value="old('month', now()->subMonth()->format('Y-m'))" />
+                        </div>
+                        <x-primary-button>{{ __('Monthly report') }}</x-primary-button>
+                        <x-input-error :messages="$errors->get('month')" />
                     </form>
-                @else
-                    <p class="mt-3 text-gray-500">{{ __('Add hashtags_to_watch or competitors under research in the profile to get a weekly listening report.') }}</p>
+                    @if (\App\Reporting\ListeningReport::watches($client))
+                        <form method="POST" action="{{ route('reports.listening', $client) }}">
+                            @csrf
+                            <x-secondary-button type="submit">{{ __('Listening report now') }}</x-secondary-button>
+                            <span class="ml-2 text-gray-500">{{ __('Runs every Monday for the hashtags and competitors in the profile.') }}</span>
+                        </form>
+                    @else
+                        <p class="text-gray-500">{{ __('Add hashtags_to_watch or competitors under research in the profile to get a weekly listening report.') }}</p>
+                    @endif
+                </div>
                 @endif
-                @endif
-                <table class="mt-4 w-full">
-                    <thead><tr class="text-left text-gray-500"><th class="py-1">{{ __('Date') }}</th><th>{{ __('Kind') }}</th><th>{{ __('Title') }}</th></tr></thead>
-                    <tbody>
+                <table class="w-full">
+                    <thead class="text-left text-xs uppercase tracking-wide text-gray-500"><tr><th class="px-6 py-2 font-medium">{{ __('Date') }}</th><th class="px-6 py-2 font-medium">{{ __('Kind') }}</th><th class="px-6 py-2 font-medium">{{ __('Title') }}</th></tr></thead>
+                    <tbody class="divide-y divide-gray-100">
                         @forelse ($reports as $report)
-                            <tr class="border-t">
-                                <td class="py-2 whitespace-nowrap">{{ $report->created_at->format('d-m-Y H:i') }}</td>
-                                <td class="pr-4">{{ __(\App\Models\Report::KINDS[$report->kind] ?? $report->kind) }}</td>
-                                <td><a href="{{ route('reports.show', $report) }}" class="font-medium text-gray-900 hover:text-brand-600">{{ $report->title }}</a></td>
+                            <tr>
+                                <td class="whitespace-nowrap px-6 py-2.5 text-gray-500">{{ $report->created_at->format('d-m-Y H:i') }}</td>
+                                <td class="px-6 py-2.5">{{ __(\App\Models\Report::KINDS[$report->kind] ?? $report->kind) }}</td>
+                                <td class="px-6 py-2.5"><a href="{{ route('reports.show', $report) }}" class="font-medium text-gray-900 hover:text-brand-600">{{ $report->title }}</a></td>
                             </tr>
                         @empty
-                            <tr><td colspan="3" class="py-2"><x-empty-state :action="__('Plan with Claude')" :href="route('clients.edit', $client)">{{ __('No reports yet. "Monthly report" above writes the first one from last month\'s numbers; "Plan with Claude" on the client page files its trend brief and content plan here.') }}</x-empty-state></td></tr>
+                            <tr><td colspan="3" class="px-6 py-4"><x-empty-state :action="__('Plan with Claude')" :href="route('clients.edit', $client)">{{ $noReports }}</x-empty-state></td></tr>
                         @endforelse
                     </tbody>
                 </table>
-            </div>
+            </x-section>
         </div>
     </div>
 </x-app-layout>

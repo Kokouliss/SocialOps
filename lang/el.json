@@ -819,5 +819,8 @@
     "Platform settings": "Ρυθμίσεις πλατφόρμας",
     "Previous": "Προηγούμενο",
     "Next": "Επόμενο",
-    "Or ask in a chat with the Social Ops connector: \"write the captions for post :id\".": "Ή ζητήστε το σε μια συνομιλία με τη σύνδεση Social Ops: «γράψε τις λεζάντες για την ανάρτηση :id»."
+    "Or ask in a chat with the Social Ops connector: \"write the captions for post :id\".": "Ή ζητήστε το σε μια συνομιλία με τη σύνδεση Social Ops: «γράψε τις λεζάντες για την ανάρτηση :id».",
+    "Every trend brief, content plan and monthly report for this client, newest first.": "Κάθε trend brief, πλάνο περιεχομένου και μηνιαία αναφορά του πελάτη, νεότερα πρώτα.",
+    "Monthly reports are built on the 1st for last month; ask for another month here.": "Οι μηνιαίες αναφορές φτιάχνονται την 1η για τον προηγούμενο μήνα· ζήτησε άλλον μήνα εδώ.",
+    "Server configuration": "Ρυθμίσεις διακομιστή"
 }

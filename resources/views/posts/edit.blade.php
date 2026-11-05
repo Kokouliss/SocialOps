@@ -3,55 +3,55 @@
     <x-slot name="header">
         <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ $client->name }} <span class="font-mono text-sm text-gray-500">{{ $post->name }}</span></h2>
     </x-slot>
+    <x-slot name="actions">
+        <x-state-badge :state="$post->state" />
+        @foreach ($post->state->next() as $next)
+            @continue($next->needsPublishing() && ! config('features.publishing'))
+            <form method="POST" action="{{ route('posts.transition', $post) }}" @if ($next === \App\Posts\PostState::Withdrawn) onsubmit="return confirm('{{ __('Take this post down on every platform? Instagram and TikTok have no API for it, so those stay until deleted by hand.') }}')" @endif>
+                @csrf
+                <input type="hidden" name="state" value="{{ $next->value }}">
+                <button type="submit" class="{{ $btn }}">{{ __($next->action()) }}</button>
+            </form>
+        @endforeach
+        <a class="{{ $btn }}" href="{{ route('posts.export', $post) }}" title="{{ __('Media files plus a captions.txt, to post by hand or design in Canva') }}">{{ __('Export ZIP') }}</a>
+        <details class="relative">
+            <summary class="{{ $btn }} cursor-pointer list-none">{{ __('Duplicate') }}</summary>
+            <form method="POST" action="{{ route('posts.duplicate', $post) }}" class="absolute left-0 z-10 mt-1 w-72 space-y-2 rounded-xl border border-gray-200 bg-white p-3 text-sm shadow-lg">
+                @csrf
+                <select name="client_id" class="block w-full border-gray-300 rounded-md shadow-sm text-sm">
+                    @foreach (auth()->user()->clients()->get() as $other)
+                        <option value="{{ $other->id }}" @selected($other->is($client))>{{ $other->name }}</option>
+                    @endforeach
+                </select>
+                <input type="date" name="date" class="block w-full border-gray-300 rounded-md shadow-sm text-sm">
+                <p class="text-xs text-gray-500">{{ __('A Draft with the captions and settings; the media comes along only within the same client.') }}</p>
+                <x-primary-button>{{ __('Duplicate') }}</x-primary-button>
+            </form>
+        </details>
+        @if ($post->assets->firstWhere('kind', 'image'))
+            @foreach (array_keys(array_filter($post->settings['design'] ?? [])) as $lang)
+                <a class="{{ $btn }}" href="{{ route('posts.image', [$post, $lang]) }}" title="{{ __('The first photo with the design text burned in, ready to post') }}">{{ __('Image :lang', ['lang' => strtoupper($lang)]) }}</a>
+            @endforeach
+        @endif
+        @if ($post->state !== \App\Posts\PostState::Published)
+            @if (config('features.claude_api'))
+            <form method="POST" action="{{ route('posts.draft', $post) }}" onsubmit="this.querySelector('button').disabled = true">
+                @csrf
+                <button type="submit" class="{{ $btn }} border-brand-300 text-brand-700 hover:bg-brand-50">{{ __('Draft captions with Claude') }}</button>
+            </form>
+            @endif
+            <form method="POST" action="{{ route('posts.destroy', $post) }}" class="ml-auto" onsubmit="return confirm('{{ __('Delete this post?') }}')">
+                @csrf
+                @method('DELETE')
+                <button type="submit" class="text-sm text-red-600 hover:underline">{{ __('Delete') }}</button>
+            </form>
+        @endif
+    </x-slot>
     <div class="py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
             @if (session('status'))
                 <p class="text-sm text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
-            <div class="flex flex-wrap items-center gap-2">
-                <x-state-badge :state="$post->state" />
-                @foreach ($post->state->next() as $next)
-                    @continue($next->needsPublishing() && ! config('features.publishing'))
-                    <form method="POST" action="{{ route('posts.transition', $post) }}" @if ($next === \App\Posts\PostState::Withdrawn) onsubmit="return confirm('{{ __('Take this post down on every platform? Instagram and TikTok have no API for it, so those stay until deleted by hand.') }}')" @endif>
-                        @csrf
-                        <input type="hidden" name="state" value="{{ $next->value }}">
-                        <button type="submit" class="{{ $btn }}">{{ __($next->action()) }}</button>
-                    </form>
-                @endforeach
-                <a class="{{ $btn }}" href="{{ route('posts.export', $post) }}" title="{{ __('Media files plus a captions.txt, to post by hand or design in Canva') }}">{{ __('Export ZIP') }}</a>
-                <details class="relative">
-                    <summary class="{{ $btn }} cursor-pointer list-none">{{ __('Duplicate') }}</summary>
-                    <form method="POST" action="{{ route('posts.duplicate', $post) }}" class="absolute left-0 z-10 mt-1 w-72 space-y-2 rounded-xl border border-gray-200 bg-white p-3 text-sm shadow-lg">
-                        @csrf
-                        <select name="client_id" class="block w-full border-gray-300 rounded-md shadow-sm text-sm">
-                            @foreach (auth()->user()->clients()->get() as $other)
-                                <option value="{{ $other->id }}" @selected($other->is($client))>{{ $other->name }}</option>
-                            @endforeach
-                        </select>
-                        <input type="date" name="date" class="block w-full border-gray-300 rounded-md shadow-sm text-sm">
-                        <p class="text-xs text-gray-500">{{ __('A Draft with the captions and settings; the media comes along only within the same client.') }}</p>
-                        <x-primary-button>{{ __('Duplicate') }}</x-primary-button>
-                    </form>
-                </details>
-                @if ($post->assets->firstWhere('kind', 'image'))
-                    @foreach (array_keys(array_filter($post->settings['design'] ?? [])) as $lang)
-                        <a class="{{ $btn }}" href="{{ route('posts.image', [$post, $lang]) }}" title="{{ __('The first photo with the design text burned in, ready to post') }}">{{ __('Image :lang', ['lang' => strtoupper($lang)]) }}</a>
-                    @endforeach
-                @endif
-                @if ($post->state !== \App\Posts\PostState::Published)
-                    @if (config('features.claude_api'))
-                    <form method="POST" action="{{ route('posts.draft', $post) }}" onsubmit="this.querySelector('button').disabled = true">
-                        @csrf
-                        <button type="submit" class="{{ $btn }} border-brand-300 text-brand-700 hover:bg-brand-50">{{ __('Draft captions with Claude') }}</button>
-                    </form>
-                    @endif
-                    <form method="POST" action="{{ route('posts.destroy', $post) }}" class="ml-auto" onsubmit="return confirm('{{ __('Delete this post?') }}')">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="text-sm text-red-600 hover:underline">{{ __('Delete') }}</button>
-                    </form>
-                @endif
-            </div>
             @error('state') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
             @error('draft') <p class="text-sm text-red-600">{{ __('Drafting failed') }}: {{ $message }}</p> @enderror
             @if (session('notes'))
