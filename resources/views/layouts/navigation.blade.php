@@ -20,6 +20,7 @@
             <x-nav-link :href="route('staff.index')" :active="request()->routeIs('staff.*')">{{ __('Staff') }}</x-nav-link>
             @can('admin')
                 <x-nav-link :href="route('settings.edit')" :active="request()->routeIs('settings.*')">{{ __('Settings') }}</x-nav-link>
+                <x-nav-link :href="url('/refresh')">{{ __('Refresh after update') }}</x-nav-link>
             @endcan
         </div>
 

@@ -13,6 +13,11 @@
                         @method('PATCH')
                         @include('clients._form')
                     </form>
+                    <form method="POST" action="{{ route('clients.destroy', $client) }}" x-show="tab === 'basics'" x-cloak class="text-right" onsubmit="return confirm('{{ __('Delete this client and everything it owns?') }}')">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="text-sm text-red-600 hover:underline">{{ __('Delete this client') }}</button>
+                    </form>
 
                     <div x-show="tab === 'plan'" x-cloak class="space-y-6">
                     @if (config('features.claude_api'))
