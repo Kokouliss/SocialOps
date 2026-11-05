@@ -839,5 +839,6 @@
     "On now": "Τρέχει τώρα",
     "Offers, events and seasonal things with their dates. Update it as the season moves.": "Προσφορές, εκδηλώσεις και εποχιακά με τις ημερομηνίες τους. Ενημέρωσέ το όσο προχωρά η σεζόν.",
     "Words and phrases to use": "Λέξεις και φράσεις για χρήση",
-    "One per line: how the client names the place, the dishes, the rooms.": "Μία ανά γραμμή: πώς ονομάζει ο πελάτης τον χώρο, τα πιάτα, τα δωμάτια."
+    "One per line: how the client names the place, the dishes, the rooms.": "Μία ανά γραμμή: πώς ονομάζει ο πελάτης τον χώρο, τα πιάτα, τα δωμάτια.",
+    "The e-mail to the approvers could not be sent (:error). Copy the link to the client yourself and check the mail settings on the Settings page.": "Το e-mail προς τους εγκρίνοντες δεν στάλθηκε (:error). Αντίγραψε το link στον πελάτη εσύ και έλεγξε τις ρυθμίσεις e-mail στη σελίδα Ρυθμίσεις."
 }

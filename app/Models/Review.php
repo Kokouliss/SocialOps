@@ -21,6 +21,9 @@ class Review extends Model
 
     public const PIVOT = ['decision', 'comment', 'decided_by', 'decided_at'];
 
+    /** Why the request e-mail did not go out, when it did not (not stored: the review and the link exist either way). */
+    public ?string $mailError = null;
+
     protected function casts(): array
     {
         return ['due_at' => 'datetime', 'reminded_at' => 'datetime', 'escalated_at' => 'datetime', 'completed_at' => 'datetime'];

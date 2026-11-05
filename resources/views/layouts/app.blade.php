@@ -32,6 +32,9 @@
                             @isset($actions)
                                 <div class="mt-4 flex flex-wrap items-center gap-2">{{ $actions }}</div>
                             @endisset
+                            @if (session('warning'))
+                                <p class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">{{ session('warning') }}</p>
+                            @endif
                         </div>
                     </header>
                 @endisset

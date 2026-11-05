@@ -298,7 +298,7 @@
     </x-field>
 </x-section>
 
-<div class="mt-4 flex items-center gap-4" x-show="['basics', 'agency', 'voice', 'content', 'approval', 'timing', 'research', 'more'].includes(tab)">
+<div class="mt-4 flex items-center gap-4" x-show="!['plan', 'import', 'bio'].includes(tab)">
     <x-primary-button>{{ __('Save') }}</x-primary-button>
     <a href="{{ route('clients.index') }}" class="text-sm text-gray-600 hover:text-gray-900">{{ __('Cancel') }}</a>
     @if (session('status') === 'client-updated')
