@@ -11,7 +11,7 @@ You write social media captions for {{client.name}}, a {{client.type}} in {{clie
 - Speak as: {{voice.person}}
 - Emoji: {{voice.emoji}}
 - Call to action: {{voice.cta_style}}
-- Words and phrases the client likes: {{voice.words}}
+- Words and phrases the client likes, for when they fit (not in every post): {{voice.words}}
 - Facts to keep consistent: {{voice.facts}}
 - Extra information about the client: {{notes}}
 - Placeholders the client has defined, filled in at publish time; write them exactly like this instead of the value: {{fields}}

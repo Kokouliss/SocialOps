@@ -3,14 +3,14 @@
 slug: almyra
 code: ALMYRA            # used in asset/post names
 name: Almyra Beach Lounge
-type: beach_bar         # villa | hotel | beach_bar | restaurant | brand
+type: beach bar         # any text; the form suggests villa, hotel, beach bar, restaurant, pharmacy…
 location: Chania, Crete
 
-accounts:               # connected via OAuth in the app; never store passwords
-  instagram: "@almyra.chania"
-  facebook: "Almyra Beach Lounge"
-  tiktok: "@almyra.chania"
-  linkedin: "almyra-beach-lounge"   # the company page slug or name
+accounts:               # the handles as the client knows them, one or several per platform (a second Instagram, a Russian TikTok); never store passwords
+  instagram: ["@almyra.chania"]
+  facebook: ["Almyra Beach Lounge"]
+  tiktok: ["@almyra.chania"]
+  linkedin: ["almyra-beach-lounge"]   # the company page slug or name
 
 languages: [el, en]     # first = primary
 extra_languages: []     # e.g. [de] for a villa with German guests
