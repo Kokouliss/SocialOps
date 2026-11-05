@@ -1,0 +1,822 @@
+From 57a4c495b4626c382a2c34af60ef05b19d56522a Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Thu, 5 Nov 2026 15:52:52 +0200
+Subject: [PATCH 1/2] Remove link in bio completely
+
+The public /bio/{slug} page, the WordPress page of D15 (App\Bio, WordPressController,
+the box on the client form, its routes and texts) are gone. A migration deletes the
+stored WordPress application passwords. Decision D19.
+---
+ CLAUDE.md                                     |  1 -
+ app/Bio/BioLinks.php                          | 47 -------------
+ app/Bio/WordPress.php                         | 68 -------------------
+ app/Http/Controllers/BioController.php        | 16 -----
+ app/Http/Controllers/ClientController.php     |  2 +-
+ app/Http/Controllers/WordPressController.php  | 51 --------------
+ ...11_05_150000_remove_wordpress_accounts.php | 18 +++++
+ docs/decisions.md                             |  3 +-
+ docs/pilot-setup.md                           |  3 +-
+ docs/roadmap.md                               |  2 +-
+ lang/el.json                                  | 20 +-----
+ resources/views/bio.blade.php                 | 23 -------
+ resources/views/bio/fragment.blade.php        | 16 -----
+ resources/views/clients/_form.blade.php       |  4 +-
+ resources/views/clients/edit.blade.php        | 39 +----------
+ routes/web.php                                | 10 +--
+ tests/Feature/BioPageTest.php                 | 31 ---------
+ tests/Feature/CheckTokensTest.php             |  2 +-
+ tests/Feature/ClientFormTabsTest.php          |  8 +--
+ tests/Feature/LinkInBioRemovedTest.php        | 22 ++++++
+ tests/Feature/WordPressBioTest.php            | 50 --------------
+ 21 files changed, 56 insertions(+), 380 deletions(-)
+ delete mode 100644 app/Bio/BioLinks.php
+ delete mode 100644 app/Bio/WordPress.php
+ delete mode 100644 app/Http/Controllers/BioController.php
+ delete mode 100644 app/Http/Controllers/WordPressController.php
+ create mode 100644 database/migrations/2026_11_05_150000_remove_wordpress_accounts.php
+ delete mode 100644 resources/views/bio.blade.php
+ delete mode 100644 resources/views/bio/fragment.blade.php
+ delete mode 100644 tests/Feature/BioPageTest.php
+ create mode 100644 tests/Feature/LinkInBioRemovedTest.php
+ delete mode 100644 tests/Feature/WordPressBioTest.php
+
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 25ac788..6e1ff6b 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -53,7 +53,6 @@ ## Conventions
+ - Interface (redesign of 2026-11-05, Panos: "smooth and easy for the eye"): a dark side navigation (`layouts/navigation.blade.php`: the pages, then every client of the login, then the login; a top bar with a menu button on phones), the page title and the client tabs (pills, `layouts/client-nav.blade.php`) on the grey background, content in `rounded-xl border` cards without shadows, plain sentence-case buttons (`x-primary-button`, `x-secondary-button`, `x-danger-button`), links in tables dark with the brand colour on hover. Long forms are sections (`<x-section title description>`, one per tab of a side list, Alpine `tab`) of rows (`<x-field label for help>`: label and help on the left, the control on the right). `public/build` is committed (no Node on the server): run `npm run build` before committing a view change that adds Tailwind classes.
+ - Admins (`users.is_admin`: Panos's login by the migration, else the oldest login; the first login made on `/setup`; the Admin tick on the Staff page, admins only) get the Settings page (`/settings`, `SettingsController`, Gate `admin`): every variable of `.env` edited in the browser, written back in place (comments kept, the previous file as `.env.backup`), then `config:cache`; `APP_KEY` is locked.
+ - Asset/post naming: `CLIENT_YYYYMMDD_PLATFORM_FORMAT_PILLAR_LANG_v#`, e.g. `ALMYRA_20270512_IG_REEL_FOOD_EL-EN_v2`. Enforced automatically on upload; raw inbox uploads use `ANY` for the platform and `IMG`/`VID` for the format (e.g. `ALMYRA_20261103_ANY_IMG_FOOD_EL-EN_v1.jpg`) because platform and post format are decided later on the post.
+-- Link in bio: the public page `/bio/{slug}` (`App\Bio\BioLinks`: the profile placeholders that hold a link, a phone number or an e-mail, then the accounts) and, Panos's choice (D15), the same buttons on the client's own WordPress site: the box on the client form connects with a WordPress user and an application password (`accounts` row with platform `wordpress`, password encrypted, no expiry so the token monitor ignores it), `App\Bio\WordPress::publish()` creates the page `links` through the REST API once and overwrites it on every Publish, in the client's language; `resources/views/bio/fragment.blade.php` is both the public page body and the WordPress content.
+ - Clients board (`/clients`): one row per client with the agency's own fields from the profile's Agency tab (`clients.status`, `owner`, `priority`, `plan_due`, `posts_per_week`, `stories_per_week`, `tiktoks_per_month`, `pending`, `links`; `Client::STATUSES`, `Client::PRIORITIES`), the date the calendar is scheduled up to, this week's and the waiting-for-client counts; soonest plan due first, overdue in red. The client never sees these.
+ - Deadlines per client (`/clients/{id}/deadlines`, the Deadlines tab, `deadlines` table, `App\Models\Deadline`): what the agency owes and what the client owes for a month (title, side, due date, ticked when done), grouped by month; the tab counts and the dashboard lists the open ones due within 7 days (`Deadline::dueSoon()`), overdue in red.
+ - Instagram grid preview per client (`/clients/{id}/grid`): feed, carousel and Reel posts with a date, newest first, first asset as a thumbnail (`/assets/{id}/thumb`, `Asset::preview(600)`).
+diff --git a/app/Bio/BioLinks.php b/app/Bio/BioLinks.php
+deleted file mode 100644
+index 5749dbb..0000000
+--- a/app/Bio/BioLinks.php
++++ /dev/null
+@@ -1,47 +0,0 @@
+-<?php
+-
+-namespace App\Bio;
+-
+-use App\Clients\ClientProfile;
+-use App\Models\Client;
+-use Illuminate\Support\Str;
+-
+-/** The buttons of a client's link-in-bio page: the profile placeholders that hold a link, a phone number or an e-mail, then the social accounts. */
+-final class BioLinks
+-{
+-    private const LABELS = ['booking' => 'Book now', 'book' => 'Book now', 'site' => 'Website', 'website' => 'Website', 'menu' => 'Menu', 'maps' => 'Directions', 'directions' => 'Directions', 'phone' => 'Call', 'whatsapp' => 'WhatsApp', 'email' => 'Email'];
+-
+-    /** @return list<array{label: string, url: string, kind: string}> kind is link, phone, email or social */
+-    public static function for(Client $client): array
+-    {
+-        $links = [];
+-        foreach ((array) ($client->profile['fields'] ?? []) as $name => $value) {
+-            $value = trim((string) $value);
+-            $label = __(self::LABELS[$name] ?? Str::ucfirst(str_replace('_', ' ', (string) $name)));
+-            $phone = preg_match('/^\+?[\d\s]{6,}$/', $value);
+-            if ($name === 'whatsapp' && $phone) {
+-                $links[] = ['label' => $label, 'url' => 'https://wa.me/'.preg_replace('/\D/', '', $value), 'kind' => 'link'];
+-            } elseif ($phone) {
+-                $links[] = ['label' => $label, 'url' => 'tel:'.preg_replace('/\s/', '', $value), 'kind' => 'phone'];
+-            } elseif (preg_match('~^https?://\S+$~i', $value)) {
+-                $links[] = ['label' => $label, 'url' => $value, 'kind' => 'link'];
+-            } elseif (preg_match('~^[\w-]+(\.[\w-]+)+(/\S*)?$~', $value)) { // a bare domain such as almyra.gr
+-                $links[] = ['label' => $label, 'url' => 'https://'.$value, 'kind' => 'link'];
+-            } elseif (filter_var($value, FILTER_VALIDATE_EMAIL)) {
+-                $links[] = ['label' => $label, 'url' => 'mailto:'.$value, 'kind' => 'email'];
+-            }
+-        }
+-        $accounts = ClientProfile::handles((array) ($client->profile['accounts'] ?? []));
+-        foreach (['instagram' => ['Instagram', 'https://www.instagram.com/'], 'tiktok' => ['TikTok', 'https://www.tiktok.com/@']] as $platform => [$label, $base]) {
+-            foreach ($accounts[$platform] as $handle) {
+-                $handle = ltrim($handle, '@');
+-                $links[] = ['label' => count($accounts[$platform]) > 1 ? "{$label} @{$handle}" : $label, 'url' => $base.$handle, 'kind' => 'social'];
+-            }
+-        }
+-        if ($page = $client->accounts->firstWhere('platform', 'facebook')?->external_id) {
+-            $links[] = ['label' => 'Facebook', 'url' => 'https://www.facebook.com/'.$page, 'kind' => 'social'];
+-        }
+-
+-        return $links;
+-    }
+-}
+diff --git a/app/Bio/WordPress.php b/app/Bio/WordPress.php
+deleted file mode 100644
+index e58da81..0000000
+--- a/app/Bio/WordPress.php
++++ /dev/null
+@@ -1,68 +0,0 @@
+-<?php
+-
+-namespace App\Bio;
+-
+-use App\Models\Account;
+-use App\Models\Client;
+-use Illuminate\Http\Client\PendingRequest;
+-use Illuminate\Http\Client\Response;
+-use Illuminate\Support\Facades\Http;
+-use RuntimeException;
+-
+-/**
+- * The client's own WordPress site for the link-in-bio page (decision D15): connected with a WordPress application password
+- * (the per-application, revocable REST credential, not a login password), the page is created once and overwritten on every publish.
+- */
+-final class WordPress
+-{
+-    public const SLUG = 'links';
+-
+-    /** Checks the site and the password; returns the `accounts` attributes to store. */
+-    public static function connect(string $site, string $user, string $password): array
+-    {
+-        $site = rtrim(preg_match('~^https?://~i', $site = trim($site)) ? $site : "https://{$site}", '/');
+-        $me = self::check(self::http($user, $password)->get("{$site}/wp-json/wp/v2/users/me", ['context' => 'edit']));
+-        throw_unless($me['capabilities']['edit_pages'] ?? false, RuntimeException::class, 'WordPress: this user may not edit pages.');
+-        $info = self::check(Http::acceptJson()->timeout(30)->get("{$site}/wp-json/"));
+-
+-        return ['platform' => 'wordpress', 'external_id' => $site, 'name' => $info['name'] ?? parse_url($site, PHP_URL_HOST), 'access_token' => $password, 'meta' => ['user' => $user, 'site' => $site]];
+-    }
+-
+-    /** Creates or updates the page with the bio buttons; returns its address. */
+-    public static function publish(Client $client, Account $account): string
+-    {
+-        $site = $account->meta['site'];
+-        $http = self::http($account->meta['user'], $account->access_token);
+-        $locale = app()->getLocale();
+-        app()->setLocale($client->uiLocale()); // the labels in the client's language, whoever presses the button
+-        try {
+-            // one line: WordPress turns newlines in page content into paragraphs and line breaks
+-            $content = preg_replace('/\s*\n\s*/', '', view('bio.fragment', ['links' => BioLinks::for($client)])->render());
+-        } finally {
+-            app()->setLocale($locale);
+-        }
+-        $page = ['title' => $client->name, 'slug' => self::SLUG, 'status' => 'publish', 'content' => $content];
+-        $id = $account->meta['page_id'] ?? null;
+-        $response = $http->post("{$site}/wp-json/wp/v2/pages".($id ? "/{$id}" : ''), $page);
+-        if ($id && $response->status() === 404) {
+-            $response = $http->post("{$site}/wp-json/wp/v2/pages", $page); // the page was deleted on the site: make it again
+-        }
+-        $result = self::check($response);
+-        $account->forceFill(['meta' => array_merge($account->meta, ['page_id' => $result['id'], 'url' => $result['link']])])->save();
+-
+-        return $result['link'];
+-    }
+-
+-    private static function http(string $user, string $password): PendingRequest
+-    {
+-        return Http::withBasicAuth($user, $password)->acceptJson()->timeout(30);
+-    }
+-
+-    /** @return array<string, mixed> */
+-    private static function check(Response $response): array
+-    {
+-        throw_unless($response->successful(), RuntimeException::class, 'WordPress: '.($response->json('message') ?? "HTTP {$response->status()}"));
+-
+-        return (array) $response->json();
+-    }
+-}
+diff --git a/app/Http/Controllers/BioController.php b/app/Http/Controllers/BioController.php
+deleted file mode 100644
+index f7633a2..0000000
+--- a/app/Http/Controllers/BioController.php
++++ /dev/null
+@@ -1,16 +0,0 @@
+-<?php
+-
+-namespace App\Http\Controllers;
+-
+-use App\Bio\BioLinks;
+-use App\Models\Client;
+-use Illuminate\View\View;
+-
+-/** The public link-in-bio page of a client, the address that goes in the Instagram and TikTok profile. */
+-class BioController extends Controller
+-{
+-    public function __invoke(Client $client): View
+-    {
+-        return view('bio', ['client' => $client, 'links' => BioLinks::for($client)]);
+-    }
+-}
+diff --git a/app/Http/Controllers/ClientController.php b/app/Http/Controllers/ClientController.php
+index 8f51563..5a43828 100644
+--- a/app/Http/Controllers/ClientController.php
++++ b/app/Http/Controllers/ClientController.php
+@@ -42,7 +42,7 @@ public function store(ClientRequest $request): RedirectResponse
+ 
+     public function edit(Client $client): View
+     {
+-        return view('clients.edit', ['client' => $client, 'accounts' => PlanRequest::accounts($client->toProfileArray()), 'wordpress' => $client->accounts()->where('platform', 'wordpress')->first()]);
++        return view('clients.edit', ['client' => $client, 'accounts' => PlanRequest::accounts($client->toProfileArray())]);
+     }
+ 
+     /** The Instagram grid as it will look: feed, carousel and Reel posts with a date, newest first, three across, with the first asset. */
+diff --git a/app/Http/Controllers/WordPressController.php b/app/Http/Controllers/WordPressController.php
+deleted file mode 100644
+index 2ae2f46..0000000
+--- a/app/Http/Controllers/WordPressController.php
++++ /dev/null
+@@ -1,51 +0,0 @@
+-<?php
+-
+-namespace App\Http\Controllers;
+-
+-use App\Bio\WordPress;
+-use App\Models\Client;
+-use Illuminate\Http\Client\ConnectionException;
+-use Illuminate\Http\RedirectResponse;
+-use Illuminate\Http\Request;
+-use RuntimeException;
+-
+-/** The client's WordPress site for the link-in-bio page (the box on the client form). */
+-class WordPressController extends Controller
+-{
+-    public function connect(Request $request, Client $client): RedirectResponse
+-    {
+-        $data = $request->validate(['site' => ['required', 'string', 'max:200'], 'user' => ['required', 'string', 'max:100'], 'password' => ['required', 'string', 'max:200']]);
+-        try {
+-            $attributes = WordPress::connect($data['site'], $data['user'], $data['password']);
+-        } catch (RuntimeException|ConnectionException $e) {
+-            return $this->back($client)->withInput($request->except('password'))->withErrors(['wordpress' => $e->getMessage()], 'wordpress');
+-        }
+-        $client->accounts()->updateOrCreate(['platform' => 'wordpress'], $attributes + ['connected_by' => $request->user()?->id]);
+-
+-        return $this->back($client)->with('status', 'wordpress-connected');
+-    }
+-
+-    public function publish(Client $client): RedirectResponse
+-    {
+-        $account = $client->accounts()->where('platform', 'wordpress')->firstOrFail();
+-        try {
+-            WordPress::publish($client, $account);
+-        } catch (RuntimeException|ConnectionException $e) {
+-            return $this->back($client)->withErrors(['wordpress' => $e->getMessage()], 'wordpress');
+-        }
+-
+-        return $this->back($client)->with('status', 'wordpress-published');
+-    }
+-
+-    public function disconnect(Client $client): RedirectResponse
+-    {
+-        $client->accounts()->where('platform', 'wordpress')->delete();
+-
+-        return $this->back($client)->with('status', 'wordpress-disconnected');
+-    }
+-
+-    private function back(Client $client): RedirectResponse
+-    {
+-        return redirect()->to(route('clients.edit', $client).'#bio');
+-    }
+-}
+diff --git a/database/migrations/2026_11_05_150000_remove_wordpress_accounts.php b/database/migrations/2026_11_05_150000_remove_wordpress_accounts.php
+new file mode 100644
+index 0000000..4b4a174
+--- /dev/null
++++ b/database/migrations/2026_11_05_150000_remove_wordpress_accounts.php
+@@ -0,0 +1,18 @@
++<?php
++
++use Illuminate\Database\Migrations\Migration;
++use Illuminate\Support\Facades\DB;
++
++return new class extends Migration
++{
++    public function up(): void
++    {
++        // link in bio is gone (D19): the WordPress application passwords it stored have no use left, so they do not stay in the database
++        DB::table('accounts')->where('platform', 'wordpress')->delete();
++    }
++
++    public function down(): void
++    {
++        // the passwords are not coming back
++    }
++};
+diff --git a/docs/decisions.md b/docs/decisions.md
+index eb0f951..3502909 100644
+--- a/docs/decisions.md
++++ b/docs/decisions.md
+@@ -21,11 +21,12 @@ ## Decided
+ | D2 | Publishing layer: direct drivers built in-house (Meta Graph API, TikTok Content Posting API, Google Business Profile API); no paid service | User's call: no paid third-party services (Claude API and hosting are fine). The cost is calendar time: Phase 0 approvals become the critical path | 2026-11-03 |
+ | D9 | Trend research: Claude API with its web search tool writes the trend brief the batch planner uses; no scraping services (ScrapeCreators, Apify) and no browser-cookie scrapers in the app. A brief made elsewhere (for example a `/last30days` run) can be passed in with `--brief` | Keeps D2's "no paid third-party services" rule; the last30days tool Panos shared needs ScrapeCreators for TikTok and Instagram and browser sessions for X. Official Instagram hashtag search through our own Meta app is the next source once that app exists | 2026-11-03 |
+ | D10 | The interface speaks English and Greek: a switch per login (and per browser for guests), client-facing pages and mails default to the client's first profile language. Translations live in `lang/el.json`; a test fails when a string has no Greek | Panos asked for Greek with a choice to change (2026-11-04); the staff and most clients are Greek speakers, the approval links reach client owners on their phones | 2026-11-04 |
+-| D15 | Link-in-bio page on the client's own WordPress site (the public `/bio/{slug}` page stays as the fallback): connected with a WordPress application password, the per-application, revocable REST credential, never the login password (WordPress has no OAuth), stored encrypted like a token; the page is created once and overwritten on every Publish | Panos's card answer (2026-11-04): clients want the page on their own domain; the agency site and a Social Ops-only page were the alternatives | 2026-11-04 |
++| D15 | **Removed by D19.** Link-in-bio page on the client's own WordPress site (the public `/bio/{slug}` page stays as the fallback): connected with a WordPress application password, the per-application, revocable REST credential, never the login password (WordPress has no OAuth), stored encrypted like a token; the page is created once and overwritten on every Publish | Panos's card answer (2026-11-04): clients want the page on their own domain; the agency site and a Social Ops-only page were the alternatives | 2026-11-04 |
+ 
+ | D16 | Organize mode: Social Ops organizes the work and the team posts in the apps by hand. Everything that posts through our drivers or reads back from the platform APIs is off behind `FEATURE_PUBLISHING` (`config/features.php`); the code stays. Posts go Approved → Scheduled → "Mark published" by hand; Failed, Manual-needed and Withdrawn have no buttons while the flag is off | Panos's call (2026-11-04): "we no longer have as goal to post on the socials", keep the code "maybe we will need them in the future"; the UI breathes | 2026-11-04 |
+ | D18 | Claude works through the MCP connector, not the server-side API: `get-planning-brief` hands Claude the profile, quota, window and prompt, Claude researches the trends in the chat (last30days skill or web search) and plans, `save-plan` files the Drafts and the review sheet. The server-side Claude buttons stay in the code behind `FEATURE_CLAUDE_API` (off) | Panos's call (2026-11-04): "The claude from now on should work with a connection mcp rather than api. If things go well then we converted to api again" | 2026-11-04 |
+ | D17 | Platforms: Instagram, Facebook, TikTok and LinkedIn. Google Business Profile removed from the code and the interface (driver, OAuth provider, reviews, the Performance API month, the event and offer fields). LinkedIn has no driver: it is planned, captioned and approved in Social Ops (feed, carousel and reel formats, 3,000 characters) and posted by hand | Panos's call (2026-11-04): "remove the google my business completely. Keep Facebook, Instagram, Tiktok and we add linkedin" | 2026-11-04 |
++| D19 | Link in bio removed completely: the public `/bio/{slug}` page, the WordPress page of D15 (`App\Bio`, the box on the client form, its routes and texts). A migration deletes the stored WordPress application passwords. A `links` page already published on a client's site stays there until someone deletes it in WordPress | The team's call (2026-11-05): "delete the link in bio completely"; the app organizes the posts, the bio page is not part of that | 2026-11-05 |
+ 
+ ## Open (ask the user before building on these)
+ | # | Question | Options | Research leaning |
+diff --git a/docs/pilot-setup.md b/docs/pilot-setup.md
+index 490de46..b7ce3a1 100644
+--- a/docs/pilot-setup.md
++++ b/docs/pilot-setup.md
+@@ -139,7 +139,6 @@ ## 6. First client: Fuse Pharmacy (decision D4)
+ 1. Clients → New client. Code `FUSE`, type `brand`. Fill in the form: accounts, voice, pillars, hashtags, approver name and e-mail, SLA (a starter profile is in the project Library, `clients/fuse-pharmacy.yaml`; `php artisan clients:import` loads such a file, or copy its values into the form).
+ 2. Accounts → Connect Facebook / Instagram (TikTok when the app review is through) and tick the Fuse Pharmacy Page and Instagram account.
+ 3. Assets → copy the upload link and send it to the client.
+-4. Link in bio → put the address shown on the client form in the Instagram and TikTok profile. Or publish it on the client's WordPress: an administrator there makes an application password (Users → Profile → Application Passwords), you enter site, user and that password in the box and press Publish; the page `/links/` appears on their site and Publish again refreshes it.
+-5. Calendar → create one test post for tomorrow, *Draft captions with Claude*, send it for approval to yourself first (put your own e-mail as approver for the first run), approve from your phone, watch it publish. Then put the client's approver in and start the two weeks.
++4. Calendar → create one test post for tomorrow, *Draft captions with Claude*, send it for approval to yourself first (put your own e-mail as approver for the first run), approve from your phone, watch it publish. Then put the client's approver in and start the two weeks.
+ 
+ What to watch during the pilot: Horizon's *Failed jobs* page, the post's red *Publishing* box, and the Manual-Needed e-mails.
+diff --git a/docs/roadmap.md b/docs/roadmap.md
+index 0c0e8f9..de1055c 100644
+--- a/docs/roadmap.md
++++ b/docs/roadmap.md
+@@ -44,7 +44,7 @@ ## Phase 3: Advanced AI (~6–8 weeks)
+ 
+ - [x] Auto-assembled Reels from venue clips (human final cut): ffmpeg on the server, "Make a Reel" on the assets page
+ - [x] Best-time-to-post suggestions from our own performance data
+-- [x] Link-in-bio pages generated on WordPress per client
++- [x] ~~Link-in-bio pages generated on WordPress per client~~ (removed 2026-11-05, D19)
+ 
+ ## Phase 4: Organizer (from 2026-11-04, D16)
+ Exit: the team plans, briefs, approves and tracks every client's month in Social Ops and posts in the apps by hand.
+diff --git a/lang/el.json b/lang/el.json
+index 1473b17..a73ce72 100644
+--- a/lang/el.json
++++ b/lang/el.json
+@@ -78,7 +78,6 @@
+     "Anything we should know? (optional)": "Κάτι που πρέπει να ξέρουμε; (προαιρετικό)",
+     "API tokens": "Κλειδιά API",
+     "App refreshed": "Η εφαρμογή ανανεώθηκε",
+-    "Application password": "Κωδικός εφαρμογής",
+     "approval": "έγκριση",
+     "Approval": "Έγκριση",
+     "Approval and timing": "Έγκριση και χρόνος",
+@@ -112,7 +111,6 @@
+     "Best hours from our numbers of the last :days days: :list": "Καλύτερες ώρες από τα νούμερά μας των τελευταίων :days ημερών: :list",
+     "Best time from our numbers": "Καλύτερη ώρα από τα νούμερά μας",
+     "Book": "Κράτηση",
+-    "Book now": "Κράτηση",
+     "brand": "μάρκα",
+     "Branded content (paid partnership with a third party)": "Branded content (πληρωμένη συνεργασία με τρίτο)",
+     "Brief (what the post is about, for the drafter and the reviewer)": "Brief (περί τίνος είναι η ανάρτηση, για τον συντάκτη και τον ελεγκτή)",
+@@ -122,7 +120,6 @@
+     "Button link (Call needs none)": "Σύνδεσμος κουμπιού (το Κλήση δεν χρειάζεται)",
+     "Buy": "Αγορά",
+     "Calendar": "Ημερολόγιο",
+-    "Call": "Κλήση",
+     "Call now": "Κλήση",
+     "Call to action": "Κάλεσμα σε δράση",
+     "Calls": "Κλήσεις",
+@@ -179,7 +176,6 @@
+     "Connect your social accounts so we can publish for you. Each button opens the platform's own login: you log in there, we never see your password, and you tick which page or profile is this business's.": "Συνδέστε τους λογαριασμούς σας στα social για να δημοσιεύουμε εμείς για εσάς. Κάθε κουμπί ανοίγει τη σύνδεση της ίδιας της πλατφόρμας: συνδέεστε εκεί, εμείς δεν βλέπουμε ποτέ τον κωδικό σας, και τσεκάρετε ποια σελίδα ή προφίλ ανήκει στην επιχείρηση.",
+     "connected accounts": "συνδεδεμένοι λογαριασμοί",
+     "Connected as :name.": "Συνδεδεμένο ως :name.",
+-    "Connected to :site as :user": "Συνδεδεμένο με :site ως :user",
+     "Connected, thank you!": "Συνδέθηκε, ευχαριστούμε!",
+     "Connecting opens the platform's own login; we never see or store a password. The profile under \"accounts\" in the brand profile is only the handle for reference.": "Η σύνδεση ανοίγει το login της ίδιας της πλατφόρμας· ποτέ δεν βλέπουμε ούτε αποθηκεύουμε κωδικό. Το προφίλ κάτω από το \"accounts\" στο προφίλ μάρκας είναι μόνο το handle, για αναφορά.",
+     "Connector key: Staff page, API tokens": "Κλειδί σύνδεσης: σελίδα Προσωπικό, κλειδιά API",
+@@ -215,7 +211,6 @@
+     "Delete this file?": "Διαγραφή αυτού του αρχείου;",
+     "Delete this post?": "Διαγραφή αυτής της ανάρτησης;",
+     "Design text": "Κείμενο σχεδίου",
+-    "Directions": "Οδηγίες",
+     "Disconnect": "Αποσύνδεση",
+     "Disconnect Canva from this client?": "Αποσύνδεση του Canva από αυτόν τον πελάτη;",
+     "Disconnect Dropbox from this client?": "Αποσύνδεση του Dropbox από αυτόν τον πελάτη;",
+@@ -336,7 +331,6 @@
+     "Limit": "Όριο",
+     "Limited to": "Περιορισμένο σε",
+     "Link for the client to connect their own accounts (no login, valid :days days; they log in at the platform themselves)": "Σύνδεσμος για να συνδέσει ο πελάτης τους λογαριασμούς του (χωρίς login, ισχύει :days ημέρες· συνδέεται μόνος του στην πλατφόρμα)",
+-    "Link in bio": "Link in bio",
+     "Links": "Σύνδεσμοι",
+     "Links the team opens often (the Drive folder, the posts presentation)": "Σύνδεσμοι που ανοίγει συχνά η ομάδα (ο φάκελος Drive, η παρουσίαση των posts)",
+     "List": "Λίστα",
+@@ -436,14 +430,12 @@
+     "Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.": "Μόλις διαγραφεί ο λογαριασμός σας, όλα τα δεδομένα του διαγράφονται οριστικά. Εισάγετε τον κωδικό σας για να επιβεβαιώσετε την οριστική διαγραφή.",
+     "One row per post, the same columns as the calendar's CSV export. Every row becomes a Draft on the calendar; if any row is wrong, nothing is imported and the errors are listed here.": "Μία γραμμή ανά ανάρτηση, ίδιες στήλες με την εξαγωγή CSV του ημερολογίου. Κάθε γραμμή γίνεται Πρόχειρο στο ημερολόγιο· αν κάποια γραμμή είναι λάθος, δεν εισάγεται τίποτα και τα σφάλματα εμφανίζονται εδώ.",
+     "Only a login that sees every client can manage logins.": "Μόνο χρήστης που βλέπει όλους τους πελάτες μπορεί να διαχειρίζεται χρήστες.",
+-    "Open": "Άνοιγμα",
+     "Open daily 10:00 to midnight, May to October": "Ανοιχτά καθημερινά 10:00 έως τα μεσάνυχτα, Μάιο έως Οκτώβριο",
+     "Open reviews": "Άνοιγμα εγκρίσεων",
+     "Open the calendar": "Άνοιγμα ημερολογίου",
+     "Open the post": "Άνοιγμα ανάρτησης",
+     "Opening hours": "Ωράριο",
+     "Optional: the client may answer": "Προαιρετική: ο πελάτης μπορεί να απαντήσει",
+-    "Or put the same buttons on a page of the WordPress site of the client: connect with a WordPress user that may edit pages and an application password made for Social Ops (WordPress → Users → Profile → Application Passwords), then press Publish; press it again after changing the profile.": "Ή βάλε τα ίδια κουμπιά σε μια σελίδα του WordPress του πελάτη: σύνδεση με χρήστη WordPress που μπορεί να επεξεργάζεται σελίδες και έναν κωδικό εφαρμογής φτιαγμένο για το Social Ops (WordPress → Χρήστες → Προφίλ → Κωδικοί εφαρμογών), μετά πάτα Δημοσίευση· ξανά μετά από κάθε αλλαγή του προφίλ.",
+     "Order online": "Online παραγγελία",
+     "other": "άλλο",
+     "Ours": "Δικό μας",
+@@ -513,14 +505,12 @@
+     "Profile": "Προφίλ",
+     "Profile Information": "Στοιχεία προφίλ",
+     "Profile updated": "Το προφίλ ενημερώθηκε",
+-    "Publish to WordPress": "Δημοσίευση στο WordPress",
+     "Published": "Δημοσιευμένο",
+     "Published posts stay as they are": "Οι δημοσιευμένες αναρτήσεις μένουν ως έχουν",
+     "Publishing": "Δημοσίευση",
+     "Publishing and planning run on the queue, which the per-minute scheduled task works through.": "Η δημοσίευση και το πλάνο τρέχουν στην ουρά, την οποία επεξεργάζεται η προγραμματισμένη εργασία κάθε λεπτό.",
+     "Publishing failed after three attempts:": "Η δημοσίευση απέτυχε μετά από τρεις προσπάθειες:",
+     "Purpose": "Σκοπός",
+-    "Put this address in the Instagram and TikTok bio. The buttons come from the profile placeholders that hold a link, a phone number or an e-mail (booking, site, menu, phone, whatsapp…) and from the accounts.": "Βάλε αυτή τη διεύθυνση στο bio του Instagram και του TikTok. Τα κουμπιά βγαίνουν από τα placeholders του προφίλ που έχουν σύνδεσμο, τηλέφωνο ή e-mail (booking, site, menu, phone, whatsapp…) και από τους λογαριασμούς.",
+     "question": "ερώτηση",
+     "Questions": "Ερωτήσεις",
+     "Queue for Claude": "Στην ουρά για τον Claude",
+@@ -601,7 +591,6 @@
+     "Show everything": "Εμφάνιση όλων",
+     "Sign up": "Εγγραφή",
+     "Signature line under every caption, per platform (optional)": "Γραμμή υπογραφής κάτω από κάθε λεζάντα, ανά πλατφόρμα (προαιρετικό)",
+-    "Site address": "Διεύθυνση ιστοσελίδας",
+     "Sites never to cite (one per line)": "Ιστότοποι που δεν αναφέρουμε ποτέ (ένας ανά γραμμή)",
+     "Sites to search first (one per line)": "Ιστότοποι που ψάχνουμε πρώτα (ένας ανά γραμμή)",
+     "soft (book a table, link in bio), never pushy": "ήπιο (κλείστε τραπέζι, link in bio), ποτέ πιεστικό",
+@@ -636,7 +625,6 @@
+     "The login worked but this user manages no page, creator profile or business location we can publish to.": "Η σύνδεση πέτυχε αλλά ο χρήστης δεν διαχειρίζεται σελίδα, προφίλ δημιουργού ή τοποθεσία επιχείρησης όπου να μπορούμε να δημοσιεύσουμε.",
+     "The month in numbers and what we read in them. The numbers are also attached as a spreadsheet (CSV).": "Ο μήνας σε νούμερα και τι διαβάζουμε σε αυτά. Τα νούμερα επισυνάπτονται και ως υπολογιστικό φύλλο (CSV).",
+     "The name of each account as the client knows it. Connecting them happens on the Accounts page.": "Το όνομα κάθε λογαριασμού όπως το ξέρει ο πελάτης. Η σύνδεσή τους γίνεται στη σελίδα Λογαριασμοί.",
+-    "The page is on WordPress.": "Η σελίδα είναι στο WordPress.",
+     "The people shown have agreed to appear on social media.": "Τα άτομα που εμφανίζονται έχουν συμφωνήσει να εμφανιστούν στα social media.",
+     "The post is approved and its time has come, but part of it has to be posted by hand:": "Η ανάρτηση είναι εγκεκριμένη και ήρθε η ώρα της, αλλά ένα μέρος της πρέπει να ανέβει με το χέρι:",
+     "The post is being written. It appears on the calendar as a Draft in a minute or two, a few minutes more when the trends are researched again.": "Η ανάρτηση γράφεται. Εμφανίζεται στο ημερολόγιο ως Πρόχειρο σε ένα δύο λεπτά, λίγα λεπτά παραπάνω όταν ερευνώνται ξανά οι τάσεις.",
+@@ -689,7 +677,6 @@
+     "Type": "Τύπος",
+     "UGC ok": "UGC ok",
+     "Untitled": "Χωρίς τίτλο",
+-    "Update on WordPress": "Ενημέρωση στο WordPress",
+     "Update Password": "Αλλαγή κωδικού",
+     "Update your account's profile information and email address.": "Ενημερώστε τα στοιχεία του προφίλ και το email σας.",
+     "Upload link": "Σύνδεσμος ανεβάσματος",
+@@ -716,7 +703,6 @@
+     "Watch folder": "Παρακολούθηση φακέλου",
+     "Watching the folder “:name”: new photos and videos land in this inbox every hour.": "Παρακολουθείται ο φάκελος «:name»: νέες φωτογραφίες και βίντεο μπαίνουν σε αυτό το inbox κάθε ώρα.",
+     "we, or the name of the place": "εμείς, ή το όνομα του χώρου",
+-    "Website": "Ιστοσελίδα",
+     "Wed": "Τετ",
+     "Wednesday": "Τετάρτη",
+     "Week": "Εβδομάδα",
+@@ -727,7 +713,6 @@
+     "What the client owes us (products, footage, answers) and what we owe the client (the topic plan, the edited videos), by when. Tick it when it is done.": "Τι μας χρωστά ο πελάτης (προϊόντα, υλικό, απαντήσεις) και τι χρωστάμε εμείς στον πελάτη (η θεματολογία, τα μονταρισμένα βίντεο), μέχρι πότε. Τσεκάρισέ το όταν γίνει.",
+     "What the post is about": "Τι αφορά η ανάρτηση",
+     "What the posts are about (optional)": "Το θέμα των αναρτήσεων (προαιρετικό)",
+-    "WhatsApp": "WhatsApp",
+     "When to post": "Πότε αναρτούμε",
+     "which accounts belong to this client?": "ποιοι λογαριασμοί ανήκουν σε αυτόν τον πελάτη;",
+     "Which folder? Its path in that Dropbox, for example /Clients/Almyra. A folder the client shared sits at the top level.": "Ποιος φάκελος; Η διαδρομή του σε αυτό το Dropbox, π.χ. /Clients/Almyra. Φάκελος που μοιράστηκε ο πελάτης βρίσκεται στο πρώτο επίπεδο.",
+@@ -740,9 +725,6 @@
+     "with": "με",
+     "Withdraw": "Απόσυρση",
+     "Withdrawn": "Αποσύρθηκε",
+-    "WordPress connected. Press Publish to make the page.": "Το WordPress συνδέθηκε. Πάτα Δημοσίευση για να φτιαχτεί η σελίδα.",
+-    "WordPress disconnected.": "Το WordPress αποσυνδέθηκε.",
+-    "WordPress user": "Χρήστης WordPress",
+     "Write the post": "Γράψε την ανάρτηση",
+     "Write what the post should be about. Claude combines your words with the brand profile and the latest trend research and puts one post on the calendar as a Draft, with captions in both languages. You get an email with the link; from the post page you can download it or send it for approval.": "Γράψε τι θέλεις να λέει η ανάρτηση. Το Claude συνδυάζει τα λόγια σου με το προφίλ της μάρκας και την πιο πρόσφατη έρευνα τάσεων και βάζει μία ανάρτηση στο ημερολόγιο ως Πρόχειρο, με λεζάντες και στις δύο γλώσσες. Λαμβάνεις email με τον σύνδεσμο· από τη σελίδα της ανάρτησης την κατεβάζεις ή τη στέλνεις για έγκριση.",
+     "Written by :agency on :date.": "Γράφτηκε από :agency στις :date.",
+@@ -806,7 +788,7 @@
+     "Who approves the posts and how long the client has to answer.": "Ποιος εγκρίνει τις αναρτήσεις και πόσο χρόνο έχει ο πελάτης να απαντήσει.",
+     "Who gets the approval links: name, email, phone for reminders.": "Ποιοι παίρνουν τους συνδέσμους έγκρισης: όνομα, email, τηλέφωνο για υπενθυμίσεις.",
+     "Who the client is, the accounts and the caption languages.": "Ποιος είναι ο πελάτης, οι λογαριασμοί και οι γλώσσες των λεζαντών.",
+-    "Written in captions as :tag and filled at publish time. Phone numbers, links and e-mails here also become the Link in bio buttons.": "Γράφονται στις λεζάντες ως :tag και συμπληρώνονται τη στιγμή της δημοσίευσης. Τηλέφωνα, σύνδεσμοι και e-mail εδώ γίνονται και τα κουμπιά του Link in bio.",
++    "Written in captions as :tag and filled at publish time.": "Γράφονται στις λεζάντες ως :tag και συμπληρώνονται τη στιγμή της δημοσίευσης.",
+     "Made from the name when left empty. Changing the link name later breaks links already sent.": "Βγαίνουν από το όνομα όταν μείνουν κενά. Αν αλλάξεις αργότερα το όνομα στους συνδέσμους, οι σύνδεσμοι που έχουν ήδη σταλεί παύουν να δουλεύουν.",
+     "Delete this client": "Διαγραφή αυτού του πελάτη",
+     "Instagram and Facebook: posted under the post right after it goes out, for hashtags or a link; also in the ZIP and the CSV": "Instagram και Facebook: μπαίνει κάτω από την ανάρτηση αμέσως μόλις βγει, για hashtags ή σύνδεσμο· επίσης στο ZIP και στο CSV",
+diff --git a/resources/views/bio.blade.php b/resources/views/bio.blade.php
+deleted file mode 100644
+index 2e7130c..0000000
+--- a/resources/views/bio.blade.php
++++ /dev/null
+@@ -1,23 +0,0 @@
+-<!DOCTYPE html>
+-<html lang="{{ app()->getLocale() }}">
+-<head>
+-    <meta charset="utf-8">
+-    <meta name="viewport" content="width=device-width, initial-scale=1">
+-    <title>{{ $client->name }}</title>
+-    <style>
+-        :root { color-scheme: light dark; }
+-        body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #f6f5f2; color: #1f2937; display: flex; justify-content: center; }
+-        main { width: 100%; max-width: 420px; padding: 48px 20px; }
+-        h1 { font-size: 1.75rem; margin: 0 0 4px; text-align: center; }
+-        .sub { margin: 0 0 32px; text-align: center; opacity: .7; }
+-        @media (prefers-color-scheme: dark) { body { background: #111827; color: #f3f4f6; } .socialops-bio .btn { background: #f3f4f6; color: #111827; } }
+-    </style>
+-</head>
+-<body>
+-    <main>
+-        <h1>{{ $client->name }}</h1>
+-        <p class="sub">{{ __(str_replace('_', ' ', $client->type)) }}@if ($client->location) · {{ $client->location }}@endif</p>
+-        @include('bio.fragment')
+-    </main>
+-</body>
+-</html>
+diff --git a/resources/views/bio/fragment.blade.php b/resources/views/bio/fragment.blade.php
+deleted file mode 100644
+index 6a359a3..0000000
+--- a/resources/views/bio/fragment.blade.php
++++ /dev/null
+@@ -1,16 +0,0 @@
+-{{-- The buttons and the social links: the body of the public bio page and the content of the page on the client's WordPress site, so it carries its own style --}}
+-<div class="socialops-bio">
+-    <style>.socialops-bio{max-width:420px;margin:0 auto}.socialops-bio .btn{display:block;padding:16px;margin:12px 0;border-radius:14px;background:#1f2937;color:#fff;text-decoration:none;text-align:center;font-weight:600;font-size:1.05rem}.socialops-bio nav{display:flex;justify-content:center;gap:20px;margin-top:28px}.socialops-bio nav a{color:inherit;text-decoration:none;font-weight:600;opacity:.8}</style>
+-    @foreach ($links as $link)
+-        @if ($link['kind'] !== 'social')
+-            <a class="btn" href="{{ $link['url'] }}" @if ($link['kind'] === 'link') target="_blank" rel="noopener" @endif>{{ $link['label'] }}</a>
+-        @endif
+-    @endforeach
+-    <nav>
+-        @foreach ($links as $link)
+-            @if ($link['kind'] === 'social')
+-                <a href="{{ $link['url'] }}" target="_blank" rel="noopener">{{ $link['label'] }}</a>
+-            @endif
+-        @endforeach
+-    </nav>
+-</div>
+diff --git a/resources/views/clients/_form.blade.php b/resources/views/clients/_form.blade.php
+index 75df290..851fc1b 100644
+--- a/resources/views/clients/_form.blade.php
++++ b/resources/views/clients/_form.blade.php
+@@ -199,7 +199,7 @@
+             @endforeach
+         </div>
+     </x-field>
+-    <x-field :label="__('Placeholders')" :help="__('Written in captions as :tag and filled at publish time. Phone numbers, links and e-mails here also become the Link in bio buttons.', ['tag' => '{'.'{phone}}'])">
++    <x-field :label="__('Placeholders')" :help="__('Written in captions as :tag and filled at publish time.', ['tag' => '{'.'{phone}}'])">
+         @foreach ($rows(collect(old('p.fields', collect($profile['fields'] ?? [])->map(fn ($v, $k) => ['key' => $k, 'value' => $v])->values()->all()))->all()) as $i => $row)
+             <div class="grid grid-cols-3 gap-2 {{ $i ? 'mt-2' : '' }}">
+                 <x-text-input name="p[fields][{{ $i }}][key]" type="text" class="block w-full font-mono text-sm" :value="$row['key'] ?? ''" placeholder="phone" />
+@@ -303,7 +303,7 @@
+     </x-field>
+ </x-section>
+ 
+-<div class="mt-4 flex items-center gap-4" x-show="!['plan', 'import', 'bio'].includes(tab)">
++<div class="mt-4 flex items-center gap-4" x-show="!['plan', 'import'].includes(tab)">
+     <x-primary-button>{{ __('Save') }}</x-primary-button>
+     <a href="{{ route('clients.index') }}" class="text-sm text-gray-600 hover:text-gray-900">{{ __('Cancel') }}</a>
+     @if (session('status') === 'client-updated')
+diff --git a/resources/views/clients/edit.blade.php b/resources/views/clients/edit.blade.php
+index e28a4bd..2e6efce 100644
+--- a/resources/views/clients/edit.blade.php
++++ b/resources/views/clients/edit.blade.php
+@@ -5,8 +5,8 @@
+     <div class="py-6">
+         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+             <style>[x-cloak] { display: none !important }</style>
+-            @php($tools = ['plan' => __('Plan with Claude'), 'import' => __('Import posts'), 'bio' => __('Link in bio')])
+-            <div x-data="{ tab: location.hash === '#bio' ? 'bio' : (localStorage.getItem('client-tab') || 'basics') }" x-init="if (! $el.querySelector(`[data-tab='${tab}']`)) tab = 'basics'; $watch('tab', t => localStorage.setItem('client-tab', t))" class="md:flex md:gap-8">
++            @php($tools = ['plan' => __('Plan with Claude'), 'import' => __('Import posts')])
++            <div x-data="{ tab: localStorage.getItem('client-tab') || 'basics' }" x-init="if (! $el.querySelector(`[data-tab='${tab}']`)) tab = 'basics'; $watch('tab', t => localStorage.setItem('client-tab', t))" class="md:flex md:gap-8">
+                 @include('clients._nav', ['tools' => $tools])
+                 <div class="min-w-0 flex-1 space-y-6">
+                     <form method="POST" action="{{ route('clients.update', $client) }}">
+@@ -137,41 +137,6 @@
+                             <x-input-error class="mt-2" :messages="$errors->get('csv')" />
+                         </div>
+                     </x-section>
+-
+-                    <x-section id="bio" x-show="tab === 'bio'" x-cloak :title="__('Link in bio')" :description="__('Put this address in the Instagram and TikTok bio. The buttons come from the profile placeholders that hold a link, a phone number or an e-mail (booking, site, menu, phone, whatsapp…) and from the accounts.')">
+-                        <div class="py-5">
+-                            <div class="flex gap-2">
+-                                <x-text-input type="text" class="block w-full font-mono text-xs" :value="route('bio', $client)" readonly onclick="this.select()" />
+-                                <a href="{{ route('bio', $client) }}" target="_blank" class="inline-flex items-center rounded-lg border border-gray-300 px-3 py-1 text-xs hover:bg-gray-50">{{ __('Open') }}</a>
+-                            </div>
+-                        </div>
+-                        <div class="py-5">
+-                            <p class="text-sm text-gray-600">{{ __('Or put the same buttons on a page of the WordPress site of the client: connect with a WordPress user that may edit pages and an application password made for Social Ops (WordPress → Users → Profile → Application Passwords), then press Publish; press it again after changing the profile.') }}</p>
+-                            @if (session('status') === 'wordpress-published')
+-                                <p class="mt-2 text-sm text-green-600">{{ __('The page is on WordPress.') }}</p>
+-                            @elseif (session('status') === 'wordpress-connected')
+-                                <p class="mt-2 text-sm text-green-600">{{ __('WordPress connected. Press Publish to make the page.') }}</p>
+-                            @elseif (session('status') === 'wordpress-disconnected')
+-                                <p class="mt-2 text-sm text-green-600">{{ __('WordPress disconnected.') }}</p>
+-                            @endif
+-                            <x-input-error class="mt-2" :messages="$errors->wordpress->all()" />
+-                            @if ($wordpress)
+-                                <p class="mt-2 text-sm text-gray-800">{{ __('Connected to :site as :user', ['site' => $wordpress->name, 'user' => $wordpress->meta['user']]) }}@if ($wordpress->meta['url'] ?? null) · <a href="{{ $wordpress->meta['url'] }}" target="_blank" class="underline">{{ $wordpress->meta['url'] }}</a>@endif</p>
+-                                <div class="mt-2 flex gap-2">
+-                                    <form method="post" action="{{ route('wordpress.publish', $client) }}">@csrf<x-primary-button>{{ ($wordpress->meta['page_id'] ?? null) ? __('Update on WordPress') : __('Publish to WordPress') }}</x-primary-button></form>
+-                                    <form method="post" action="{{ route('wordpress.disconnect', $client) }}">@csrf @method('delete')<x-secondary-button type="submit">{{ __('Disconnect') }}</x-secondary-button></form>
+-                                </div>
+-                            @else
+-                                <form method="post" action="{{ route('wordpress.connect', $client) }}" class="mt-3 grid gap-3 sm:grid-cols-3">
+-                                    @csrf
+-                                    <div><x-input-label for="wp-site" :value="__('Site address')" /><x-text-input id="wp-site" name="site" type="text" class="mt-1 block w-full" :value="old('site')" placeholder="https://client.gr" required /></div>
+-                                    <div><x-input-label for="wp-user" :value="__('WordPress user')" /><x-text-input id="wp-user" name="user" type="text" class="mt-1 block w-full" :value="old('user')" required /></div>
+-                                    <div><x-input-label for="wp-password" :value="__('Application password')" /><x-text-input id="wp-password" name="password" type="password" class="mt-1 block w-full" required autocomplete="off" /></div>
+-                                    <div class="sm:col-span-3"><x-primary-button>{{ __('Connect') }}</x-primary-button></div>
+-                                </form>
+-                            @endif
+-                        </div>
+-                    </x-section>
+                 </div>
+             </div>
+         </div>
+diff --git a/routes/web.php b/routes/web.php
+index bc8b421..fb1d4e2 100644
+--- a/routes/web.php
++++ b/routes/web.php
+@@ -2,7 +2,6 @@
+ 
+ use App\Http\Controllers\AccountController;
+ use App\Http\Controllers\AssetController;
+-use App\Http\Controllers\BioController;
+ use App\Http\Controllers\CalendarController;
+ use App\Http\Controllers\CanvaController;
+ use App\Http\Controllers\ClientController;
+@@ -20,7 +19,6 @@
+ use App\Http\Controllers\ReviewController;
+ use App\Http\Controllers\SettingsController;
+ use App\Http\Controllers\StaffController;
+-use App\Http\Controllers\WordPressController;
+ use App\Http\Middleware\LimitClients;
+ use App\Models\User;
+ use Illuminate\Support\Facades\Artisan;
+@@ -59,9 +57,6 @@
+     Route::post('/clients/{client}/dropbox', [FolderController::class, 'watchDropbox'])->name('dropbox.watch');
+     Route::get('/dropbox/callback', [FolderController::class, 'dropboxCallback'])->name('dropbox.callback');
+     Route::post('/clients/{client}/folders/{platform}/pull', [FolderController::class, 'pull'])->name('folders.pull');
+-    Route::post('/clients/{client}/wordpress', [WordPressController::class, 'connect'])->name('wordpress.connect');
+-    Route::post('/clients/{client}/wordpress/publish', [WordPressController::class, 'publish'])->name('wordpress.publish');
+-    Route::delete('/clients/{client}/wordpress', [WordPressController::class, 'disconnect'])->name('wordpress.disconnect');
+     Route::get('/clients/{client}/deadlines', [DeadlineController::class, 'index'])->name('clients.deadlines');
+     Route::post('/clients/{client}/deadlines', [DeadlineController::class, 'store'])->name('deadlines.store');
+     Route::patch('/deadlines/{deadline}', [DeadlineController::class, 'toggle'])->name('deadlines.toggle');
+@@ -73,7 +68,7 @@
+     Route::get('/reports/{report}/download', [ReportController::class, 'download'])->name('reports.download');
+     Route::get('/reports/{report}/word', [ReportController::class, 'word'])->name('reports.word');
+     Route::post('/reports/{report}/send', [ReportController::class, 'send'])->name('reports.send');
+-    Route::delete('/accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy'); // also Canva, Drive, Dropbox and WordPress
++    Route::delete('/accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy'); // also Canva, Drive and Dropbox
+     Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar');
+     Route::get('/jobs', [JobController::class, 'index'])->name('jobs.index');
+     Route::post('/jobs/{uuid}/retry', [JobController::class, 'retry'])->name('jobs.retry');
+@@ -135,9 +130,6 @@
+     Route::post('/clients/{client}/accounts', [AccountController::class, 'attach'])->name('accounts.attach');
+ });
+ 
+-// The link-in-bio page is public on purpose: its address sits in the client's Instagram and TikTok profile
+-Route::get('/bio/{client:slug}', BioController::class)->name('bio');
+-
+ // Client-facing pages: no login, the signed link is the credential (GET and POST share the URL)
+ Route::middleware('signed')->group(function () {
+     Route::get('/connect/{client:slug}', [AccountController::class, 'clientConnect'])->middleware('feature:publishing')->name('connect.show');
+diff --git a/tests/Feature/BioPageTest.php b/tests/Feature/BioPageTest.php
+deleted file mode 100644
+index f3aa6fe..0000000
+--- a/tests/Feature/BioPageTest.php
++++ /dev/null
+@@ -1,31 +0,0 @@
+-<?php
+-
+-use App\Bio\BioLinks;
+-use App\Models\Client;
+-use App\Models\User;
+-
+-test('the public bio page lists the profile links, phone and accounts in the client\'s language', function () {
+-    $client = Client::factory()->create(['name' => 'Almyra Beach Lounge', 'slug' => 'almyra']);
+-    $profile = $client->profile;
+-    $profile['fields'] = ['phone' => '+30 28210 00000', 'site' => 'almyra.gr', 'booking' => 'https://almyra.gr/book', 'menu' => 'https://almyra.gr/menu.pdf', 'whatsapp' => '+30 6900000000', 'email' => 'hello@almyra.gr', 'promo_code' => 'SUMMER10'];
+-    $profile['accounts'] = ['instagram' => '@almyra.chania', 'facebook' => 'Almyra', 'tiktok' => ['almyra.chania', '@almyra.ru'], 'linkedin' => '']; // a string from before, and two TikToks
+-    $client->forceFill(['profile' => $profile])->save();
+-    $client->accounts()->create(['platform' => 'facebook', 'external_id' => '1234567890', 'name' => 'Almyra', 'access_token' => 't']);
+-
+-    expect(BioLinks::for($client->fresh()))->toHaveCount(10)
+-        ->and(BioLinks::for($client->fresh())[1])->toBe(['label' => 'Website', 'url' => 'https://almyra.gr', 'kind' => 'link'])
+-        ->and(BioLinks::for($client->fresh())[8])->toBe(['label' => 'TikTok @almyra.ru', 'url' => 'https://www.tiktok.com/@almyra.ru', 'kind' => 'social']);
+-
+-    $this->get('/bio/almyra')->assertOk()->assertSee('Almyra Beach Lounge')
+-        ->assertSeeInOrder(['tel:+302821000000', 'https://almyra.gr"', 'https://almyra.gr/book', 'https://almyra.gr/menu.pdf', 'https://wa.me/306900000000', 'mailto:hello@almyra.gr', 'https://www.instagram.com/almyra.chania', 'https://www.tiktok.com/@almyra.chania', 'https://www.tiktok.com/@almyra.ru', 'https://www.facebook.com/1234567890'], false)
+-        ->assertDontSee('SUMMER10')
+-        ->assertSee('Κράτηση')->assertSee('Κλήση'); // factory clients speak Greek first
+-    $this->withSession(['locale' => 'en'])->get('/bio/almyra')->assertOk()->assertSee('Book now')->assertSee('Call');
+-    $this->get('/bio/nobody')->assertNotFound();
+-});
+-
+-test('the client page shows the bio address', function () {
+-    $client = Client::factory()->create(['slug' => 'almyra']);
+-    $this->actingAs(User::factory()->create())->get(route('clients.edit', $client))->assertOk()->assertSee('Link in bio')->assertSee(route('bio', $client));
+-    $this->get(route('bio', $client))->assertOk()->assertDontSee('class="btn"', false); // no placeholders with links yet: name and accounts only
+-});
+diff --git a/tests/Feature/CheckTokensTest.php b/tests/Feature/CheckTokensTest.php
+index a7cabf3..64de460 100644
+--- a/tests/Feature/CheckTokensTest.php
++++ b/tests/Feature/CheckTokensTest.php
+@@ -12,7 +12,7 @@
+     $client = Client::factory()->create();
+     $soon = $client->accounts()->create(['platform' => 'instagram', 'external_id' => 'ig', 'name' => '@almyra', 'access_token' => 't', 'token_expires_at' => '2026-11-12 10:00', 'connected_by' => $user->id]);
+     $client->accounts()->create(['platform' => 'facebook', 'external_id' => 'fb', 'name' => 'Almyra', 'access_token' => 't', 'token_expires_at' => '2026-12-01 10:00', 'connected_by' => $user->id]);
+-    $client->accounts()->create(['platform' => 'wordpress', 'external_id' => 'wp', 'name' => 'Almyra', 'access_token' => 't', 'token_expires_at' => null]);
++    $client->accounts()->create(['platform' => 'drive', 'external_id' => 'folder', 'name' => 'Almyra', 'access_token' => '', 'token_expires_at' => null]);
+ 
+     $this->artisan('accounts:check-tokens');
+     $this->artisan('accounts:check-tokens');
+diff --git a/tests/Feature/ClientFormTabsTest.php b/tests/Feature/ClientFormTabsTest.php
+index f593be5..10886cb 100644
+--- a/tests/Feature/ClientFormTabsTest.php
++++ b/tests/Feature/ClientFormTabsTest.php
+@@ -3,15 +3,15 @@
+ use App\Models\Client;
+ use App\Models\User;
+ 
+-test('the profile form is nine sections plus the three tool boxes, with every field still in the page', function () {
++test('the profile form is nine sections plus the two tool boxes, with every field still in the page', function () {
+     $client = Client::factory()->create();
+     $html = $this->actingAs(User::factory()->create())->get(route('clients.edit', $client))->assertOk()->getContent();
+ 
+-    expect(substr_count($html, 'role="tab"'))->toBe(12);
+-    foreach (['basics', 'about', 'agency', 'voice', 'content', 'approval', 'timing', 'research', 'more', 'plan', 'import', 'bio'] as $tab) {
++    expect(substr_count($html, 'role="tab"'))->toBe(11);
++    foreach (['basics', 'about', 'agency', 'voice', 'content', 'approval', 'timing', 'research', 'more', 'plan', 'import'] as $tab) {
+         expect($html)->toContain("x-show=\"tab === '{$tab}'\"");
+     }
+-    expect($html)->toContain('x-show="![\'plan\', \'import\', \'bio\'].includes(tab)"') // the Save bar: every profile section, not the tool boxes
++    expect($html)->toContain('x-show="![\'plan\', \'import\'].includes(tab)"') // the Save bar: every profile section, not the tool boxes
+         ->toContain('name="name"')->toContain('name="p[about][description]"')->toContain('name="p[voice][words]"')->toContain('name="plan_due"')->toContain('name="p[signatures][instagram]"')->toContain('name="p[slots][0][day]"')
+         ->toContain('name="p[research][sources]"')->toContain('name="p[saved_replies][0][label]"')->toContain('name="p[webhooks][0][url]"');
+ });
+diff --git a/tests/Feature/LinkInBioRemovedTest.php b/tests/Feature/LinkInBioRemovedTest.php
+new file mode 100644
+index 0000000..0df9baf
+--- /dev/null
++++ b/tests/Feature/LinkInBioRemovedTest.php
+@@ -0,0 +1,22 @@
++<?php
++
++use App\Models\Client;
++use App\Models\User;
++
++test('link in bio is gone: no public page, no box on the client page', function () {
++    $client = Client::factory()->create();
++
++    $this->get("/bio/{$client->slug}")->assertNotFound();
++    $this->actingAs(User::factory()->create())->get(route('clients.edit', $client))->assertOk()
++        ->assertDontSee('Link in bio')->assertDontSee('WordPress');
++});
++
++test('the migration deletes the stored WordPress application passwords and leaves the other accounts', function () {
++    $client = Client::factory()->create();
++    $client->accounts()->create(['platform' => 'wordpress', 'external_id' => 'https://example.gr', 'name' => 'Example', 'access_token' => 'secret']);
++    $drive = $client->accounts()->create(['platform' => 'drive', 'external_id' => 'folder', 'name' => 'Example', 'access_token' => '']);
++
++    (require database_path('migrations/2026_11_05_150000_remove_wordpress_accounts.php'))->up();
++
++    expect($client->accounts()->pluck('id')->all())->toBe([$drive->id]);
++});
+diff --git a/tests/Feature/WordPressBioTest.php b/tests/Feature/WordPressBioTest.php
+deleted file mode 100644
+index de7906e..0000000
+--- a/tests/Feature/WordPressBioTest.php
++++ /dev/null
+@@ -1,50 +0,0 @@
+-<?php
+-
+-use App\Models\Account;
+-use App\Models\Client;
+-use App\Models\User;
+-use Illuminate\Support\Facades\Http;
+-
+-test('the bio buttons are published on the client\'s WordPress site with an application password and updated in place', function () {
+-    Http::fake([
+-        'client.gr/wp-json/wp/v2/users/me*' => Http::response(['name' => 'Agency', 'capabilities' => ['edit_pages' => true]]),
+-        'client.gr/wp-json/' => Http::response(['name' => 'Almyra Beach Lounge']),
+-        'client.gr/wp-json/wp/v2/pages' => Http::response(['id' => 12, 'link' => 'https://client.gr/links/'], 201),
+-        'client.gr/wp-json/wp/v2/pages/12' => Http::response(['id' => 12, 'link' => 'https://client.gr/links/']),
+-    ]);
+-    $client = Client::factory()->create(['slug' => 'almyra']);
+-    $profile = $client->profile;
+-    $profile['fields'] = ['booking' => 'https://almyra.gr/book'];
+-    $client->forceFill(['profile' => $profile])->save();
+-
+-    $this->actingAs(User::factory()->create())->post(route('wordpress.connect', $client), ['site' => 'client.gr', 'user' => 'agency', 'password' => 'abcd efgh'])
+-        ->assertRedirect()->assertSessionHas('status', 'wordpress-connected');
+-    $account = Account::where('client_id', $client->id)->where('platform', 'wordpress')->first();
+-    expect($account->name)->toBe('Almyra Beach Lounge')
+-        ->and($account->meta)->toBe(['user' => 'agency', 'site' => 'https://client.gr'])
+-        ->and($account->access_token)->toBe('abcd efgh')
+-        ->and($account->getRawOriginal('access_token'))->not->toContain('abcd');
+-    Http::assertSent(fn ($request) => str_contains($request->url(), 'users/me') && $request->hasHeader('Authorization', 'Basic '.base64_encode('agency:abcd efgh')));
+-
+-    $this->withSession(['locale' => 'en'])->post(route('wordpress.publish', $client))->assertSessionHas('status', 'wordpress-published');
+-    expect($account->fresh()->meta['page_id'])->toBe(12)->and($account->fresh()->meta['url'])->toBe('https://client.gr/links/');
+-    Http::assertSent(fn ($request) => $request->url() === 'https://client.gr/wp-json/wp/v2/pages' && $request['slug'] === 'links' && $request['status'] === 'publish'
+-        && str_contains($request['content'], 'href="https://almyra.gr/book"') && str_contains($request['content'], 'Κράτηση') && ! str_contains($request['content'], "\n")); // the client's language, one line
+-
+-    $this->post(route('wordpress.publish', $client))->assertSessionHas('status', 'wordpress-published');
+-    Http::assertSent(fn ($request) => $request->url() === 'https://client.gr/wp-json/wp/v2/pages/12');
+-
+-    $this->get(route('clients.edit', $client))->assertOk()->assertSee('Update on WordPress')->assertSee('https://client.gr/links/');
+-    $this->delete(route('wordpress.disconnect', $client))->assertSessionHas('status', 'wordpress-disconnected');
+-    expect(Account::where('platform', 'wordpress')->count())->toBe(0);
+-    $this->get(route('clients.edit', $client))->assertOk()->assertSee('Application password');
+-});
+-
+-test('a wrong application password is reported and nothing is stored', function () {
+-    Http::fake(['client.gr/*' => Http::response(['code' => 'incorrect_password', 'message' => 'The provided password is an invalid application password.'], 401)]);
+-    $client = Client::factory()->create();
+-
+-    $this->actingAs(User::factory()->create())->post(route('wordpress.connect', $client), ['site' => 'https://client.gr/', 'user' => 'agency', 'password' => 'nope'])
+-        ->assertSessionHasErrors(['wordpress' => 'WordPress: The provided password is an invalid application password.'], null, 'wordpress');
+-    expect(Account::count())->toBe(0);
+-});
+-- 
+2.43.0
+

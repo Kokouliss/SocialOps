@@ -1,0 +1,905 @@
+From 14c9e709b87f7cb46e4f37982462d9664ef03e7d Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Thu, 5 Nov 2026 16:08:17 +0200
+Subject: [PATCH] Recycle bin per client: a deleted post can be restored
+
+Deleting a post (the post page or the list's bulk delete) soft-deletes it: it leaves
+every list, the approval links and the tools, and keeps its captions, media, notes and
+approvals. The client's Recycle bin tab lists the deleted posts with who deleted them
+and when, restores one or all, or deletes them for good. Nothing empties it on its own.
+
+Post names stay unique with binned posts counted. A publish job already queued leaves a
+binned post alone. An approval left with nothing to decide reminds nobody and closes
+once overdue; a post restored after that comes back a Draft. An old link to a binned
+post opens the bin, and the assets page names a binned post that uses a file.
+Decision D20.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01GAFd54RLsKcieieWCSQ4Cx
+---
+ CLAUDE.md                                     |   1 +
+ app/Console/Commands/RemindReviews.php        |   9 +
+ app/Http/Controllers/AssetController.php      |   2 +-
+ app/Http/Controllers/DashboardController.php  |   2 +-
+ app/Http/Controllers/PostController.php       |  19 +-
+ app/Http/Controllers/RecycleBinController.php |  51 +++++
+ app/Http/Controllers/ReviewController.php     |   2 +-
+ app/Jobs/PublishPost.php                      |   8 +-
+ app/Models/Post.php                           |  35 ++++
+ app/Posts/PostImporter.php                    |   3 +-
+ app/Posts/PostNamer.php                       |   6 +-
+ ..._11_05_160000_add_recycle_bin_to_posts.php |  25 +++
+ docs/decisions.md                             |   1 +
+ docs/dpa-template.md                          |   2 +-
+ docs/roadmap.md                               |   1 +
+ lang/el.json                                  |  27 ++-
+ resources/views/calendar/_list.blade.php      |   2 +-
+ resources/views/clients/assets.blade.php      |   6 +-
+ resources/views/clients/bin.blade.php         |  77 ++++++++
+ resources/views/layouts/client-nav.blade.php  |   3 +-
+ resources/views/posts/edit.blade.php          |   2 +-
+ routes/web.php                                |  10 +-
+ tests/Feature/BulkActionsTest.php             |   6 +-
+ tests/Feature/DashboardTest.php               |   7 +-
+ tests/Feature/PostsTest.php                   |   4 +-
+ tests/Feature/RecycleBinTest.php              | 181 ++++++++++++++++++
+ 26 files changed, 456 insertions(+), 36 deletions(-)
+ create mode 100644 app/Http/Controllers/RecycleBinController.php
+ create mode 100644 database/migrations/2026_11_05_160000_add_recycle_bin_to_posts.php
+ create mode 100644 resources/views/clients/bin.blade.php
+ create mode 100644 tests/Feature/RecycleBinTest.php
+
+diff --git a/CLAUDE.md b/CLAUDE.md
+index 6e1ff6b..47b5ca9 100644
+--- a/CLAUDE.md
++++ b/CLAUDE.md
+@@ -55,6 +55,7 @@ ## Conventions
+ - Asset/post naming: `CLIENT_YYYYMMDD_PLATFORM_FORMAT_PILLAR_LANG_v#`, e.g. `ALMYRA_20270512_IG_REEL_FOOD_EL-EN_v2`. Enforced automatically on upload; raw inbox uploads use `ANY` for the platform and `IMG`/`VID` for the format (e.g. `ALMYRA_20261103_ANY_IMG_FOOD_EL-EN_v1.jpg`) because platform and post format are decided later on the post.
+ - Clients board (`/clients`): one row per client with the agency's own fields from the profile's Agency tab (`clients.status`, `owner`, `priority`, `plan_due`, `posts_per_week`, `stories_per_week`, `tiktoks_per_month`, `pending`, `links`; `Client::STATUSES`, `Client::PRIORITIES`), the date the calendar is scheduled up to, this week's and the waiting-for-client counts; soonest plan due first, overdue in red. The client never sees these.
+ - Deadlines per client (`/clients/{id}/deadlines`, the Deadlines tab, `deadlines` table, `App\Models\Deadline`): what the agency owes and what the client owes for a month (title, side, due date, ticked when done), grouped by month; the tab counts and the dashboard lists the open ones due within 7 days (`Deadline::dueSoon()`), overdue in red.
++- Recycle bin per client (`/clients/{id}/bin`, the Recycle bin tab, `RecycleBinController`, D20): `Post` uses `SoftDeletes`, so deleting a post (`Post::moveToBin()`, from the post page or the list's bulk delete; never a Published one) only sets `posts.deleted_at` and `deleted_by`: every ordinary query, the approval links, the API and the MCP tools skip it, and its captions, media, notes and approvals stay. The tab lists the client's deleted posts with who deleted them and when, restores one or all (`Post::restoreFromBin()`: as it was, except that with posting on a Scheduled post whose time has passed comes back Approved, and a post that waited for the client comes back a Draft when every approval it waited in has closed meanwhile) or deletes them for good (`forceDelete`); nothing empties it on its own. An approval left with nothing to decide gets no reminder and is closed by `reviews:remind` once overdue; until then a restored post goes back into it. An old link to a binned post (`posts.edit`) opens the bin; the assets page names a binned post that uses a file. `PostNamer` and `PostImporter` look at binned posts too (`withTrashed`), because names are unique; validation rules on `posts` need `->withoutTrashed()`; `Model::fresh()` and a queued job's model ignore the soft-delete scope, so `PublishPost` checks `trashed()` itself.
+ - Instagram grid preview per client (`/clients/{id}/grid`): feed, carousel and Reel posts with a date, newest first, first asset as a thumbnail (`/assets/{id}/thumb`, `Asset::preview(600)`).
+ - Canva import (`App\Media\Canva`: the Connect API through our own integration, OAuth with PKCE, read-only scopes, keys in `services.canva`): the Canva box on the assets page connects the agency's Canva to the client (an `accounts` row with platform `canva`, refreshed on use, skipped by `accounts:check-tokens`), searches designs and queues `ImportCanvaDesign` per ticked design: PNG or JPG per page, or MP4, filed through `Client::storeAsset()` like an inbox upload (`uploaded_via` canva).
+ - Google Drive intake (`App\Media\GoogleDrive`: our own service account from `GOOGLE_SERVICE_ACCOUNT_JSON`, scope `drive.readonly`, JWT signed in PHP, token cached 50 minutes): the Google Drive box on the assets page checks a pasted folder link and keeps it as an `accounts` row with platform `drive` (`external_id` = folder id, empty token, no expiry so the token monitor ignores it); `inbox:pull` (hourly) queues `PullDriveFolder` per folder, which files every photo and video the inbox has not seen yet (`assets.source_id` = `drive:<file id>`) through `Client::storeAsset()` with `uploaded_via` drive. Subfolders are not read, one folder per client.
+diff --git a/app/Console/Commands/RemindReviews.php b/app/Console/Commands/RemindReviews.php
+index 6467be0..ac783f9 100644
+--- a/app/Console/Commands/RemindReviews.php
++++ b/app/Console/Commands/RemindReviews.php
+@@ -18,6 +18,15 @@ class RemindReviews extends Command
+     public function handle(): int
+     {
+         foreach (Review::whereNull('completed_at')->with('client', 'creator')->get() as $review) {
++            if ($review->pending()->doesntExist()) {
++                // its last waiting posts were deleted: nobody is reminded of an empty link, and past the deadline it is closed
++                // (until then it stays open, so a post restored from the recycle bin goes back into it)
++                if (now()->gte($review->due_at)) {
++                    $review->forceFill(['completed_at' => now()])->save();
++                }
++
++                continue;
++            }
+             if (now()->lt($review->due_at)) {
+                 if (! $review->reminded_at && now()->gte($review->created_at->copy()->average($review->due_at))) {
+                     Mail::to($review->approverEmails())->send(new ReviewMail($review, 'reminder'));
+diff --git a/app/Http/Controllers/AssetController.php b/app/Http/Controllers/AssetController.php
+index 7514728..03df69e 100644
+--- a/app/Http/Controllers/AssetController.php
++++ b/app/Http/Controllers/AssetController.php
+@@ -54,7 +54,7 @@ public function index(Request $request, Client $client, Canva $canva): View
+ 
+         return view('clients.assets', [
+             'client' => $client,
+-            'assets' => $client->assets()->with('posts')
++            'assets' => $client->assets()->with(['posts' => fn ($q) => $q->withTrashed()]) // a post in the recycle bin still uses its media
+                 ->when($request->input('kind'), fn ($q, $kind) => $q->where('kind', $kind))
+                 ->when($request->input('pillar'), fn ($q, $pillar) => $q->where('pillar', $pillar))
+                 ->latest()->get(),
+diff --git a/app/Http/Controllers/DashboardController.php b/app/Http/Controllers/DashboardController.php
+index 0ed253b..fb9c847 100644
+--- a/app/Http/Controllers/DashboardController.php
++++ b/app/Http/Controllers/DashboardController.php
+@@ -33,7 +33,7 @@ public function index(Request $request): View
+             'drafts' => $mine->restrict(Post::with('client'))->whereIn('state', [PostState::Idea, PostState::Draft, PostState::ChangesRequested])->whereBetween('scheduled_at', [now()->startOfDay(), now()->addDays(7)->endOfDay()])->orderBy('scheduled_at')->get(),
+             'stuck' => $mine->restrict(Post::with('client'))->whereIn('state', [PostState::Failed, PostState::ManualNeeded])->latest('updated_at')->get(),
+             'deadlines' => $mine->restrict(Deadline::with('client'))->dueSoon()->orderBy('due_on')->get(),
+-            'waiting' => $mine->restrict(Review::with('client'))->whereNull('completed_at')->withCount('pending')->orderBy('due_at')->get(),
++            'waiting' => $mine->restrict(Review::with('client'))->whereNull('completed_at')->has('pending')->withCount('pending')->orderBy('due_at')->get(), // has(): not a review whose waiting posts were all deleted
+             'unanswered' => ! config('features.publishing') ? collect() : $mine->restrict(Comment::with('client'))->whereNull('replied_at')->whereNull('hidden_at')->selectRaw('client_id, count(*) as n')->groupBy('client_id')->get(),
+             'tokens' => ! config('features.publishing') ? collect() : $mine->restrict(Account::with('client'))->where('token_expires_at', '<=', now()->addDays(CheckTokens::ALERT_DAYS))->orderBy('token_expires_at')->get(),
+             'failedJobs' => DB::table('failed_jobs')->count(),
+diff --git a/app/Http/Controllers/PostController.php b/app/Http/Controllers/PostController.php
+index 623ee8e..74c5717 100644
+--- a/app/Http/Controllers/PostController.php
++++ b/app/Http/Controllers/PostController.php
+@@ -89,8 +89,12 @@ public function import(Request $request, Client $client): RedirectResponse
+         return redirect()->route('calendar', ['client' => $client->slug])->with('status', __(':n drafts imported', ['n' => $result['imported']]));
+     }
+ 
+-    public function edit(Post $post): View
++    public function edit(Post $post): View|RedirectResponse
+     {
++        if ($post->trashed()) { // an old link (Slack, a mail, the Back button): the post is in the recycle bin, where it can be restored
++            return redirect()->route('clients.bin', $post->client_id);
++        }
++
+         return view('posts.edit', [
+             'client' => $post->client,
+             'post' => $post,
+@@ -275,7 +279,7 @@ public function bulk(Request $request): RedirectResponse
+             'action' => ['required', Rule::in(['review', 'move', 'delete'])],
+             'date' => ['required_if:action,move', 'nullable', 'date_format:Y-m-d'],
+             'posts' => ['required', 'array', 'min:1'],
+-            'posts.*' => [Rule::exists('posts', 'id')->whereIn('client_id', $request->user()->clients()->pluck('id'))],
++            'posts.*' => [Rule::exists('posts', 'id')->whereIn('client_id', $request->user()->clients()->pluck('id'))->withoutTrashed()],
+         ]);
+         $posts = Post::with('client')->whereIn('id', $data['posts'])->get();
+ 
+@@ -290,8 +294,8 @@ public function bulk(Request $request): RedirectResponse
+             session()->flash('warning', ReviewController::mailWarning($reviews));
+         } else {
+             [$skipped, $todo] = $posts->partition(fn (Post $p) => $p->state === PostState::Published);
+-            $todo->each(fn (Post $p) => $data['action'] === 'move' ? $this->move($p, $data['date']) : $p->delete());
+-            $done = __($data['action'] === 'move' ? ':n moved' : ':n deleted', ['n' => $todo->count()]);
++            $todo->each(fn (Post $p) => $data['action'] === 'move' ? $this->move($p, $data['date']) : $p->moveToBin($request->user()->id));
++            $done = __($data['action'] === 'move' ? ':n moved' : ':n moved to the recycle bin', ['n' => $todo->count()]);
+         }
+ 
+         return back()->with('status', $done.($skipped->isNotEmpty() ? ', '.__(':n left as they are (published or already in review)', ['n' => $skipped->count()]) : ''));
+@@ -307,12 +311,13 @@ public function duplicate(Request $request, Post $post): RedirectResponse
+         return redirect()->route('posts.edit', $copy)->with('status', $client->is($post->client) ? 'duplicated-as-a-draft' : 'duplicated-as-a-draft-without-the-media-which-stays-with-its-client');
+     }
+ 
+-    public function destroy(Post $post): RedirectResponse
++    /** Delete = into the client's recycle bin (RecycleBinController restores it or deletes it for good). */
++    public function destroy(Request $request, Post $post): RedirectResponse
+     {
+         abort_if($post->state === PostState::Published, 422, 'Published posts cannot be deleted.');
+-        $post->delete();
++        $post->moveToBin($request->user()->id);
+ 
+-        return redirect()->route('calendar')->with('status', 'post-deleted');
++        return redirect()->route('calendar', ['client' => $post->client->slug])->with('status', 'post-moved-to-the-recycle-bin');
+     }
+ 
+     /** ZIP with the media files and a captions.txt, for posting by hand or designing in Canva while no account is connected. */
+diff --git a/app/Http/Controllers/RecycleBinController.php b/app/Http/Controllers/RecycleBinController.php
+new file mode 100644
+index 0000000..a82aee9
+--- /dev/null
++++ b/app/Http/Controllers/RecycleBinController.php
+@@ -0,0 +1,51 @@
++<?php
++
++namespace App\Http\Controllers;
++
++use App\Models\Client;
++use App\Models\Post;
++use Illuminate\Http\RedirectResponse;
++use Illuminate\View\View;
++
++/** A client's recycle bin: the posts someone deleted, kept whole until they are restored or deleted for good. Nothing empties it on its own. */
++class RecycleBinController extends Controller
++{
++    public function index(Client $client): View
++    {
++        return view('clients.bin', [
++            'client' => $client,
++            'posts' => $client->posts()->onlyTrashed()->with('assets', 'deleter')->orderByDesc('deleted_at')->orderByDesc('id')->get(),
++        ]);
++    }
++
++    public function restore(Post $post): RedirectResponse
++    {
++        abort_unless($post->trashed(), 404);
++        $post->restoreFromBin();
++
++        return redirect()->route('clients.bin', $post->client_id)->with(['status' => 'post-restored', 'restored' => $post->id]);
++    }
++
++    public function restoreAll(Client $client): RedirectResponse
++    {
++        $posts = $client->posts()->onlyTrashed()->get()->each->restoreFromBin();
++
++        return redirect()->route('clients.bin', $client)->with('status', __(':n restored', ['n' => $posts->count()]));
++    }
++
++    /** For good: the captions, notes and approval history go with it (the media files stay in the assets). */
++    public function destroy(Post $post): RedirectResponse
++    {
++        abort_unless($post->trashed(), 404);
++        $post->forceDelete();
++
++        return redirect()->route('clients.bin', $post->client_id)->with('status', 'post-deleted-for-good');
++    }
++
++    public function empty(Client $client): RedirectResponse
++    {
++        $posts = $client->posts()->onlyTrashed()->get()->each->forceDelete();
++
++        return redirect()->route('clients.bin', $client)->with('status', __(':n deleted for good', ['n' => $posts->count()]));
++    }
++}
+diff --git a/app/Http/Controllers/ReviewController.php b/app/Http/Controllers/ReviewController.php
+index 13472ae..fc4670e 100644
+--- a/app/Http/Controllers/ReviewController.php
++++ b/app/Http/Controllers/ReviewController.php
+@@ -33,7 +33,7 @@ public function store(Request $request, Client $client): RedirectResponse
+     {
+         $data = $request->validate([
+             'posts' => ['required', 'array', 'min:1'],
+-            'posts.*' => [Rule::exists('posts', 'id')->where('client_id', $client->id)->whereIn('state', self::SENDABLE)],
++            'posts.*' => [Rule::exists('posts', 'id')->where('client_id', $client->id)->whereIn('state', self::SENDABLE)->withoutTrashed()],
+         ]);
+ 
+         try {
+diff --git a/app/Jobs/PublishPost.php b/app/Jobs/PublishPost.php
+index 4635959..c471464 100644
+--- a/app/Jobs/PublishPost.php
++++ b/app/Jobs/PublishPost.php
+@@ -39,9 +39,9 @@ public function middleware(): array
+ 
+     public function handle(): void
+     {
+-        $post = $this->post->fresh();
+-        if ($post->state !== PostState::Scheduled) {
+-            return; // a human moved it, or a twin job already did the work
++        $post = $this->post->fresh(); // fresh() also finds a post in the recycle bin
++        if (! $post || $post->trashed() || $post->state !== PostState::Scheduled) {
++            return; // a human moved or deleted it, or a twin job already did the work
+         }
+ 
+         $done = $post->external_ids ?? [];
+@@ -96,7 +96,7 @@ private function firstComment(Post $post, Account $account, string $mediaId): vo
+     public function failed(Throwable $e): void
+     {
+         $post = $this->post->fresh();
+-        if ($post->state !== PostState::Scheduled) {
++        if (! $post || $post->trashed() || $post->state !== PostState::Scheduled) {
+             return;
+         }
+         $post->forceFill(['publish_error' => $e->getMessage()])->save();
+diff --git a/app/Models/Post.php b/app/Models/Post.php
+index 8cb4a08..5400926 100644
+--- a/app/Models/Post.php
++++ b/app/Models/Post.php
+@@ -16,13 +16,17 @@
+ use Illuminate\Database\Eloquent\Relations\BelongsTo;
+ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+ use Illuminate\Database\Eloquent\Relations\HasMany;
++use Illuminate\Database\Eloquent\SoftDeletes;
+ 
++/** A deleted post is soft-deleted: it waits in its client's recycle bin (`moveToBin()`, `restoreFromBin()`) and every ordinary query skips it. */
+ #[Fillable(['name', 'state', 'platforms', 'format', 'pillar', 'brief', 'settings', 'scheduled_at', 'created_by'])]
+ class Post extends Model
+ {
+     /** @use HasFactory<PostFactory> */
+     use HasFactory;
+ 
++    use SoftDeletes;
++
+     public const PLATFORMS = ['instagram', 'facebook', 'tiktok', 'linkedin'];
+ 
+     /** LinkedIn posts use feed (image or text), carousel (images or a document) and reel (video). */
+@@ -66,6 +70,37 @@ public function creator(): BelongsTo
+         return $this->belongsTo(User::class, 'created_by');
+     }
+ 
++    /** Who moved the post to the recycle bin. */
++    public function deleter(): BelongsTo
++    {
++        return $this->belongsTo(User::class, 'deleted_by');
++    }
++
++    /** Into the client's recycle bin: the post leaves every list and keeps its captions, media, notes and approvals for a restore. */
++    public function moveToBin(?int $by = null): void
++    {
++        $this->forceFill(['deleted_by' => $by])->save();
++        $this->delete();
++    }
++
++    /**
++     * Back from the recycle bin as it was, with two exceptions that keep the state true: with posting on, a Scheduled post whose time
++     * has passed comes back Approved, so a restore never publishes on its own; and a post that was waiting for the client comes back
++     * a Draft when every approval it waited in has closed meanwhile, so it is sent again instead of waiting for nobody.
++     */
++    public function restoreFromBin(): void
++    {
++        if (config('features.publishing') && $this->state === PostState::Scheduled && $this->scheduled_at?->isPast()) {
++            $this->state = PostState::Approved;
++        }
++        $asked = $this->reviews()->wherePivotNull('decision')->get();
++        if ($this->state === PostState::InReview && $asked->isNotEmpty() && $asked->every(fn (Review $review) => $review->completed_at !== null)) {
++            $this->state = PostState::Draft;
++        }
++        $this->deleted_by = null;
++        $this->restore();
++    }
++
+     public function notes(): HasMany
+     {
+         return $this->hasMany(PostNote::class)->with('user')->latest()->orderByDesc('id');
+diff --git a/app/Posts/PostImporter.php b/app/Posts/PostImporter.php
+index e037033..1a797d2 100644
+--- a/app/Posts/PostImporter.php
++++ b/app/Posts/PostImporter.php
+@@ -16,7 +16,8 @@ public function __construct(private MetaPublisher $meta) {}
+     public function import(Account $account): int
+     {
+         $client = $account->client;
+-        $known = Post::where('client_id', $client->id)->whereNotNull('external_ids')->pluck('external_ids')->pluck($account->platform)->filter()->all();
++        // withTrashed: a post in the recycle bin is not imported a second time
++        $known = Post::withTrashed()->where('client_id', $client->id)->whereNotNull('external_ids')->pluck('external_ids')->pluck($account->platform)->filter()->all();
+         $imported = 0;
+         foreach ($this->meta->recentPosts($account) as $remote) {
+             if (in_array($remote['id'], $known, true)) {
+diff --git a/app/Posts/PostNamer.php b/app/Posts/PostNamer.php
+index f2b88f6..59877d4 100644
+--- a/app/Posts/PostNamer.php
++++ b/app/Posts/PostNamer.php
+@@ -20,11 +20,13 @@ public static function name(Client $client, array $platforms, string $format, ?s
+         $lang = strtoupper(implode('-', $client->profile['languages']));
+         $base = sprintf('%s_%s_%s_%s_%s_%s_v', $client->code, $date->format('Ymd'), $platform, $clean($format), $clean($pillar) ?: 'MISC', $lang);
+ 
+-        $version = Post::where('client_id', $client->id)
++        // names are unique and a post in the recycle bin keeps its own, so the next version is one past the highest there is, binned posts included
++        $version = Post::withTrashed()->where('client_id', $client->id)
+             ->where('name', '>=', $base)
+             ->pluck('name')
+             ->filter(fn (string $name) => str_starts_with($name, $base))
+-            ->count() + 1;
++            ->map(fn (string $name) => (int) substr($name, strlen($base)))
++            ->max() + 1;
+ 
+         return $base.$version;
+     }
+diff --git a/database/migrations/2026_11_05_160000_add_recycle_bin_to_posts.php b/database/migrations/2026_11_05_160000_add_recycle_bin_to_posts.php
+new file mode 100644
+index 0000000..c258ce7
+--- /dev/null
++++ b/database/migrations/2026_11_05_160000_add_recycle_bin_to_posts.php
+@@ -0,0 +1,25 @@
++<?php
++
++use Illuminate\Database\Migrations\Migration;
++use Illuminate\Database\Schema\Blueprint;
++use Illuminate\Support\Facades\Schema;
++
++return new class extends Migration
++{
++    public function up(): void
++    {
++        // a deleted post waits in its client's recycle bin: deleted_at set, everything else (captions, media, notes, approvals) kept for the restore
++        Schema::table('posts', function (Blueprint $table) {
++            $table->softDeletes();
++            $table->foreignId('deleted_by')->nullable()->constrained('users')->nullOnDelete();
++        });
++    }
++
++    public function down(): void
++    {
++        Schema::table('posts', function (Blueprint $table) {
++            $table->dropConstrainedForeignId('deleted_by');
++            $table->dropSoftDeletes();
++        });
++    }
++};
+diff --git a/docs/decisions.md b/docs/decisions.md
+index 3502909..1097dc7 100644
+--- a/docs/decisions.md
++++ b/docs/decisions.md
+@@ -27,6 +27,7 @@ ## Decided
+ | D18 | Claude works through the MCP connector, not the server-side API: `get-planning-brief` hands Claude the profile, quota, window and prompt, Claude researches the trends in the chat (last30days skill or web search) and plans, `save-plan` files the Drafts and the review sheet. The server-side Claude buttons stay in the code behind `FEATURE_CLAUDE_API` (off) | Panos's call (2026-11-04): "The claude from now on should work with a connection mcp rather than api. If things go well then we converted to api again" | 2026-11-04 |
+ | D17 | Platforms: Instagram, Facebook, TikTok and LinkedIn. Google Business Profile removed from the code and the interface (driver, OAuth provider, reviews, the Performance API month, the event and offer fields). LinkedIn has no driver: it is planned, captioned and approved in Social Ops (feed, carousel and reel formats, 3,000 characters) and posted by hand | Panos's call (2026-11-04): "remove the google my business completely. Keep Facebook, Instagram, Tiktok and we add linkedin" | 2026-11-04 |
+ | D19 | Link in bio removed completely: the public `/bio/{slug}` page, the WordPress page of D15 (`App\Bio`, the box on the client form, its routes and texts). A migration deletes the stored WordPress application passwords. A `links` page already published on a client's site stays there until someone deletes it in WordPress | The team's call (2026-11-05): "delete the link in bio completely"; the app organizes the posts, the bio page is not part of that | 2026-11-05 |
++| D20 | Recycle bin per client: deleting a post (the post page or the list's bulk delete) soft-deletes it (`posts.deleted_at`, `deleted_by`); it leaves every list, the approval links and the tools, and keeps its captions, media, notes and approval history. The client's Recycle bin tab restores it as it was or deletes it for good, one post or all of them. Nothing empties the bin on its own. Published posts still cannot be deleted. With posting on, a Scheduled post restored after its time comes back Approved, so a restore never publishes by itself, and a publish job already queued leaves a binned post alone. An approval whose waiting posts were all deleted reminds nobody and closes once overdue; a post restored in time waits in it again, one restored after it closed comes back a Draft to send again | The team's call (2026-11-05): "If someone deletes a post it goes to recycle bin and can restore if they want"; no automatic emptying because nobody asked for it and it would delete work silently | 2026-11-05 |
+ 
+ ## Open (ask the user before building on these)
+ | # | Question | Options | Research leaning |
+diff --git a/docs/dpa-template.md b/docs/dpa-template.md
+index 747af3e..21042b7 100644
+--- a/docs/dpa-template.md
++++ b/docs/dpa-template.md
+@@ -63,7 +63,7 @@ ## Annex 1: Description of the processing
+ | **Categories of data subjects** | The Controller's staff and approvers; customers and guests who appear in photos and videos (user-generated content, venue clips); people who comment on or message the Controller's accounts; people named in captions. |
+ | **Categories of personal data** | Names, e-mail addresses and phone numbers of approvers and staff; photos and videos, including faces, with the consent and repost-permission records the Controller gives; social media profile names and the text of comments, messages and reviews, with a sentiment and intent tag; access tokens for the Controller's accounts (encrypted); publishing statistics (aggregated numbers); captions and notes. |
+ | **Special categories** | None intended. The Controller does not provide content revealing health, religion or similar data (for example a customer's prescription in a pharmacy photo); the Processor flags such content to the Controller instead of using it. |
+-| **Retention in Social Ops** | Media and posts: until the Controller deletes them or the services end. Comments, messages and reviews: read from the networks for the last 30 days and kept until deleted. AI call records: [12] months, with the cost and size of each call. Access logs: [6] months. |
++| **Retention in Social Ops** | Media and posts: until the Controller deletes them or the services end; a deleted post stays in the client's recycle bin until it is deleted for good there. Comments, messages and reviews: read from the networks for the last 30 days and kept until deleted. AI call records: [12] months, with the cost and size of each call. Access logs: [6] months. |
+ 
+ ## Annex 2: Sub-processors
+ 
+diff --git a/docs/roadmap.md b/docs/roadmap.md
+index de1055c..e6cabae 100644
+--- a/docs/roadmap.md
++++ b/docs/roadmap.md
+@@ -56,3 +56,4 @@ ## Phase 4: Organizer (from 2026-11-04, D16)
+ - [x] Profile form in tabs (Basics, Voice and content, Approval and timing, Research, Replies and webhooks)
+ - [x] Clients board: status, person, priority, plan due, posts per week, pending notes, links (the Agency tab of the profile form)
+ - [x] Deadlines per client per month: client side and agency side, due date, done (Deadlines tab, due this week on the dashboard)
++- [x] Recycle bin per client: a deleted post waits there whole and can be restored or deleted for good (Recycle bin tab, D20)
+diff --git a/lang/el.json b/lang/el.json
+index a73ce72..34a451a 100644
+--- a/lang/el.json
++++ b/lang/el.json
+@@ -19,7 +19,6 @@
+     ":client: the first comment under :name on :platform failed: :error": ":client: το πρώτο σχόλιο κάτω από το :name στο :platform απέτυχε: :error",
+     ":month posts :year": "Αναρτήσεις :month :year",
+     ":n Canva imports queued": ":n εισαγωγές Canva μπήκαν στην ουρά",
+-    ":n deleted": ":n διαγράφηκαν",
+     ":n drafts imported": ":n πρόχειρα εισήχθησαν",
+     ":n left as they are (published or already in review)": ":n έμειναν ως έχουν (δημοσιευμένες ή ήδη σε έλεγχο)",
+     ":n moved": ":n μετακινήθηκαν",
+@@ -205,11 +204,9 @@
+     "Delayed": "Καθυστερεί",
+     "Delete": "Διαγραφή",
+     "Delete Account": "Διαγραφή λογαριασμού",
+-    "Delete the ticked posts? Published posts stay.": "Διαγραφή των τσεκαρισμένων αναρτήσεων; Οι δημοσιευμένες μένουν.",
+     "Delete this client and everything it owns?": "Διαγραφή αυτού του πελάτη και όλων όσων του ανήκουν;",
+     "Delete this deadline?": "Να διαγραφεί αυτή η προθεσμία;",
+     "Delete this file?": "Διαγραφή αυτού του αρχείου;",
+-    "Delete this post?": "Διαγραφή αυτής της ανάρτησης;",
+     "Design text": "Κείμενο σχεδίου",
+     "Disconnect": "Αποσύνδεση",
+     "Disconnect Canva from this client?": "Αποσύνδεση του Canva από αυτόν τον πελάτη;",
+@@ -481,7 +478,6 @@
+     "Post approved": "Η ανάρτηση εγκρίθηκε",
+     "Post changes requested": "Ζητήθηκαν αλλαγές στην ανάρτηση",
+     "Post created": "Η ανάρτηση δημιουργήθηκε",
+-    "Post deleted": "Η ανάρτηση διαγράφηκε",
+     "Post draft": "Η ανάρτηση έγινε πρόχειρο",
+     "Post failed": "Η ανάρτηση απέτυχε",
+     "Post from a prompt": "Ανάρτηση από οδηγία",
+@@ -839,5 +835,26 @@
+     "gym": "γυμναστήριο",
+     "spa": "spa",
+     "real estate": "μεσιτικό",
+-    "The share of posts each topic gets; the shares add up to 100. Optional: without pillars Claude picks the topics from About the client, the season and the trends.": "Το ποσοστό αναρτήσεων που παίρνει κάθε θέμα· τα ποσοστά αθροίζουν 100. Προαιρετικό: χωρίς πυλώνες το Claude διαλέγει τα θέματα από το Σχετικά με τον πελάτη, την εποχή και τις τάσεις."
++    "The share of posts each topic gets; the shares add up to 100. Optional: without pillars Claude picks the topics from About the client, the season and the trends.": "Το ποσοστό αναρτήσεων που παίρνει κάθε θέμα· τα ποσοστά αθροίζουν 100. Προαιρετικό: χωρίς πυλώνες το Claude διαλέγει τα θέματα από το Σχετικά με τον πελάτη, την εποχή και τις τάσεις.",
++    "Recycle bin": "Κάδος ανακύκλωσης",
++    "recycle bin": "κάδος ανακύκλωσης",
++    "Deleted posts": "Διαγραμμένες αναρτήσεις",
++    "A deleted post waits here with its captions, media and notes. Restore puts it back on the calendar as it was. Nothing is emptied on its own.": "Κάθε διαγραμμένη ανάρτηση περιμένει εδώ με τις λεζάντες, τα αρχεία και τις σημειώσεις της. Η επαναφορά τη βάζει πίσω στο ημερολόγιο όπως ήταν. Τίποτα δεν αδειάζει από μόνο του.",
++    "The recycle bin is empty. A deleted post of this client waits here until someone restores it or deletes it for good.": "Ο κάδος ανακύκλωσης είναι άδειος. Κάθε ανάρτηση αυτού του πελάτη που διαγράφεται περιμένει εδώ μέχρι κάποιος να την επαναφέρει ή να τη διαγράψει οριστικά.",
++    "Deleted :date": "Διαγράφηκε :date",
++    "Restore": "Επαναφορά",
++    "Restore all": "Επαναφορά όλων",
++    "Delete for good": "Οριστική διαγραφή",
++    "Empty the recycle bin": "Άδειασμα του κάδου ανακύκλωσης",
++    "Delete this post for good? This cannot be undone.": "Οριστική διαγραφή αυτής της ανάρτησης; Δεν αναιρείται.",
++    "Delete every post in the recycle bin for good? This cannot be undone.": "Οριστική διαγραφή όλων των αναρτήσεων του κάδου ανακύκλωσης; Δεν αναιρείται.",
++    "Move this post to the recycle bin? It can be restored from there.": "Μεταφορά αυτής της ανάρτησης στον κάδο ανακύκλωσης; Μπορεί να επαναφερθεί από εκεί.",
++    "Move the ticked posts to the recycle bin? Published posts stay.": "Μεταφορά των τσεκαρισμένων αναρτήσεων στον κάδο ανακύκλωσης; Οι δημοσιευμένες μένουν.",
++    ":n moved to the recycle bin": ":n μπήκαν στον κάδο ανακύκλωσης",
++    ":n restored": ":n επαναφέρθηκαν",
++    ":n deleted for good": ":n διαγράφηκαν οριστικά",
++    "Post moved to the recycle bin": "Η ανάρτηση μπήκε στον κάδο ανακύκλωσης",
++    "Post restored": "Η ανάρτηση επαναφέρθηκε",
++    "Post deleted for good": "Η ανάρτηση διαγράφηκε οριστικά",
++    "In the recycle bin:": "Στον κάδο ανακύκλωσης:"
+ }
+diff --git a/resources/views/calendar/_list.blade.php b/resources/views/calendar/_list.blade.php
+index 731b90c..7410351 100644
+--- a/resources/views/calendar/_list.blade.php
++++ b/resources/views/calendar/_list.blade.php
+@@ -54,7 +54,7 @@
+                 <input type="date" name="date" value="{{ old('date') }}" class="rounded-md border-gray-300 py-1.5 text-sm" aria-label="{{ __('Move to') }}">
+                 <button name="action" value="move" class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40">{{ __('Move') }}</button>
+             </span>
+-            <button name="action" value="delete" class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-40" onclick="return confirm('{{ __('Delete the ticked posts? Published posts stay.') }}')">{{ __('Delete') }}</button>
++            <button name="action" value="delete" class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-40" onclick="return confirm('{{ __('Move the ticked posts to the recycle bin? Published posts stay.') }}')">{{ __('Delete') }}</button>
+             @if ($errors->hasAny(['posts', 'date']))
+                 <span class="text-red-600">{{ $errors->first('posts') ?: $errors->first('date') }}</span>
+             @endif
+diff --git a/resources/views/clients/assets.blade.php b/resources/views/clients/assets.blade.php
+index e636dd5..78e1548 100644
+--- a/resources/views/clients/assets.blade.php
++++ b/resources/views/clients/assets.blade.php
+@@ -186,7 +186,11 @@
+                             @endif
+                             <p class="mt-1">
+                                 @forelse ($asset->posts as $post)
+-                                    <a href="{{ route('posts.edit', $post) }}" class="block truncate font-medium text-gray-900 hover:text-brand-600" title="{{ $post->name }}">{{ __('In') }} {{ $post->name }}</a>
++                                    @if ($post->trashed())
++                                        <a href="{{ route('clients.bin', $client) }}" class="block truncate text-gray-500 hover:text-brand-600" title="{{ $post->name }}">{{ __('In the recycle bin:') }} {{ $post->name }}</a>
++                                    @else
++                                        <a href="{{ route('posts.edit', $post) }}" class="block truncate font-medium text-gray-900 hover:text-brand-600" title="{{ $post->name }}">{{ __('In') }} {{ $post->name }}</a>
++                                    @endif
+                                 @empty
+                                     <span class="text-gray-400">{{ __('Not used in a post yet') }}</span>
+                                 @endforelse
+diff --git a/resources/views/clients/bin.blade.php b/resources/views/clients/bin.blade.php
+new file mode 100644
+index 0000000..893f000
+--- /dev/null
++++ b/resources/views/clients/bin.blade.php
+@@ -0,0 +1,77 @@
++<x-app-layout :client="$client">
++    @php($platforms = ['instagram' => 'Instagram', 'facebook' => 'Facebook', 'tiktok' => 'TikTok', 'linkedin' => 'LinkedIn'])
++    <x-slot name="header">
++        <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ $client->name }}: {{ __('recycle bin') }}</h2>
++    </x-slot>
++    @if ($posts->isNotEmpty())
++        <x-slot name="actions">
++            <form method="POST" action="{{ route('bin.restore-all', $client) }}">
++                @csrf
++                <x-secondary-button type="submit">{{ __('Restore all') }}</x-secondary-button>
++            </form>
++            <form method="POST" action="{{ route('bin.empty', $client) }}" class="ml-auto" onsubmit="return confirm('{{ __('Delete every post in the recycle bin for good? This cannot be undone.') }}')">
++                @csrf
++                @method('DELETE')
++                <button type="submit" class="text-sm text-red-600 hover:underline">{{ __('Empty the recycle bin') }}</button>
++            </form>
++        </x-slot>
++    @endif
++
++    <div class="py-6">
++        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
++            @if (session('status'))
++                <p class="text-sm text-green-600">
++                    {{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.
++                    @if ($restored = $client->posts()->find(session('restored')))
++                        <a href="{{ route('posts.edit', $restored) }}" class="font-medium underline">{{ __('Open the post') }}</a>
++                    @endif
++                </p>
++            @endif
++
++            @if ($posts->isEmpty())
++                <x-empty-state class="bg-white">{{ __('The recycle bin is empty. A deleted post of this client waits here until someone restores it or deletes it for good.') }}</x-empty-state>
++            @else
++                <x-section :title="__('Deleted posts')" :description="__('A deleted post waits here with its captions, media and notes. Restore puts it back on the calendar as it was. Nothing is emptied on its own.')" flush>
++                    <ul class="divide-y divide-gray-100 text-sm">
++                        @foreach ($posts as $post)
++                            {{-- what the post is and when it was deleted, then the two buttons: side by side, stacked on a phone --}}
++                            <li class="grid gap-3 px-6 py-3 sm:grid-cols-6 sm:items-center">
++                                <div class="flex min-w-0 items-center gap-3 sm:col-span-4">
++                                    @if ($thumb = $post->assets->firstWhere('kind', 'image'))
++                                        <img src="{{ route('assets.thumb', $thumb) }}" alt="" loading="lazy" class="h-12 w-12 flex-none rounded object-cover">
++                                    @else
++                                        <span class="flex h-12 w-12 flex-none items-center justify-center rounded bg-gray-100 text-center text-[10px] uppercase leading-tight text-gray-400">{{ $post->assets->isEmpty() ? __('no media') : __('video') }}</span>
++                                    @endif
++                                    <div class="min-w-0 flex-1">
++                                        <p class="truncate font-mono text-xs text-gray-700">{{ $post->name }}</p>
++                                        <p class="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
++                                            <x-state-badge :state="$post->state" />
++                                            <span>{{ $post->scheduled_at?->translatedFormat('D d-m-Y H:i') ?? __('No date yet') }}</span>
++                                            <span>{{ collect($post->platforms)->map(fn ($p) => $platforms[$p] ?? ucfirst($p))->join(', ') }}</span>
++                                        </p>
++                                        @if ($post->brief)
++                                            <p class="mt-1 truncate text-gray-600">{{ $post->brief }}</p>
++                                        @endif
++                                        <p class="mt-1 text-xs text-gray-500">{{ __('Deleted :date', ['date' => $post->deleted_at->format('d-m-Y H:i')]) }}@if ($post->deleter) · {{ $post->deleter->name }}@endif</p>
++                                    </div>
++                                </div>
++                                <div class="flex flex-wrap items-center gap-3 sm:col-span-2">
++                                    <span class="hidden grow sm:block"></span>{{-- pushes the buttons to the right edge on a wide screen --}}
++                                    <form method="POST" action="{{ route('posts.restore', $post) }}">
++                                        @csrf
++                                        <x-secondary-button type="submit">{{ __('Restore') }}</x-secondary-button>
++                                    </form>
++                                    <form method="POST" action="{{ route('posts.forget', $post) }}" onsubmit="return confirm('{{ __('Delete this post for good? This cannot be undone.') }}')">
++                                        @csrf
++                                        @method('DELETE')
++                                        <button type="submit" class="text-xs text-red-600 hover:underline">{{ __('Delete for good') }}</button>
++                                    </form>
++                                </div>
++                            </li>
++                        @endforeach
++                    </ul>
++                </x-section>
++            @endif
++        </div>
++    </div>
++</x-app-layout>
+diff --git a/resources/views/layouts/client-nav.blade.php b/resources/views/layouts/client-nav.blade.php
+index 407e2fa..2d58703 100644
+--- a/resources/views/layouts/client-nav.blade.php
++++ b/resources/views/layouts/client-nav.blade.php
+@@ -1,7 +1,7 @@
+ @php
+     // Same tab row on every page of a client; the switcher (phones: the side navigation lists the clients on wider screens) keeps the page when the route is client-scoped.
+     $name = request()->route()->getName();
+-    $switch = fn ($c) => in_array($name, ['clients.assets', 'clients.grid', 'clients.reviews', 'clients.deadlines', 'clients.comments', 'clients.accounts', 'clients.reports', 'clients.edit', 'posts.create']) ? route($name, $c) : route('calendar', ['client' => $c->slug]);
++    $switch = fn ($c) => in_array($name, ['clients.assets', 'clients.grid', 'clients.reviews', 'clients.deadlines', 'clients.comments', 'clients.accounts', 'clients.reports', 'clients.edit', 'clients.bin', 'posts.create']) ? route($name, $c) : route('calendar', ['client' => $c->slug]);
+     $tabs = [
+         [__('Calendar'), route('calendar', ['client' => $client->slug]), request()->routeIs('calendar', 'posts.*'), null],
+         [__('Assets'), route('clients.assets', $client), request()->routeIs('clients.assets'), null],
+@@ -14,6 +14,7 @@
+         ] : []),
+         [__('Reports'), route('clients.reports', $client), request()->routeIs('clients.reports', 'reports.show'), null],
+         [__('Profile'), route('clients.edit', $client), request()->routeIs('clients.edit'), null],
++        [__('Recycle bin'), route('clients.bin', $client), request()->routeIs('clients.bin'), null],
+     ];
+ @endphp
+ <nav class="mt-4 flex items-center gap-1 overflow-x-auto text-sm" aria-label="{{ $client->name }}">
+diff --git a/resources/views/posts/edit.blade.php b/resources/views/posts/edit.blade.php
+index 14a3050..31914fd 100644
+--- a/resources/views/posts/edit.blade.php
++++ b/resources/views/posts/edit.blade.php
+@@ -40,7 +40,7 @@
+                 <button type="submit" class="{{ $btn }} border-brand-300 text-brand-700 hover:bg-brand-50">{{ __('Draft captions with Claude') }}</button>
+             </form>
+             @endif
+-            <form method="POST" action="{{ route('posts.destroy', $post) }}" class="ml-auto" onsubmit="return confirm('{{ __('Delete this post?') }}')">
++            <form method="POST" action="{{ route('posts.destroy', $post) }}" class="ml-auto" onsubmit="return confirm('{{ __('Move this post to the recycle bin? It can be restored from there.') }}')">
+                 @csrf
+                 @method('DELETE')
+                 <button type="submit" class="text-sm text-red-600 hover:underline">{{ __('Delete') }}</button>
+diff --git a/routes/web.php b/routes/web.php
+index fb1d4e2..d57c61c 100644
+--- a/routes/web.php
++++ b/routes/web.php
+@@ -15,6 +15,7 @@
+ use App\Http\Controllers\PortalController;
+ use App\Http\Controllers\PostController;
+ use App\Http\Controllers\ProfileController;
++use App\Http\Controllers\RecycleBinController;
+ use App\Http\Controllers\ReportController;
+ use App\Http\Controllers\ReviewController;
+ use App\Http\Controllers\SettingsController;
+@@ -75,14 +76,19 @@
+     Route::delete('/jobs/{uuid}', [JobController::class, 'forget'])->name('jobs.forget');
+     Route::get('/clients/{client}/posts/create', [PostController::class, 'create'])->name('posts.create');
+     Route::post('/clients/{client}/posts', [PostController::class, 'store'])->name('posts.store');
+-    Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
++    Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->withTrashed()->name('posts.edit'); // a binned post's link goes to the bin
+     Route::patch('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
+     Route::post('/posts/{post}/transition', [PostController::class, 'transition'])->name('posts.transition');
+     Route::post('/posts/bulk', [PostController::class, 'bulk'])->name('posts.bulk');
+     Route::post('/posts/{post}/duplicate', [PostController::class, 'duplicate'])->name('posts.duplicate');
+     Route::patch('/posts/{post}/reschedule', [PostController::class, 'reschedule'])->name('posts.reschedule');
+     Route::post('/posts/{post}/notes', [PostController::class, 'note'])->name('posts.note');
+-    Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
++    Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy'); // into the client's recycle bin
++    Route::get('/clients/{client}/bin', [RecycleBinController::class, 'index'])->name('clients.bin');
++    Route::post('/clients/{client}/bin/restore', [RecycleBinController::class, 'restoreAll'])->name('bin.restore-all');
++    Route::delete('/clients/{client}/bin', [RecycleBinController::class, 'empty'])->name('bin.empty');
++    Route::post('/posts/{post}/restore', [RecycleBinController::class, 'restore'])->withTrashed()->name('posts.restore');
++    Route::delete('/posts/{post}/for-good', [RecycleBinController::class, 'destroy'])->withTrashed()->name('posts.forget');
+     Route::get('/posts/{post}/export', [PostController::class, 'export'])->name('posts.export');
+     Route::get('/posts/{post}/image/{lang}', [PostController::class, 'image'])->name('posts.image')->where('lang', '[a-z]{2}');
+     Route::get('/clients/{client}/posts/export.csv', [CalendarController::class, 'csv'])->name('posts.csv');
+diff --git a/tests/Feature/BulkActionsTest.php b/tests/Feature/BulkActionsTest.php
+index a4d1b8d..127afed 100644
+--- a/tests/Feature/BulkActionsTest.php
++++ b/tests/Feature/BulkActionsTest.php
+@@ -35,6 +35,8 @@
+     $this->post(route('posts.bulk'), ['action' => 'move', 'posts' => [$draftA->id]])->assertSessionHasErrors('date');
+ 
+     $this->post(route('posts.bulk'), ['action' => 'delete', 'posts' => [$draftA->id, $published->id, $foreign->id]])->assertSessionHasErrors('posts.2');
+-    $this->post(route('posts.bulk'), ['action' => 'delete', 'posts' => [$draftA->id, $published->id]])->assertSessionHas('status', '1 deleted, 1 left as they are (published or already in review)');
+-    expect(Post::find($draftA->id))->toBeNull()->and(Post::find($published->id))->not->toBeNull();
++    $this->post(route('posts.bulk'), ['action' => 'delete', 'posts' => [$draftA->id, $published->id]])->assertSessionHas('status', '1 moved to the recycle bin, 1 left as they are (published or already in review)');
++    expect(Post::find($draftA->id))->toBeNull()->and(Post::find($published->id))->not->toBeNull()
++        ->and(Post::onlyTrashed()->find($draftA->id)->deleted_by)->toBe($me->id); // in the client's recycle bin, not gone
++    $this->post(route('posts.bulk'), ['action' => 'delete', 'posts' => [$draftA->id]])->assertSessionHasErrors('posts.0'); // a binned post cannot be ticked again
+ });
+diff --git a/tests/Feature/DashboardTest.php b/tests/Feature/DashboardTest.php
+index 3a9952c..89234f6 100644
+--- a/tests/Feature/DashboardTest.php
++++ b/tests/Feature/DashboardTest.php
+@@ -20,7 +20,8 @@
+     Post::factory()->create(['client_id' => $client->id, 'name' => 'DRAFT_LATER', 'state' => PostState::Draft, 'scheduled_at' => '2026-11-30 09:00']);
+     Post::factory()->create(['client_id' => $client->id, 'name' => 'BROKEN', 'state' => PostState::Failed, 'publish_error' => 'Meta: boom']);
+     $client->reviews()->create(['due_at' => '2026-11-09 10:00', 'created_by' => $me->id])->posts()->attach(Post::factory()->create(['client_id' => $client->id, 'state' => PostState::InReview]));
+-    $client->reviews()->create(['due_at' => '2026-11-12 10:00', 'created_by' => $me->id]);
++    $client->reviews()->create(['due_at' => '2026-11-12 10:00', 'created_by' => $me->id])->posts()->attach(Post::factory()->create(['client_id' => $client->id, 'state' => PostState::InReview]));
++    $client->reviews()->create(['due_at' => '2026-11-13 10:00', 'created_by' => $me->id]); // nothing left to decide (its posts were deleted): not listed
+     $account = $client->accounts()->create(['platform' => 'instagram', 'external_id' => '1', 'name' => '@almyra', 'access_token' => 't', 'token_expires_at' => '2026-11-12 10:00']);
+     $client->comments()->create(['account_id' => $account->id, 'platform' => 'instagram', 'external_id' => 'c1', 'text' => 'Τιμές;', 'posted_at' => now()]);
+     $client->comments()->create(['account_id' => $account->id, 'platform' => 'instagram', 'external_id' => 'c2', 'text' => 'Done', 'posted_at' => now(), 'replied_at' => now()]);
+@@ -31,8 +32,8 @@
+         ->assertSeeInOrder(['Today', 'LATE_ONE', 'late: is the queue running?', 'DUE_TODAY', 'Tomorrow', 'TOMORROW'])->assertDontSee('NEXT_WEEK')
+         ->assertSeeInOrder(['not sent for approval yet', 'DRAFT_SOON'])->assertDontSee('DRAFT_LATER')
+         ->assertSeeInOrder(['BROKEN', 'Failed', 'Meta: boom'])
+-        ->assertSeeInOrder(['Waiting for the client', route('clients.reviews', $client), '1 posts waiting', 'bg-red-100', 'due 1 day ago', '0 posts waiting', 'due 2 days from now'])
+-        ->assertSeeInOrder(['Per client, the next 7 days', 'Almyra', '>4<', '>1<', '>1<', '>1<', '>1<'], false)
++        ->assertSeeInOrder(['Waiting for the client', route('clients.reviews', $client), '1 posts waiting', 'bg-red-100', 'due 1 day ago', '1 posts waiting', 'due 2 days from now'])->assertDontSee('0 posts waiting')->assertDontSee('due 3 days from now')
++        ->assertSeeInOrder(['Per client, the next 7 days', 'Almyra', '>4<', '>2<', '>1<', '>1<', '>1<'], false)
+         ->assertSee(route('clients.comments', $client).'">Almyra</a> · 1', false)
+         ->assertSee('expires 2 days from now')
+         ->assertSee('1 failed jobs');
+diff --git a/tests/Feature/PostsTest.php b/tests/Feature/PostsTest.php
+index 14f8975..1ef75d3 100644
+--- a/tests/Feature/PostsTest.php
++++ b/tests/Feature/PostsTest.php
+@@ -118,8 +118,8 @@ function postInput(array $overrides = []): array
+     $this->actingAs($this->staff)->patch("/posts/{$published->id}", postInput())->assertForbidden();
+     $this->actingAs($this->staff)->delete("/posts/{$published->id}")->assertStatus(422);
+ 
+-    $this->actingAs($this->staff)->delete("/posts/{$theirs->id}")->assertRedirect('/calendar');
+-    expect(Post::count())->toBe(3);
++    $this->actingAs($this->staff)->delete("/posts/{$theirs->id}")->assertRedirect(route('calendar', ['client' => $theirs->client->slug]));
++    expect(Post::count())->toBe(3)->and(Post::onlyTrashed()->whereKey($theirs->id)->exists())->toBeTrue(); // deleted = in the recycle bin
+ });
+ 
+ test('a post exports as a ZIP of media and captions, and a client month as a CSV', function () {
+diff --git a/tests/Feature/RecycleBinTest.php b/tests/Feature/RecycleBinTest.php
+new file mode 100644
+index 0000000..faaaec2
+--- /dev/null
++++ b/tests/Feature/RecycleBinTest.php
+@@ -0,0 +1,181 @@
++<?php
++
++use App\Http\Controllers\ReviewController;
++use App\Jobs\PublishPost;
++use App\Mail\ReviewMail;
++use App\Models\Asset;
++use App\Models\Client;
++use App\Models\Post;
++use App\Models\User;
++use App\Posts\PostNamer;
++use App\Posts\PostState;
++use Illuminate\Support\Facades\Mail;
++
++test('a deleted post waits in its client\'s recycle bin and comes back whole on restore', function () {
++    $this->travelTo('2026-11-05 16:00:00');
++    $client = Client::factory()->create();
++    $other = Client::factory()->create();
++    $me = User::factory()->create(['name' => 'Maria Staff']);
++    $post = Post::factory()->for($client)->create(['state' => PostState::InReview, 'scheduled_at' => '2026-11-10 18:00']);
++    $post->variants()->create(['platform' => 'instagram', 'lang' => 'el', 'caption' => 'Καλημέρα', 'hashtags' => ['chania']]);
++    $post->notes()->create(['body' => 'check the photo', 'user_id' => $me->id]);
++    $calendar = route('calendar', ['client' => $client->slug, 'view' => 'list']);
++
++    $this->actingAs($me)->get($calendar)->assertOk()->assertSee($post->name)->assertSee('Recycle bin');
++    $this->delete(route('posts.destroy', $post))->assertRedirect(route('calendar', ['client' => $client->slug]))->assertSessionHas('status', 'post-moved-to-the-recycle-bin');
++
++    // out of every list, kept whole in the bin of its own client only
++    $this->get($calendar)->assertOk()->assertDontSee($post->name);
++    $this->get(route('posts.edit', $post))->assertRedirect(route('clients.bin', $client)); // an old link to it lands on the bin
++    $this->get(route('clients.bin', $client))->assertOk()->assertSee($post->name)->assertSee('Deleted 05-11-2026 16:00')->assertSee('Maria Staff')->assertSee('Restore')->assertSee('In review');
++    $this->get(route('clients.bin', $other))->assertOk()->assertDontSee($post->name)->assertSee('The recycle bin is empty');
++    expect($post->variants()->count())->toBe(1)->and($post->notes()->count())->toBe(1);
++
++    $this->post(route('posts.restore', $post))->assertRedirect(route('clients.bin', $client))->assertSessionHas('status', 'post-restored');
++    $post = Post::findOrFail($post->id);
++    expect($post->deleted_by)->toBeNull()->and($post->state)->toBe(PostState::InReview)->and($post->scheduled_at->format('Y-m-d H:i'))->toBe('2026-11-10 18:00')
++        ->and($post->variants->first()->caption)->toBe('Καλημέρα')->and($post->notes)->toHaveCount(1);
++    $this->get($calendar)->assertSee($post->name);
++    $this->get(route('posts.edit', $post))->assertOk();
++    $this->post(route('posts.restore', $post))->assertNotFound(); // only a post in the bin can be restored
++});
++
++test('a login limited to other clients cannot see or touch this client\'s recycle bin', function () {
++    $mine = Client::factory()->create();
++    $theirs = Client::factory()->create();
++    $post = Post::factory()->for($theirs)->create();
++    $post->moveToBin();
++    $limited = User::factory()->create(['client_ids' => [$mine->id]]);
++
++    $this->actingAs($limited)->get(route('clients.bin', $theirs))->assertForbidden();
++    $this->post(route('posts.restore', $post))->assertForbidden();
++    $this->delete(route('posts.forget', $post))->assertForbidden();
++    $this->delete(route('bin.empty', $theirs))->assertForbidden();
++    $this->post(route('bin.restore-all', $theirs))->assertForbidden();
++    expect(Post::onlyTrashed()->count())->toBe(1);
++});
++
++test('delete for good and empty remove only what is in the bin, restore all brings everything back', function () {
++    $client = Client::factory()->create();
++    $live = Post::factory()->for($client)->create();
++    [$a, $b, $c] = Post::factory()->count(3)->for($client)->create()->each(function (Post $post) {
++        $post->variants()->create(['platform' => 'instagram', 'lang' => 'en', 'caption' => 'Hello', 'hashtags' => []]);
++        $post->moveToBin();
++    })->all();
++    $elsewhere = Post::factory()->create();
++    $elsewhere->moveToBin();
++    $this->actingAs(User::factory()->create());
++
++    $this->delete(route('posts.forget', $live))->assertNotFound(); // a post on the calendar goes to the bin first
++    $this->delete(route('posts.forget', $a))->assertRedirect(route('clients.bin', $client))->assertSessionHas('status', 'post-deleted-for-good');
++    expect(Post::withTrashed()->find($a->id))->toBeNull()->and($a->variants()->count())->toBe(0);
++
++    $this->post(route('bin.restore-all', $client))->assertSessionHas('status', '2 restored');
++    expect($client->posts()->count())->toBe(3)->and($client->posts()->onlyTrashed()->count())->toBe(0);
++
++    $b->moveToBin();
++    $c->moveToBin();
++    $this->delete(route('bin.empty', $client))->assertRedirect(route('clients.bin', $client))->assertSessionHas('status', '2 deleted for good');
++    expect($client->posts()->withTrashed()->pluck('id')->all())->toBe([$live->id])
++        ->and(Post::onlyTrashed()->pluck('id')->all())->toBe([$elsewhere->id]); // another client's bin is left alone
++});
++
++test('a post name is never reused while its post sits in the recycle bin, nor after it is deleted for good', function () {
++    $client = Client::factory()->create();
++    $name = fn () => PostNamer::name($client, ['instagram'], 'feed', 'place', now()->parse('2026-12-01'));
++    $first = Post::factory()->for($client)->create(['name' => $name()]);
++    $second = Post::factory()->for($client)->create(['name' => $name()]);
++    expect($first->name)->toEndWith('_v1')->and($second->name)->toEndWith('_v2');
++
++    $first->moveToBin();
++    expect($name())->toEndWith('_v3');
++    $first->forceDelete();
++    expect($name())->toEndWith('_v3'); // v2 is still taken, so not v2 again
++});
++
++test('with posting on, a scheduled post restored after its time comes back approved instead of publishing at once', function () {
++    $this->travelTo('2026-11-05 16:00:00');
++    $overdue = Post::factory()->create(['state' => PostState::Scheduled, 'scheduled_at' => '2026-11-04 10:00']);
++    $ahead = Post::factory()->create(['state' => PostState::Scheduled, 'scheduled_at' => '2026-11-20 10:00']);
++    $byHand = Post::factory()->create(['state' => PostState::Scheduled, 'scheduled_at' => '2026-11-04 10:00']);
++    collect([$overdue, $ahead, $byHand])->each->moveToBin();
++
++    $overdue->restoreFromBin();
++    $ahead->restoreFromBin();
++    config(['features.publishing' => false]); // organize mode: Scheduled only waits for "Mark published" by hand
++    $byHand->restoreFromBin();
++
++    expect($overdue->fresh()->state)->toBe(PostState::Approved)->and($ahead->fresh()->state)->toBe(PostState::Scheduled)->and($byHand->fresh()->state)->toBe(PostState::Scheduled);
++});
++
++test('a binned post leaves the approval it was sent with and returns to it on restore', function () {
++    Mail::fake();
++    $client = Client::factory()->create();
++    $user = User::factory()->create();
++    [$keep, $gone] = Post::factory()->count(2)->for($client)->create()->all();
++    $review = ReviewController::send($client, [$keep->id, $gone->id], $user->id);
++
++    $gone->moveToBin($user->id);
++    expect($review->posts()->pluck('posts.id')->all())->toBe([$keep->id])->and($review->pending()->count())->toBe(1);
++    $this->actingAs($user)->post(route('reviews.store', $client), ['posts' => [$gone->id]])->assertSessionHasErrors('posts.0'); // not sendable from the bin
++
++    Post::onlyTrashed()->find($gone->id)->restoreFromBin();
++    expect($review->pending()->count())->toBe(2)->and($gone->fresh()->state)->toBe(PostState::InReview);
++});
++
++test('an approval whose waiting posts were all deleted reminds nobody, takes a restored post back, and closes once overdue', function () {
++    Mail::fake();
++    $this->travelTo('2026-11-03 09:00:00');
++    $client = Client::factory()->create();
++    $user = User::factory()->create();
++    $post = Post::factory()->for($client)->create();
++    $review = ReviewController::send($client, [$post->id], $user->id);
++    $post->refresh()->moveToBin($user->id);
++
++    // half the time to answer has passed: no reminder for an empty link, and the dashboard does not list it as waiting
++    $this->travelTo($review->created_at->copy()->average($review->due_at)->addMinute());
++    $this->artisan('reviews:remind');
++    Mail::assertNotSent(ReviewMail::class, fn (ReviewMail $mail) => $mail->kind === 'reminder');
++    expect($review->fresh()->completed_at)->toBeNull();
++    $this->actingAs($user)->get(route('dashboard'))->assertOk()->assertDontSee('Waiting for the client');
++
++    // restored in time: it waits in the same approval again
++    Post::onlyTrashed()->find($post->id)->restoreFromBin();
++    expect($post->fresh()->state)->toBe(PostState::InReview)->and($review->pending()->count())->toBe(1);
++    $this->get(route('dashboard'))->assertSee('Waiting for the client');
++
++    // deleted again and left past the deadline: the approval closes quietly, and a later restore gives a Draft to send again
++    $post->fresh()->moveToBin($user->id);
++    $this->travelTo($review->due_at->copy()->addHour());
++    $this->artisan('reviews:remind');
++    $this->artisan('reviews:remind');
++    expect($review->fresh()->completed_at)->not->toBeNull();
++    Mail::assertNotSent(ReviewMail::class, fn (ReviewMail $mail) => in_array($mail->kind, ['reminder', 'overdue', 'completed']));
++    Post::onlyTrashed()->find($post->id)->restoreFromBin();
++    expect($post->fresh()->state)->toBe(PostState::Draft);
++});
++
++test('a publish job that was already queued leaves a binned post alone', function () {
++    Mail::fake();
++    $post = Post::factory()->create(['state' => PostState::Scheduled, 'scheduled_at' => now()->subMinute()]);
++    $job = new PublishPost($post);
++    $post->moveToBin();
++
++    $job->handle(); // without the guard this throws: no account is connected to publish to
++    $job->failed(new RuntimeException('Meta: down'));
++
++    $post = Post::onlyTrashed()->find($post->id);
++    expect($post->state)->toBe(PostState::Scheduled)->and($post->external_ids)->toBeNull()->and($post->publish_error)->toBeNull();
++    Mail::assertNothingSent();
++});
++
++test('the assets page says when a file is used by a post in the recycle bin', function () {
++    $client = Client::factory()->create();
++    $asset = Asset::factory()->create(['client_id' => $client->id]);
++    $post = Post::factory()->for($client)->create();
++    $post->assets()->attach($asset->id, ['position' => 0]);
++    $post->moveToBin();
++
++    $this->actingAs(User::factory()->create())->get(route('clients.assets', $client))->assertOk()
++        ->assertSee('In the recycle bin:')->assertSee($post->name)->assertDontSee('Not used in a post yet');
++});
+-- 
+2.43.0
+
