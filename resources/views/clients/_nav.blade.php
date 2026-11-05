@@ -1,5 +1,5 @@
 {{-- The section list of the client page. `tab` lives on the page's x-data wrapper; $tools adds the edit page's own boxes under a heading. --}}
-@php($sections = ['basics' => __('Basics'), 'agency' => __('Agency'), 'voice' => __('Voice'), 'content' => __('Content'), 'approval' => __('Approval'), 'timing' => __('Timing'), 'research' => __('Research'), 'more' => __('Replies and webhooks')])
+@php($sections = ['basics' => __('Basics'), 'about' => __('About'), 'agency' => __('Agency'), 'voice' => __('Voice'), 'content' => __('Content'), 'approval' => __('Approval'), 'timing' => __('Timing'), 'research' => __('Research'), 'more' => __('Replies and webhooks')])
 <nav class="mb-4 flex gap-1 overflow-x-auto text-sm md:sticky md:top-6 md:mb-0 md:w-52 md:shrink-0 md:flex-col md:self-start" role="tablist">
     @foreach ($sections + ($tools ?? []) as $key => $label)
         @if (isset($tools) && $key === array_key_first($tools))

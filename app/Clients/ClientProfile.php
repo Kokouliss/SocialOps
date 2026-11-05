@@ -15,9 +15,12 @@ use Symfony\Component\Yaml\Yaml;
 /** Parses and validates a brand profile written in the config/clients/example.yaml format. */
 final class ClientProfile
 {
-    public const SECTIONS = ['accounts', 'languages', 'extra_languages', 'voice', 'notes', 'pillars', 'hashtags', 'research', 'approval', 'slots', 'saved_replies', 'signatures', 'fields', 'utm', 'webhooks', 'key_dates'];
+    public const SECTIONS = ['accounts', 'languages', 'extra_languages', 'about', 'voice', 'notes', 'pillars', 'hashtags', 'research', 'approval', 'slots', 'saved_replies', 'signatures', 'fields', 'utm', 'webhooks', 'key_dates'];
 
     public const PLATFORMS = ['instagram', 'facebook', 'tiktok', 'linkedin'];
+
+    /** What Claude plans and writes from: the free-text fields of the About section, each a `{{about.<key>}}` in the prompts. */
+    public const ABOUT = ['description', 'audience', 'offerings', 'differentiators', 'goals', 'current'];
 
     /**
      * The nested sections (everything but slug, code, name, type, location), validated.
@@ -28,7 +31,7 @@ final class ClientProfile
      */
     public static function parse(string $yaml): array
     {
-        $data = Arr::only(self::parseYaml($yaml), self::SECTIONS) + ['extra_languages' => [], 'notes' => '', 'slots' => [], 'saved_replies' => [], 'signatures' => [], 'fields' => [], 'utm' => false, 'webhooks' => [], 'key_dates' => [], 'research' => ['sources' => [], 'excluded_domains' => [], 'excluded_topics' => []]];
+        $data = Arr::only(self::parseYaml($yaml), self::SECTIONS) + ['extra_languages' => [], 'about' => [], 'notes' => '', 'slots' => [], 'saved_replies' => [], 'signatures' => [], 'fields' => [], 'utm' => false, 'webhooks' => [], 'key_dates' => [], 'research' => ['sources' => [], 'excluded_domains' => [], 'excluded_topics' => []]];
 
         $validator = Validator::make($data, self::rules());
 
@@ -68,12 +71,14 @@ final class ClientProfile
             'accounts' => array_map($text, array_replace(array_fill_keys(self::PLATFORMS, ''), Arr::only((array) ($form['accounts'] ?? []), self::PLATFORMS))),
             'languages' => $list($form['languages'] ?? ''),
             'extra_languages' => $list($form['extra_languages'] ?? ''),
+            'about' => array_map($text, array_replace(array_fill_keys(self::ABOUT, ''), Arr::only((array) ($form['about'] ?? []), self::ABOUT))),
             'voice' => [
                 'tone' => $text($form['voice']['tone'] ?? ''),
                 'person' => $text($form['voice']['person'] ?? ''),
                 'emoji' => $text($form['voice']['emoji'] ?? ''),
                 'cta_style' => $text($form['voice']['cta_style'] ?? ''),
                 'banned_phrases' => $lines($form['voice']['banned_phrases'] ?? ''),
+                'words' => $lines($form['voice']['words'] ?? ''),
                 'facts' => $lines($form['voice']['facts'] ?? ''),
             ],
             'notes' => $text($form['notes'] ?? ''),
@@ -118,6 +123,7 @@ final class ClientProfile
 
         return array_replace($t, [
             'accounts' => [],
+            'about' => [],
             'voice' => ['tone' => '', 'cta_style' => '', 'facts' => []] + $t['voice'],
             'hashtags' => ['always' => [], 'pool' => []] + $t['hashtags'],
             'approval' => ['approvers' => []] + $t['approval'],
@@ -197,6 +203,8 @@ final class ClientProfile
             'languages.*' => ['string', 'size:2'],
             'extra_languages' => ['present', 'array'],
             'extra_languages.*' => ['string', 'size:2'],
+            'about' => ['present', 'array'],
+            'about.*' => ['nullable', 'string', 'max:3000'],
             'voice' => ['required', 'array'],
             'voice.tone' => ['required', 'string'],
             'voice.person' => ['required', 'string'],
@@ -204,6 +212,8 @@ final class ClientProfile
             'voice.cta_style' => ['required', 'string'],
             'voice.banned_phrases' => ['present', 'array'],
             'voice.banned_phrases.*' => ['string'],
+            'voice.words' => ['nullable', 'array'],
+            'voice.words.*' => ['string'],
             'voice.facts' => ['present', 'array'],
             'voice.facts.*' => ['string'],
             'notes' => ['nullable', 'string', 'max:5000'],

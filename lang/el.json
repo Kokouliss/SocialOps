@@ -822,5 +822,22 @@
     "Or ask in a chat with the Social Ops connector: \"write the captions for post :id\".": "Ή ζητήστε το σε μια συνομιλία με τη σύνδεση Social Ops: «γράψε τις λεζάντες για την ανάρτηση :id».",
     "Every trend brief, content plan and monthly report for this client, newest first.": "Κάθε trend brief, πλάνο περιεχομένου και μηνιαία αναφορά του πελάτη, νεότερα πρώτα.",
     "Monthly reports are built on the 1st for last month; ask for another month here.": "Οι μηνιαίες αναφορές φτιάχνονται την 1η για τον προηγούμενο μήνα· ζήτησε άλλον μήνα εδώ.",
-    "Server configuration": "Ρυθμίσεις διακομιστή"
+    "Server configuration": "Ρυθμίσεις διακομιστή",
+    "About": "Σχετικά",
+    "About the client": "Σχετικά με τον πελάτη",
+    "What Claude plans and writes from. Every price, dish, service and event in a post comes from here or from the facts under Voice, so the more there is, the more accurate the posts.": "Από εδώ σχεδιάζει και γράφει το Claude. Κάθε τιμή, πιάτο, υπηρεσία και εκδήλωση σε μια ανάρτηση προέρχεται από εδώ ή από τα στοιχεία στη Φωνή· όσο περισσότερα υπάρχουν, τόσο πιο ακριβείς οι αναρτήσεις.",
+    "What it is": "Τι είναι",
+    "The place in a few sentences: what it is, where, since when, who runs it.": "Ο χώρος σε λίγες προτάσεις: τι είναι, πού, από πότε, ποιος τον τρέχει.",
+    "Who the guests are": "Ποιοι είναι οι πελάτες",
+    "Countries, ages, couples or families, budget, locals or visitors.": "Χώρες, ηλικίες, ζευγάρια ή οικογένειες, budget, ντόπιοι ή επισκέπτες.",
+    "What it offers": "Τι προσφέρει",
+    "Rooms, menu highlights, services, prices worth naming.": "Δωμάτια, πιάτα που ξεχωρίζουν, υπηρεσίες, τιμές που αξίζει να αναφέρονται.",
+    "What makes it different": "Τι το κάνει διαφορετικό",
+    "What a guest gets here and nowhere else.": "Τι βρίσκει ο πελάτης εδώ και πουθενά αλλού.",
+    "What the client wants now": "Τι θέλει ο πελάτης τώρα",
+    "Bookings, a new menu, awareness, a season to fill.": "Κρατήσεις, νέο μενού, αναγνωρισιμότητα, μια σεζόν που πρέπει να γεμίσει.",
+    "On now": "Τρέχει τώρα",
+    "Offers, events and seasonal things with their dates. Update it as the season moves.": "Προσφορές, εκδηλώσεις και εποχιακά με τις ημερομηνίες τους. Ενημέρωσέ το όσο προχωρά η σεζόν.",
+    "Words and phrases to use": "Λέξεις και φράσεις για χρήση",
+    "One per line: how the client names the place, the dishes, the rooms.": "Μία ανά γραμμή: πώς ονομάζει ο πελάτης τον χώρο, τα πιάτα, τα δωμάτια."
 }

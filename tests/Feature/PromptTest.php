@@ -17,9 +17,16 @@ it('fills the caption prompt from the example profile and leaves no placeholder 
         ->toContain('Platforms: instagram, facebook')
         ->toContain('Sunset cocktails')
         ->toContain('Client-specific banned phrases: none')
+        ->toContain('Words and phrases the client likes: none')
+        ->toContain('What it offers: Sunbeds and umbrellas, the cocktail list')
         ->toContain('Extra information about the client: none')
         ->not->toContain('Used by the AI Drafting Service')
         ->not->toMatch('/\{\{\s*[\w.]+\s*\}\}/');
+
+    // a profile saved before the About section existed still renders
+    unset($profile['about'], $profile['voice']['words']);
+    expect(Prompt::render('caption-draft', Prompt::profileVars($profile) + ['examples' => 'none yet', 'post' => ['platforms' => [], 'format' => 'feed', 'pillar' => 'place', 'brief' => '', 'asset_description' => '', 'photo' => 'none']]))
+        ->toContain('What it is: none')->toContain('Words and phrases the client likes: none');
 });
 
 it('renders the trend and plan prompts with key dates as bullet lines', function () {
@@ -33,6 +40,7 @@ it('renders the trend and plan prompts with key dates as bullet lines', function
         ->toContain('written in Greek');
     expect(Prompt::render('content-plan', $vars + ['quota' => 'place: 2, offers: 1', 'instruction' => '', 'trend_brief' => 'BRIEF', 'recent' => []]))
         ->toContain('Posts per pillar (exact): place: 2, offers: 1')
+        ->toContain('What the client wants from social media now: Fill the sunset tables')
         ->toContain("## Trend brief\nBRIEF")
         ->toContain("do not repeat these angles)\nnone");
 });
