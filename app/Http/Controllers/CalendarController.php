@@ -20,7 +20,7 @@ class CalendarController extends Controller
 
     public function index(Request $request): View
     {
-        [$view, $date, $start, $end] = $this->range($request);
+        [$view, $date, $start, $end, $range] = $this->range($request);
         $clientSlug = $request->input('client');
         $filters = $request->only(['state', 'platform', 'pillar']);
 
@@ -57,6 +57,7 @@ class CalendarController extends Controller
             'marks' => $marks,
             'view' => $view,
             'date' => $date,
+            'range' => $range,
             'days' => collect(Carbon::parse($start)->toPeriod($end, '1 day')),
             'posts' => $posts,
             'unscheduled' => $unscheduled,
@@ -104,16 +105,24 @@ class CalendarController extends Controller
         ]);
     }
 
-    /** @return array{string, Carbon, Carbon, Carbon} view, the date shown, first and last day shown */
+    /** @return array{string, Carbon, Carbon, Carbon, ?array{Carbon, Carbon}} view, the date shown, first and last day shown, the from–to range when one was asked for */
     private function range(Request $request): array
     {
+        $request->validate(['from' => ['nullable', 'date'], 'to' => ['nullable', 'date', 'after_or_equal:from']]);
         $view = in_array($request->input('view'), ['week', 'list']) ? $request->input('view') : 'month';
+        if ($request->filled(['from', 'to'])) {
+            $from = $request->date('from')->startOfDay();
+            $to = $request->date('to')->startOfDay()->min($from->copy()->addYear()); // shortcut: a longer range is cut to one year, enough for a season and already a long page
+
+            // the grid shows whole weeks around the range, the list exactly its days
+            return $view === 'list' ? [$view, $from, $from, $to->copy()->endOfDay(), [$from, $to]] : [$view, $from, $from->copy()->startOfWeek(), $to->copy()->endOfWeek(), [$from, $to]];
+        }
         $date = Carbon::parse($request->input('date', 'today'))->startOfDay();
 
         return match ($view) {
-            'week' => [$view, $date, $date->copy()->startOfWeek(), $date->copy()->endOfWeek()],
-            'list' => [$view, $date, $date->copy()->startOfMonth(), $date->copy()->endOfMonth()],
-            default => [$view, $date, $date->copy()->startOfMonth()->startOfWeek(), $date->copy()->endOfMonth()->endOfWeek()],
+            'week' => [$view, $date, $date->copy()->startOfWeek(), $date->copy()->endOfWeek(), null],
+            'list' => [$view, $date, $date->copy()->startOfMonth(), $date->copy()->endOfMonth(), null],
+            default => [$view, $date, $date->copy()->startOfMonth()->startOfWeek(), $date->copy()->endOfMonth()->endOfWeek(), null],
         };
     }
 }

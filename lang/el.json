@@ -758,5 +758,7 @@
     "{0} nothing waiting for the client|{1} :count waiting for the client|[2,*] :count waiting for the client": "{0} τίποτα δεν περιμένει τον πελάτη|{1} :count περιμένει τον πελάτη|[2,*] :count περιμένουν τον πελάτη",
     "{1} :count post failed or needs a human|[2,*] :count posts failed or need a human": "{1} :count ανάρτηση απέτυχε ή χρειάζεται άνθρωπο|[2,*] :count αναρτήσεις απέτυχαν ή χρειάζονται άνθρωπο",
     "{1} :count post|[2,*] :count posts": "{1} :count ανάρτηση|[2,*] :count αναρτήσεις",
-    "{1} :count token expiring|[2,*] :count tokens expiring": "{1} :count σύνδεση λήγει|[2,*] :count συνδέσεις λήγουν"
+    "{1} :count token expiring|[2,*] :count tokens expiring": "{1} :count σύνδεση λήγει|[2,*] :count συνδέσεις λήγουν",
+    "To": "Έως",
+    "Go to a date": "Μετάβαση σε ημερομηνία"
 }
