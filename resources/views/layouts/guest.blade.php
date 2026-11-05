@@ -25,7 +25,7 @@
                 </a>
             </div>
 
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden rounded-xl">
+            <div class="mt-6 w-full overflow-hidden rounded-xl bg-white p-6 sm:max-w-md">
                 {{ $slot }}
             </div>
             <x-locale-switch class="mt-4 text-sm text-gray-400 hover:text-white" />

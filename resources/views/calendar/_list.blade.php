@@ -47,14 +47,14 @@
             </x-slot:action>
         </x-empty-state>
     @else
-        <div class="sticky bottom-0 flex flex-wrap items-center gap-2 rounded-b-lg bg-white p-3">
+        <div class="sticky bottom-0 flex flex-wrap items-center gap-2 rounded-b-xl border-t border-gray-100 bg-white/95 p-3 backdrop-blur">
             <label class="flex items-center gap-2 text-gray-600"><input type="checkbox" data-bulk-all class="rounded border-gray-300"> <span data-bulk-count>0</span> {{ __('ticked') }}</label>
-            <button name="action" value="review" class="rounded border px-3 py-1 hover:bg-gray-100 disabled:opacity-40">{{ __('Send for approval') }}</button>
+            <button name="action" value="review" class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40">{{ __('Send for approval') }}</button>
             <span class="flex items-center gap-1">
-                <input type="date" name="date" value="{{ old('date') }}" class="rounded-md border-gray-300 py-1 text-sm" aria-label="{{ __('Move to') }}">
-                <button name="action" value="move" class="rounded border px-3 py-1 hover:bg-gray-100 disabled:opacity-40">{{ __('Move') }}</button>
+                <input type="date" name="date" value="{{ old('date') }}" class="rounded-md border-gray-300 py-1.5 text-sm" aria-label="{{ __('Move to') }}">
+                <button name="action" value="move" class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40">{{ __('Move') }}</button>
             </span>
-            <button name="action" value="delete" class="rounded border px-3 py-1 text-red-700 hover:bg-red-50 disabled:opacity-40" onclick="return confirm('{{ __('Delete the ticked posts? Published posts stay.') }}')">{{ __('Delete') }}</button>
+            <button name="action" value="delete" class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-40" onclick="return confirm('{{ __('Delete the ticked posts? Published posts stay.') }}')">{{ __('Delete') }}</button>
             @if ($errors->hasAny(['posts', 'date']))
                 <span class="text-red-600">{{ $errors->first('posts') ?: $errors->first('date') }}</span>
             @endif

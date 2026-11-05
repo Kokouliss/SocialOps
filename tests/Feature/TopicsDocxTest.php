@@ -15,7 +15,7 @@ function planReport(Client $client)
 }
 
 test('the topics of a content plan download as a Word file in the client language', function () {
-    $client = Client::factory()->create();
+    $client = Client::factory()->create(['name' => 'Fuse Pharmacies']); // a fixed name: the XML escapes an apostrophe the faker may put in one
     $client->update(['profile' => ['languages' => ['el', 'en']] + $client->profile]);
     $report = planReport($client);
     $staff = $this->actingAs(User::factory()->create());
@@ -42,7 +42,7 @@ test('the topics of a content plan download as a Word file in the client languag
 });
 
 test('only a content plan with its posts has a Word file', function () {
-    $client = Client::factory()->create();
+    $client = Client::factory()->create(['name' => 'Fuse Pharmacies']); // a fixed name: the XML escapes an apostrophe the faker may put in one
     $staff = $this->actingAs(User::factory()->create());
 
     $staff->get(route('reports.word', $client->reports()->create(['kind' => 'monthly', 'title' => 'Monthly report October 2026', 'body' => 'x'])))->assertNotFound();

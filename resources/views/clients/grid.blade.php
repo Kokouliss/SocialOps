@@ -1,18 +1,17 @@
 <x-app-layout :client="$client">
     <x-slot name="header">
-        <div class="flex flex-wrap items-center gap-3">
-            <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ $client->name }}: {{ __('Instagram grid') }}</h2>
-            <span class="text-sm text-gray-500">{{ __('Newest first, as it will look. Drag a post on the calendar to change the order.') }}</span>
-            <a class="ml-auto px-2 py-1 border rounded text-sm" href="{{ route('calendar', ['client' => $client->slug]) }}">{{ __('Calendar') }}</a>
-        </div>
+        <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ $client->name }}: {{ __('Instagram grid') }}</h2>
+    </x-slot>
+    <x-slot name="actions">
+        <span class="text-sm text-gray-500">{{ __('Newest first, as it will look. Drag a post on the calendar to change the order.') }}</span>
     </x-slot>
 
     <div class="py-6">
         <div class="max-w-md mx-auto px-4">
             @if ($posts->isEmpty())
-                <x-empty-state class="mb-4" :action="__('New post')" :href="route('posts.create', $client)">{{ __('No Instagram feed posts with a date yet. Feed, carousel and Reel posts show here as the grid will look, newest first.') }}</x-empty-state>
+                <x-empty-state class="mb-4 bg-white" :action="__('New post')" :href="route('posts.create', $client)">{{ __('No Instagram feed posts with a date yet. Feed, carousel and Reel posts show here as the grid will look, newest first.') }}</x-empty-state>
             @endif
-            <div class="grid grid-cols-3 gap-px bg-gray-200">
+            <div class="grid grid-cols-3 gap-px overflow-hidden rounded-xl border border-gray-200 bg-gray-200">
                 @foreach ($posts as $post)
                     @php($asset = $post->assets->first())
                     <a href="{{ route('posts.edit', $post) }}" class="relative block aspect-square bg-gray-900 overflow-hidden" title="{{ $post->name }}: {{ __($post->state->label()) }}">

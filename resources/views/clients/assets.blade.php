@@ -3,8 +3,9 @@
         <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ $client->name }}: {{ __('assets') }}</h2>
     </x-slot>
 
+    @php($btn = 'inline-flex items-center rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50')
     <div class="py-6">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
             @if (session('status'))
                 <p class="text-sm text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
@@ -14,11 +15,11 @@
                 <x-text-input id="inbox-url" type="text" class="mt-1 block w-full font-mono text-xs" :value="$inboxUrl" readonly onclick="this.select()" />
             </div>
 
-            <div class="bg-white p-6 rounded-xl border border-gray-200">
-                <h3 class="text-lg font-medium text-gray-900">Canva</h3>
+            <x-section title="Canva">
+                <div class="py-5">
                 @error('canva') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 @if ($canva)
-                    <div class="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                    <div class="flex flex-wrap items-center gap-3 text-sm text-gray-600">
                         <span>{{ __('Connected as :name.', ['name' => $canva->name]) }}</span>
                         <form method="POST" action="{{ route('accounts.destroy', $canva) }}" onsubmit="return confirm('{{ __('Disconnect Canva from this client?') }}')">@csrf @method('DELETE')<button class="text-red-600 hover:underline">{{ __('Disconnect') }}</button></form>
                     </div>
@@ -61,45 +62,47 @@
                         </form>
                     @endif
                 @elseif ($canvaReady)
-                    <p class="mt-1 text-sm text-gray-600">{{ __('Bring finished designs straight into this inbox.') }} <a href="{{ route('canva.connect', $client) }}" class="ml-2 inline-flex items-center px-3 py-1 border rounded text-xs hover:bg-gray-100">{{ __('Connect Canva') }}</a></p>
+                    <p class="text-sm text-gray-600">{{ __('Bring finished designs straight into this inbox.') }} <a href="{{ route('canva.connect', $client) }}" class="{{ $btn }} ml-2">{{ __('Connect Canva') }}</a></p>
                 @else
-                    <p class="mt-1 text-sm text-gray-500">{{ __('Add CANVA_CLIENT_ID and CANVA_CLIENT_SECRET to .env to import designs (docs/pilot-setup.md).') }}</p>
+                    <p class="text-sm text-gray-500">{{ __('Add CANVA_CLIENT_ID and CANVA_CLIENT_SECRET to .env to import designs (docs/pilot-setup.md).') }}</p>
                 @endif
-            </div>
+                </div>
+            </x-section>
 
-            <div class="bg-white p-6 rounded-xl border border-gray-200">
-                <h3 class="text-lg font-medium text-gray-900">Google Drive</h3>
+            <x-section title="Google Drive">
+                <div class="py-5">
                 @error('drive') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 @if ($drive)
-                    <div class="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                    <div class="flex flex-wrap items-center gap-3 text-sm text-gray-600">
                         <span>{{ __('Watching the folder “:name”: new photos and videos land in this inbox every hour.', ['name' => $drive->name]) }}
                             @if ($drive->meta['pulled_at'] ?? null) {{ __('Last check :when, :n files in the folder.', ['when' => \Illuminate\Support\Carbon::parse($drive->meta['pulled_at'])->diffForHumans(), 'n' => $drive->meta['files'] ?? 0]) }} @endif</span>
                         <form method="POST" action="{{ route('folders.pull', [$client, 'drive']) }}">@csrf<button class="font-medium text-gray-900 hover:text-brand-600">{{ __('Check now') }}</button></form>
                         <form method="POST" action="{{ route('accounts.destroy', $drive) }}" onsubmit="return confirm('{{ __('Stop watching this folder?') }}')">@csrf @method('DELETE')<button class="text-red-600 hover:underline">{{ __('Stop watching') }}</button></form>
                     </div>
                 @elseif ($driveEmail)
-                    <p class="mt-1 text-sm text-gray-600">{{ __('Share a Drive folder with :email (viewer is enough), then paste its link here. Photos and videos the client drops in it reach this inbox within the hour.', ['email' => $driveEmail]) }}</p>
+                    <p class="text-sm text-gray-600">{{ __('Share a Drive folder with :email (viewer is enough), then paste its link here. Photos and videos the client drops in it reach this inbox within the hour.', ['email' => $driveEmail]) }}</p>
                     <form method="POST" action="{{ route('drive.watch', $client) }}" class="mt-3 flex gap-2">@csrf
                         <x-text-input name="folder" type="text" class="block w-full text-sm" :value="old('folder')" placeholder="https://drive.google.com/drive/folders/…" />
                         <x-primary-button>{{ __('Watch folder') }}</x-primary-button>
                     </form>
                 @else
-                    <p class="mt-1 text-sm text-gray-500">{{ __('Add GOOGLE_SERVICE_ACCOUNT_JSON to .env to pull files from a shared Drive folder (docs/pilot-setup.md).') }}</p>
+                    <p class="text-sm text-gray-500">{{ __('Add GOOGLE_SERVICE_ACCOUNT_JSON to .env to pull files from a shared Drive folder (docs/pilot-setup.md).') }}</p>
                 @endif
-            </div>
+                </div>
+            </x-section>
 
-            <div class="bg-white p-6 rounded-xl border border-gray-200">
-                <h3 class="text-lg font-medium text-gray-900">Dropbox</h3>
+            <x-section title="Dropbox">
+                <div class="py-5">
                 @error('dropbox') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 @if ($dropbox && ($dropbox->meta['folder'] ?? null))
-                    <div class="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                    <div class="flex flex-wrap items-center gap-3 text-sm text-gray-600">
                         <span>{{ __('Watching the folder “:name”: new photos and videos land in this inbox every hour.', ['name' => $dropbox->meta['folder_name']]) }}
                             @if ($dropbox->meta['pulled_at'] ?? null) {{ __('Last check :when, :n files in the folder.', ['when' => \Illuminate\Support\Carbon::parse($dropbox->meta['pulled_at'])->diffForHumans(), 'n' => $dropbox->meta['files'] ?? 0]) }} @endif</span>
                         <form method="POST" action="{{ route('folders.pull', [$client, 'dropbox']) }}">@csrf<button class="font-medium text-gray-900 hover:text-brand-600">{{ __('Check now') }}</button></form>
                         <form method="POST" action="{{ route('accounts.destroy', $dropbox) }}" onsubmit="return confirm('{{ __('Stop watching this folder?') }}')">@csrf @method('DELETE')<button class="text-red-600 hover:underline">{{ __('Stop watching') }}</button></form>
                     </div>
                 @elseif ($dropbox)
-                    <div class="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                    <div class="flex flex-wrap items-center gap-3 text-sm text-gray-600">
                         <span>{{ __('Connected as :name.', ['name' => $dropbox->name]) }} {{ __('Which folder? Its path in that Dropbox, for example /Clients/Almyra. A folder the client shared sits at the top level.') }}</span>
                         <form method="POST" action="{{ route('accounts.destroy', $dropbox) }}" onsubmit="return confirm('{{ __('Disconnect Dropbox from this client?') }}')">@csrf @method('DELETE')<button class="text-red-600 hover:underline">{{ __('Disconnect') }}</button></form>
                     </div>
@@ -108,17 +111,18 @@
                         <x-primary-button>{{ __('Watch folder') }}</x-primary-button>
                     </form>
                 @elseif ($dropboxReady)
-                    <p class="mt-1 text-sm text-gray-600">{{ __('Bring the photos and videos a client drops in a shared Dropbox folder into this inbox.') }} <a href="{{ route('dropbox.connect', $client) }}" class="ml-2 inline-flex items-center px-3 py-1 border rounded text-xs hover:bg-gray-100">{{ __('Connect Dropbox') }}</a></p>
+                    <p class="text-sm text-gray-600">{{ __('Bring the photos and videos a client drops in a shared Dropbox folder into this inbox.') }} <a href="{{ route('dropbox.connect', $client) }}" class="{{ $btn }} ml-2">{{ __('Connect Dropbox') }}</a></p>
                 @else
-                    <p class="mt-1 text-sm text-gray-500">{{ __('Add DROPBOX_APP_KEY to .env to pull files from a Dropbox folder (docs/pilot-setup.md).') }}</p>
+                    <p class="text-sm text-gray-500">{{ __('Add DROPBOX_APP_KEY to .env to pull files from a Dropbox folder (docs/pilot-setup.md).') }}</p>
                 @endif
-            </div>
+                </div>
+            </x-section>
 
             @if ($hasVideos)
-                <div class="bg-white p-6 rounded-xl border border-gray-200">
-                    <h3 class="text-lg font-medium text-gray-900">{{ __('Make a Reel') }}</h3>
+                <x-section :title="__('Make a Reel')">
+                    <div class="py-5">
                     @if ($reelReady)
-                        <p class="mt-1 text-sm text-gray-600">{{ __('Tick the clips below (2 to 10). They play in file-name order, each cut to the chosen seconds, vertical 1080×1920 without sound; add music in the Instagram app and give the result its final cut.') }}</p>
+                        <p class="text-sm text-gray-600">{{ __('Tick the clips below (2 to 10). They play in file-name order, each cut to the chosen seconds, vertical 1080×1920 without sound; add music in the Instagram app and give the result its final cut.') }}</p>
                         @if ($errors->reel->any())
                             <ul class="mt-2 list-disc pl-5 text-sm text-red-600">@foreach ($errors->reel->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
                         @endif
@@ -139,14 +143,14 @@
                             <x-primary-button>{{ __('Make the Reel') }}</x-primary-button>
                         </form>
                     @else
-                        <p class="mt-1 text-sm text-gray-500">{{ __('Install ffmpeg on the server to assemble Reels from clips (docs/pilot-setup.md).') }}</p>
+                        <p class="text-sm text-gray-500">{{ __('Install ffmpeg on the server to assemble Reels from clips (docs/pilot-setup.md).') }}</p>
                     @endif
-                </div>
+                    </div>
+                </x-section>
             @endif
 
-            <div class="bg-white p-6 rounded-xl border border-gray-200">
-                <form method="GET" action="{{ route('clients.assets', $client) }}" class="flex flex-wrap items-center gap-2 text-sm">
-                    <h3 class="font-semibold text-gray-900 mr-2">{{ __('Files') }} <span class="font-normal text-gray-500">({{ $assets->count() }})</span></h3>
+            <x-section :title="__('Files').' ('.$assets->count().')'" flush>
+                <form method="GET" action="{{ route('clients.assets', $client) }}" class="flex flex-wrap items-center gap-2 px-6 py-3 text-sm">
                     <select name="kind" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm">
                         <option value="">{{ __('Photos and videos') }}</option>
                         <option value="image" @selected(request('kind') === 'image')>{{ __('Photos') }}</option>
@@ -159,7 +163,7 @@
                         @endforeach
                     </select>
                 </form>
-                <div class="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                <div class="grid grid-cols-2 gap-4 p-6 sm:grid-cols-3 lg:grid-cols-5">
                     @forelse ($assets as $asset)
                         <div class="text-xs" data-asset="{{ $asset->id }}">
                             <a href="{{ route('assets.download', $asset) }}" class="block aspect-square overflow-hidden rounded bg-gray-900" title="{{ $asset->original_name }} · {{ number_format($asset->size / 1048576, 1) }} MB">
@@ -202,7 +206,7 @@
                         @endif
                     @endforelse
                 </div>
-            </div>
+            </x-section>
         </div>
     </div>
 </x-app-layout>

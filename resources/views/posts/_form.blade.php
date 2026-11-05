@@ -1,7 +1,9 @@
 @csrf
 @php($languages = array_merge($client->profile['languages'], $client->profile['extra_languages'] ?? []))
 @php($selected = old('platforms', $post->platforms ?? []))
-<div class="grid gap-6 md:grid-cols-2">
+@php($control = 'mt-1 block w-full rounded-md border-gray-300 focus:border-brand-500 focus:ring-brand-500')
+<x-section :title="__('Post')" :description="__('Where it goes, what it is and when it is due.')">
+<div class="grid gap-6 py-5 md:grid-cols-2">
     <div>
         <x-input-label :value="__('Platforms')" />
         <div class="mt-2 flex flex-wrap gap-4 text-sm">
@@ -16,7 +18,7 @@
     </div>
     <div>
         <x-input-label for="format" :value="__('Format')" />
-        <select id="format" name="format" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm">
+        <select id="format" name="format" class="{{ $control }}">
             @foreach (\App\Models\Post::FORMATS as $format)
                 <option value="{{ $format }}" @selected(old('format', $post->format) === $format)>{{ __(ucfirst(str_replace('_', ' ', $format))) }}</option>
             @endforeach
@@ -25,7 +27,7 @@
     </div>
     <div>
         <x-input-label for="pillar" :value="__('Pillar')" />
-        <select id="pillar" name="pillar" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm">
+        <select id="pillar" name="pillar" class="{{ $control }}">
             <option value="">—</option>
             @foreach (array_keys($client->profile['pillars']) as $pillar)
                 <option value="{{ $pillar }}" @selected(old('pillar', $post->pillar) === $pillar)>{{ str_replace('_', ' ', $pillar) }}</option>
@@ -48,14 +50,14 @@
         </div>
     </div>
 </div>
-<div class="mt-6">
+<div class="py-5">
     <x-input-label for="brief" :value="__('Brief (what the post is about, for the drafter and the reviewer)')" />
-    <textarea id="brief" name="brief" rows="3" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm">{{ old('brief', $post->brief) }}</textarea>
+    <textarea id="brief" name="brief" rows="3" class="{{ $control }}">{{ old('brief', $post->brief) }}</textarea>
     <x-input-error class="mt-2" :messages="$errors->get('brief')" />
 </div>
 
 @if ($client->assets->isNotEmpty())
-    <div class="mt-6">
+    <div class="py-5">
         <x-input-label :value="__('Assets')" />
         @php($chosen = old('assets', $post->exists ? $post->assets->pluck('id')->map(fn ($id) => (string) $id)->all() : []))
         <div class="mt-2 grid gap-1 md:grid-cols-2 text-xs font-mono">
@@ -66,9 +68,11 @@
         <x-input-error class="mt-2" :messages="$errors->get('assets')" />
     </div>
 @endif
+</x-section>
 
 @if (config('features.publishing'))
-<fieldset class="mt-6 border rounded-md p-4 text-sm" data-for="instagram">
+<x-section data-for="instagram tiktok" :title="__('Platform settings')" flush>
+<fieldset class="px-6 py-5 text-sm" data-for="instagram">
     <legend class="px-1 text-sm font-medium">Instagram</legend>
     <x-input-label for="ig-collab" :value="__('Collab invite: up to 3 Instagram usernames, feed, carousel and Reel only (they accept in the app, then the post shows on both profiles)')" />
     <x-text-input id="ig-collab" name="settings[instagram][collaborators]" type="text" class="mt-1 block w-full" placeholder="@hotel, @chef" :value="old('settings.instagram.collaborators', $post->settings['instagram']['collaborators'] ?? '')" />
@@ -77,7 +81,7 @@
 
 @php($tiktok = $client->accounts->firstWhere('platform', 'tiktok'))
 @php($tt = old('settings.tiktok', $post->settings['tiktok'] ?? []))
-<fieldset class="mt-6 border rounded-md p-4 text-sm" data-for="tiktok">
+<fieldset class="px-6 py-5 text-sm" data-for="tiktok">
     <legend class="px-1 text-sm font-medium">TikTok {{ $tiktok ? __('(posting as :name)', ['name' => $tiktok->name]) : '' }}</legend>
     <div class="grid gap-4 md:grid-cols-3">
         <div>
@@ -110,30 +114,37 @@
     </label>
     <x-input-error class="mt-1" :messages="$errors->get('settings.tiktok.consent')" />
 </fieldset>
+</x-section>
 @endif
 
 
-<div data-for="instagram facebook">
-<h3 class="mt-8 font-semibold text-gray-800">{{ __('First comment') }} <span class="text-sm font-normal text-gray-500">{{ __('(Instagram and Facebook: posted under the post right after it goes out, for hashtags or a link; also in the ZIP and the CSV)') }}</span></h3>
-<textarea name="settings[first_comment]" rows="2" class="mt-2 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">{{ old('settings.first_comment', $post->settings['first_comment'] ?? '') }}</textarea>
+<x-section data-for="instagram facebook" :title="__('First comment')" :description="__('Instagram and Facebook: posted under the post right after it goes out, for hashtags or a link; also in the ZIP and the CSV')">
+<div class="py-5">
+<textarea name="settings[first_comment]" rows="2" class="{{ $control }} text-sm">{{ old('settings.first_comment', $post->settings['first_comment'] ?? '') }}</textarea>
 <x-input-error class="mt-1" :messages="$errors->get('settings.first_comment')" />
 </div>
+</x-section>
 
 @php($design = old('settings.design', $post->settings['design'] ?? []))
-<h3 class="mt-8 font-semibold text-gray-800">{{ __('Design text') }} <span class="text-sm font-normal text-gray-500">{{ __('(what goes on the graphic or in the video: headline, slide texts or Reel script; it travels with the ZIP and the Canva CSV)') }}</span></h3>
-<div class="mt-2 grid gap-4 md:grid-cols-{{ count($languages) }}">
+<x-section :title="__('Design text')" :description="__('What goes on the graphic or in the video: headline, slide texts or Reel script; it travels with the ZIP and the Canva CSV')">
+<div class="grid gap-4 py-5 md:grid-cols-{{ count($languages) }}">
     @foreach ($languages as $lang)
         <div>
             <x-input-label :value="strtoupper($lang)" />
-            <textarea name="settings[design][{{ $lang }}]" rows="4" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">{{ $design[$lang] ?? '' }}</textarea>
+            <textarea name="settings[design][{{ $lang }}]" rows="4" class="{{ $control }} text-sm">{{ $design[$lang] ?? '' }}</textarea>
         </div>
     @endforeach
 </div>
+</x-section>
 
-<h3 class="mt-8 font-semibold text-gray-800">{{ __('Captions') }} <span class="text-sm font-normal text-gray-500">{{ __('(only the ticked platforms are saved; Greek is reviewed by a human before approval)') }}</span></h3>
-<label class="mt-2 flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" id="sync-captions" class="rounded border-gray-300"> {{ __('Same text on every platform: type it once, it copies to the other ticked platforms; untick to customise per platform') }}</label>
+<x-section :title="__('Captions')" :description="__('Only the ticked platforms are saved; Greek is reviewed by a human before approval')">
+<div class="space-y-2 py-4">
+<label class="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" id="sync-captions" class="rounded border-gray-300"> {{ __('Same text on every platform: type it once, it copies to the other ticked platforms; untick to customise per platform') }}</label>
 @if (! config('features.claude_api'))
-    <label class="mt-2 flex items-center gap-2 text-sm text-gray-700"><input type="hidden" name="settings[ask_claude]" value="0"><input type="checkbox" name="settings[ask_claude]" value="1" class="rounded border-gray-300" @checked(old('settings.ask_claude', $post->settings['ask_claude'] ?? false))> {{ __('Ask Claude for the captions: the scheduled task writes them and files them here for review') }}</label>
+    <label class="flex items-center gap-2 text-sm text-gray-700"><input type="hidden" name="settings[ask_claude]" value="0"><input type="checkbox" name="settings[ask_claude]" value="1" class="rounded border-gray-300" @checked(old('settings.ask_claude', $post->settings['ask_claude'] ?? false))> {{ __('Ask Claude for the captions: the scheduled task writes them and files them here for review') }}</label>
+    @if ($post->exists)
+        <p class="pl-6 text-xs text-gray-500">{{ __('Or ask in a chat with the Social Ops connector: "write the captions for post :id".', ['id' => $post->id]) }}</p>
+    @endif
 @endif
 @if ($post->exists && config('features.claude_api'))
     <div class="mt-3 flex gap-2">
@@ -142,19 +153,20 @@
     </div>
     <p class="mt-1 text-xs text-gray-500">{{ __('Rewrites the captions of every ticked platform as you say; nothing is saved until you press Save.') }}</p>
 @endif
+</div>
 @foreach (\App\Models\Post::PLATFORMS as $platform)
-    <fieldset class="mt-4 border rounded-md p-4" data-for="{{ $platform }}" data-platform="{{ $platform }}" data-max="{{ \App\Http\Requests\PostRequest::CAPTION_MAX[$platform] }}" data-signature="{{ trim($client->profile['signatures'][$platform] ?? '') }}" data-fields="{{ json_encode((object) ($client->profile['fields'] ?? [])) }}">
-        <legend class="px-1 text-sm font-medium">{{ str_replace('_', ' ', $platform) }} <span class="count text-gray-400" title="{{ __('Characters of the published text: every language, then the hashtags') }}"></span>
+    <fieldset class="py-5" data-for="{{ $platform }}" data-platform="{{ $platform }}" data-max="{{ \App\Http\Requests\PostRequest::CAPTION_MAX[$platform] }}" data-signature="{{ trim($client->profile['signatures'][$platform] ?? '') }}" data-fields="{{ json_encode((object) ($client->profile['fields'] ?? [])) }}">
+        <legend class="float-left w-full pb-2 text-sm font-medium text-gray-900">{{ str_replace('_', ' ', $platform) }} <span class="count font-normal text-gray-400" title="{{ __('Characters of the published text: every language, then the hashtags') }}"></span>
             @if ($post->exists && config('features.claude_api'))
                 <button type="button" class="shorten ml-2 text-xs font-medium text-gray-900 hover:text-brand-600" data-url="{{ route('posts.shorten', $post) }}">{{ __('Shorten with Claude') }}</button>
             @endif
         </legend>
-        <div class="grid gap-4 md:grid-cols-{{ count($languages) }}">
+        <div class="clear-both grid gap-4 md:grid-cols-{{ count($languages) }}">
             @foreach ($languages as $lang)
                 @php($v = $variants->get("$platform.$lang"))
                 <div>
                     <x-input-label :value="strtoupper($lang)" />
-                    <textarea name="variants[{{ $platform }}][{{ $lang }}][caption]" data-lang="{{ $lang }}" rows="5" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm">{{ old("variants.$platform.$lang.caption", $v?->caption) }}</textarea>
+                    <textarea name="variants[{{ $platform }}][{{ $lang }}][caption]" data-lang="{{ $lang }}" rows="5" class="{{ $control }} text-sm">{{ old("variants.$platform.$lang.caption", $v?->caption) }}</textarea>
                     <x-input-error class="mt-1" :messages="$errors->get(\"variants.$platform.$lang.caption\")" />
                     <x-text-input name="variants[{{ $platform }}][{{ $lang }}][hashtags]" type="text" class="mt-2 block w-full text-sm" placeholder="#chania #crete" :value="old('variants.'.$platform.'.'.$lang.'.hashtags', implode(' ', $v?->hashtags ?? []))" />
                     @if ($platform !== 'tiktok')
@@ -165,6 +177,7 @@
         </div>
     </fieldset>
 @endforeach
+</x-section>
 
 <script>
     // Live count of the text that will be published per platform (languages joined by blank lines, the profile's signature, then the hashtags), and the Shorten button.
@@ -243,7 +256,7 @@
     sync.checked = texts.every(t => t === texts[0]);
 </script>
 
-<div class="sticky bottom-0 -mx-6 -mb-6 mt-6 flex items-center gap-4 border-t border-gray-100 bg-white/95 px-6 py-3 backdrop-blur sm:rounded-b-lg">
+<div class="sticky bottom-0 flex items-center gap-4 rounded-xl border border-gray-200 bg-white/95 px-6 py-3 backdrop-blur">
     <x-primary-button>{{ __('Save') }}</x-primary-button>
     <a href="{{ route('calendar', ['client' => $client->slug]) }}" class="text-sm text-gray-600 hover:underline">{{ __('Back to calendar') }}</a>
 </div>

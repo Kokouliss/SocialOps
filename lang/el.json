@@ -810,5 +810,17 @@
     "Who the client is, the accounts and the caption languages.": "Ποιος είναι ο πελάτης, οι λογαριασμοί και οι γλώσσες των λεζαντών.",
     "Written in captions as :tag and filled at publish time. Phone numbers, links and e-mails here also become the Link in bio buttons.": "Γράφονται στις λεζάντες ως :tag και συμπληρώνονται τη στιγμή της δημοσίευσης. Τηλέφωνα, σύνδεσμοι και e-mail εδώ γίνονται και τα κουμπιά του Link in bio.",
     "Made from the name when left empty. Changing the link name later breaks links already sent.": "Βγαίνουν από το όνομα όταν μείνουν κενά. Αν αλλάξεις αργότερα το όνομα στους συνδέσμους, οι σύνδεσμοι που έχουν ήδη σταλεί παύουν να δουλεύουν.",
-    "Delete this client": "Διαγραφή αυτού του πελάτη"
+    "Delete this client": "Διαγραφή αυτού του πελάτη",
+    "Instagram and Facebook: posted under the post right after it goes out, for hashtags or a link; also in the ZIP and the CSV": "Instagram και Facebook: μπαίνει κάτω από την ανάρτηση αμέσως μόλις βγει, για hashtags ή σύνδεσμο· επίσης στο ZIP και στο CSV",
+    "Only the ticked platforms are saved; Greek is reviewed by a human before approval": "Αποθηκεύονται μόνο οι τσεκαρισμένες πλατφόρμες· τα ελληνικά τα ελέγχει άνθρωπος πριν την έγκριση",
+    "What goes on the graphic or in the video: headline, slide texts or Reel script; it travels with the ZIP and the Canva CSV": "Ό,τι μπαίνει στο γραφικό ή στο βίντεο: τίτλος, κείμενα slide ή σενάριο Reel· ταξιδεύει με το ZIP και το CSV του Canva",
+    "Post": "Ανάρτηση",
+    "Where it goes, what it is and when it is due.": "Πού πάει, τι είναι και πότε βγαίνει.",
+    "Platform settings": "Ρυθμίσεις πλατφόρμας",
+    "Previous": "Προηγούμενο",
+    "Next": "Επόμενο",
+    "Or ask in a chat with the Social Ops connector: \"write the captions for post :id\".": "Ή ζητήστε το σε μια συνομιλία με τη σύνδεση Social Ops: «γράψε τις λεζάντες για την ανάρτηση :id».",
+    "Every trend brief, content plan and monthly report for this client, newest first.": "Κάθε trend brief, πλάνο περιεχομένου και μηνιαία αναφορά του πελάτη, νεότερα πρώτα.",
+    "Monthly reports are built on the 1st for last month; ask for another month here.": "Οι μηνιαίες αναφορές φτιάχνονται την 1η για τον προηγούμενο μήνα· ζήτησε άλλον μήνα εδώ.",
+    "Server configuration": "Ρυθμίσεις διακομιστή"
 }

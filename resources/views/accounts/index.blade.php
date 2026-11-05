@@ -4,7 +4,7 @@
     </x-slot>
 
     <div class="py-6">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
             @if (session('status'))
                 <p class="text-sm text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
@@ -35,7 +35,7 @@
                                 <span class="text-gray-400">{{ __('not connected') }}</span>
                             @endif
                             @if ($loop->first)
-                                <a href="{{ route('accounts.connect', [$client, $provider]) }}" class="{{ $account ? '' : 'ml-auto' }} inline-flex items-center px-3 py-1 border rounded text-xs hover:bg-gray-100">{{ $account ? __('Reconnect') : __('Connect') }} {{ ['meta' => 'Facebook / Instagram', 'tiktok' => 'TikTok'][$provider] }}</a>
+                                <a href="{{ route('accounts.connect', [$client, $provider]) }}" class="{{ $account ? '' : 'ml-auto' }} inline-flex items-center rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50">{{ $account ? __('Reconnect') : __('Connect') }} {{ ['meta' => 'Facebook / Instagram', 'tiktok' => 'TikTok'][$provider] }}</a>
                             @endif
                         </div>
                     @endforeach

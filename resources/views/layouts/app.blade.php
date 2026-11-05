@@ -29,6 +29,9 @@
                             @if ($client)
                                 @include('layouts.client-nav')
                             @endif
+                            @isset($actions)
+                                <div class="mt-4 flex flex-wrap items-center gap-2">{{ $actions }}</div>
+                            @endisset
                         </div>
                     </header>
                 @endisset
