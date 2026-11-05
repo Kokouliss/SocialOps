@@ -1,16 +1,16 @@
 <x-app-layout :client="$client">
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $client->name }}: {{ __('connected accounts') }}</h2>
+        <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ $client->name }}: {{ __('connected accounts') }}</h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <div class="py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             @if (session('status'))
                 <p class="text-sm text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
             @error('connect') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
-            <div class="bg-white shadow-sm sm:rounded-lg divide-y divide-gray-100 text-sm">
+            <div class="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100 text-sm">
                 @foreach ($providers as $provider => $platforms)
                     @foreach ($platforms as $platform)
                         @php($account = $accounts->get($platform))
@@ -43,7 +43,7 @@
             </div>
             <p class="text-xs text-gray-500">{{ __('Connecting opens the platform\'s own login; we never see or store a password. The profile under "accounts" in the brand profile is only the handle for reference.') }}</p>
 
-            <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+            <div class="bg-white p-6 rounded-xl border border-gray-200">
                 <x-input-label for="connect-url" :value="__('Link for the client to connect their own accounts (no login, valid :days days; they log in at the platform themselves)', ['days' => \App\Http\Controllers\AccountController::LINK_DAYS])" />
                 <x-text-input id="connect-url" type="text" class="mt-1 block w-full font-mono text-xs" :value="$connectUrl" readonly onclick="this.select()" />
             </div>

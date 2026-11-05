@@ -1,7 +1,7 @@
 <x-app-layout :client="$report->client">
     <x-slot name="header">
         <div class="flex flex-wrap items-center gap-3">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $report->client->name }}: {{ $report->title }}</h2>
+            <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ $report->client->name }}: {{ $report->title }}</h2>
             <span class="px-2 py-0.5 rounded text-xs bg-gray-100">{{ __(\App\Models\Report::KINDS[$report->kind] ?? $report->kind) }}</span>
             <a class="px-3 py-1 border rounded text-xs hover:bg-gray-100" href="{{ route('reports.download', $report) }}">{{ __('Download .md') }}</a>
             @if ($report->kind === 'plan' && isset($report->meta['posts']))

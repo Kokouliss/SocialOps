@@ -1,5 +1,5 @@
 @php
-    // Same tab row on every page of a client; the switcher keeps the page when the route is client-scoped.
+    // Same tab row on every page of a client; the switcher (phones: the side navigation lists the clients on wider screens) keeps the page when the route is client-scoped.
     $name = request()->route()->getName();
     $switch = fn ($c) => in_array($name, ['clients.assets', 'clients.grid', 'clients.reviews', 'clients.deadlines', 'clients.comments', 'clients.accounts', 'clients.reports', 'clients.edit', 'posts.create']) ? route($name, $c) : route('calendar', ['client' => $c->slug]);
     $tabs = [
@@ -16,14 +16,14 @@
         [__('Profile'), route('clients.edit', $client), request()->routeIs('clients.edit'), null],
     ];
 @endphp
-<nav class="mt-4 -mb-6 flex items-center gap-1 overflow-x-auto text-sm" aria-label="{{ $client->name }}">
-    <select onchange="location.href = this.value" class="mr-2 mb-2 rounded-md border-gray-300 py-1 text-sm font-medium" aria-label="{{ __('Client') }}">
+<nav class="mt-4 flex items-center gap-1 overflow-x-auto text-sm" aria-label="{{ $client->name }}">
+    <select onchange="location.href = this.value" class="mr-2 rounded-md border-gray-300 py-1 text-sm font-medium md:hidden" aria-label="{{ __('Client') }}">
         @foreach (auth()->user()->clients()->get() as $other)
             <option value="{{ $switch($other) }}" @selected($other->is($client))>{{ $other->name }}</option>
         @endforeach
     </select>
     @foreach ($tabs as [$label, $url, $active, $count])
-        <a href="{{ $url }}" class="whitespace-nowrap px-3 py-2 border-b-2 {{ $active ? 'border-brand-500 text-gray-900 font-medium' : 'border-transparent text-gray-500 hover:text-gray-900' }}">{{ $label }}@if ($count)<span class="ml-1 rounded-full bg-brand-100 px-1.5 text-xs text-brand-700">{{ $count }}</span>@endif</a>
+        <a href="{{ $url }}" class="whitespace-nowrap rounded-full px-3 py-1.5 {{ $active ? 'bg-white font-medium text-gray-900 shadow-sm ring-1 ring-gray-200' : 'text-gray-600 hover:bg-white/60 hover:text-gray-900' }}">{{ $label }}@if ($count)<span class="ml-1 rounded-full bg-brand-100 px-1.5 text-xs text-brand-700">{{ $count }}</span>@endif</a>
     @endforeach
-    <a href="{{ route('posts.create', $client) }}" class="ml-auto mb-2 whitespace-nowrap inline-flex items-center px-3 py-1.5 bg-brand-500 rounded-full font-semibold text-xs text-white uppercase tracking-widest hover:bg-brand-600">{{ __('New post') }}</a>
+    <a href="{{ route('posts.create', $client) }}" class="ml-auto inline-flex items-center whitespace-nowrap rounded-lg bg-brand-500 px-3 py-1.5 text-sm font-medium text-white hover:bg-brand-600">{{ __('New post') }}</a>
 </nav>

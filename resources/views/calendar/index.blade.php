@@ -1,7 +1,7 @@
 <x-app-layout :client="$client">
     <x-slot name="header">
         <div class="flex flex-wrap items-center gap-3">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('Calendar') }}</h2>
+            <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ __('Calendar') }}</h2>
             <form method="GET" action="{{ route('calendar') }}" class="flex flex-wrap items-center gap-2 text-sm">
                 <input type="hidden" name="view" value="{{ $view }}">
                 <input type="date" name="date" value="{{ $date->toDateString() }}" onchange="this.form.from.value = this.form.to.value = ''; this.form.submit()" title="{{ __('Go to a date') }}" class="border-gray-300 rounded-md shadow-sm text-sm">
@@ -47,19 +47,19 @@
             @if ($clientSlug)
                 <a class="px-2 py-1 border rounded" href="{{ route('posts.csv', [$clients->firstWhere('slug', $clientSlug), 'view' => $view, ...$when]) }}" title="{{ __('The posts shown, one row per platform, for Canva Bulk Create or a spreadsheet') }}">{{ __('Export CSV') }}</a>
             @else
-                <button type="button" data-new-post="" class="ml-auto inline-flex items-center px-4 py-2 bg-brand-500 rounded-full font-semibold text-xs text-white uppercase tracking-widest hover:bg-brand-600">{{ __('New post') }}</button>
+                <button type="button" data-new-post="" class="ml-auto inline-flex items-center px-4 py-2 bg-brand-500 rounded-lg text-sm font-medium text-white hover:bg-brand-600">{{ __('New post') }}</button>
             @endif
         </div>
     </x-slot>
 
     <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-4">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
             @if (session('status'))
                 <p class="text-sm text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
             @error('state') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
             @if ($clientUrl)
-                <div class="bg-white p-4 shadow-sm sm:rounded-lg">
+                <div class="bg-white p-4 rounded-xl border border-gray-200">
                     <x-input-label for="client-url" :value="__('View-only link for the client (no login, valid :days days, this month and the next)', ['days' => \App\Http\Controllers\CalendarController::LINK_DAYS])" />
                     <x-text-input id="client-url" type="text" class="mt-1 block w-full font-mono text-xs" :value="$clientUrl" readonly onclick="this.select()" />
                 </div>
@@ -105,7 +105,7 @@
             @endif
             @include('calendar._list', ['class' => $view === 'list' ? '' : 'sm:hidden', 'days' => $range ? collect($range[0]->toPeriod($range[1], '1 day')) : $days])
 
-            <p class="flex flex-wrap items-center gap-1.5 bg-white p-3 shadow-sm sm:rounded-lg text-xs text-gray-500" title="{{ __('Click a state to show only those posts; click it again to show all.') }}">
+            <p class="flex flex-wrap items-center gap-1.5 bg-white p-3 rounded-xl border border-gray-200 text-xs text-gray-500" title="{{ __('Click a state to show only those posts; click it again to show all.') }}">
                 {{ __('States') }}:
                 @foreach (\App\Posts\PostState::cases() as $state)
                     @php($on = ($filters['state'] ?? '') === $state->value)

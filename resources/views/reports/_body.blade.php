@@ -9,12 +9,12 @@
         .report blockquote { border-left: 3px solid #d4d4d4; padding-left: .75rem; color: #737373 }
         .report code { font-family: ui-monospace, monospace; font-size: .85em }
     </style>
-    <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-3">
+    <div class="py-6">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-3">
             @if (session('status'))
                 <p class="text-sm text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
             @error('send') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-            <div class="bg-white p-6 shadow-sm sm:rounded-lg text-sm text-gray-800 report">{!! $html !!}</div>
+            <div class="bg-white p-6 rounded-xl border border-gray-200 text-sm text-gray-800 report">{!! $html !!}</div>
         </div>
     </div>

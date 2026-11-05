@@ -1,265 +1,216 @@
 @csrf
 @php($profile = $client->exists ? $client->profile : \App\Clients\ClientProfile::template())
 @php($rows = fn ($items) => array_merge(array_values($items), [[]]))
-@php($input = 'mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm text-sm')
+@php($input = 'block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-500 focus:ring-brand-500')
 @php($check = 'rounded border-gray-300 text-brand-600 focus:ring-brand-500')
+@php($sub = 'mb-1 block text-xs font-medium text-gray-500')
 @php($p = fn ($key, $default = '') => old('p.'.$key, data_get($profile, $key, $default)))
 @php($text = fn ($key, $glue = ', ') => is_array($v = $p($key)) ? implode($glue, $v) : (string) $v)
 @php($flag = fn ($key) => $errors->any() ? (bool) old('p.'.$key) : (bool) data_get($profile, $key))
 @php($platforms = ['instagram' => 'Instagram', 'facebook' => 'Facebook', 'tiktok' => 'TikTok', 'linkedin' => 'LinkedIn'])
 
 @if ($errors->any())
-    <div class="mb-6 rounded-md bg-red-50 p-4 text-sm text-red-700">
+    <div class="mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
         <p class="font-medium">{{ __('Please check these and save again:') }}</p>
         <ul class="mt-1 list-disc pl-5">@foreach ($errors->all() as $message)<li>{{ $message }}</li>@endforeach</ul>
     </div>
 @endif
 
-@php($tabs = ['basics' => __('Basics'), 'agency' => __('Agency'), 'voice' => __('Voice and content'), 'approval' => __('Approval and timing'), 'research' => __('Research'), 'more' => __('Replies and webhooks')])
-<style>[x-cloak] { display: none !important }</style>
-<div x-data="{ tab: localStorage.getItem('client-tab') || 'basics' }" x-init="$watch('tab', t => localStorage.setItem('client-tab', t))">
-<nav class="mb-4 flex gap-1 overflow-x-auto text-sm" role="tablist">
-    @foreach ($tabs as $key => $label)
-        <button type="button" role="tab" class="whitespace-nowrap px-3 py-2 border-b-2" :class="tab === '{{ $key }}' ? 'border-brand-500 text-gray-900 font-medium' : 'border-transparent text-gray-500 hover:text-gray-900'" :aria-selected="tab === '{{ $key }}'" x-on:click="tab = '{{ $key }}'">{{ $label }}</button>
-    @endforeach
-</nav>
-<div x-show="tab === 'basics'">
-<div class="grid gap-6 md:grid-cols-3">
-    <div>
-        <x-input-label for="name" :value="__('Name')" />
-        <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $client->name)" required />
-    </div>
-    <div>
-        <x-input-label for="type" :value="__('Type')" />
-        <select id="type" name="type" class="{{ $input }}" required>
-            @foreach (\App\Models\Client::TYPES as $type)
-                <option value="{{ $type }}" @selected(old('type', $client->type) === $type)>{{ __(str_replace('_', ' ', $type)) }}</option>
+<x-section x-show="tab === 'basics'" :title="__('Basics')" :description="__('Who the client is, the accounts and the caption languages.')">
+    <x-field :label="__('Name')" for="name">
+        <x-text-input id="name" name="name" type="text" class="block w-full text-sm" :value="old('name', $client->name)" required />
+    </x-field>
+    <x-field :label="__('Type and location')" for="type">
+        <div class="grid gap-3 sm:grid-cols-2">
+            <select id="type" name="type" class="{{ $input }}" required>
+                @foreach (\App\Models\Client::TYPES as $type)
+                    <option value="{{ $type }}" @selected(old('type', $client->type) === $type)>{{ __(str_replace('_', ' ', $type)) }}</option>
+                @endforeach
+            </select>
+            <x-text-input id="location" name="location" type="text" class="block w-full text-sm" :value="old('location', $client->location)" placeholder="Chania, Crete" required aria-label="{{ __('Location') }}" />
+        </div>
+    </x-field>
+    <x-field :label="__('Name in links and code in file names')" for="slug" :help="__('Made from the name when left empty. Changing the link name later breaks links already sent.')">
+        <div class="grid gap-3 sm:grid-cols-2">
+            <x-text-input id="slug" name="slug" type="text" class="block w-full font-mono text-sm" :value="old('slug', $client->slug)" placeholder="almyra-beach-lounge" />
+            <x-text-input id="code" name="code" type="text" class="block w-full font-mono text-sm uppercase" :value="old('code', $client->code)" placeholder="ALMYRA" aria-label="{{ __('In file and post names') }}" />
+        </div>
+    </x-field>
+    <x-field :label="__('Accounts')" :help="__('The name of each account as the client knows it.')">
+        <div class="grid gap-3 sm:grid-cols-2">
+            @foreach ($platforms as $platform => $label)
+                <div>
+                    <label for="p-accounts-{{ $platform }}" class="{{ $sub }}">{{ $label }}</label>
+                    <x-text-input id="p-accounts-{{ $platform }}" name="p[accounts][{{ $platform }}]" type="text" class="block w-full text-sm" :value="$p('accounts.'.$platform)" placeholder="@almyra.chania" />
+                </div>
             @endforeach
-        </select>
-    </div>
-    <div>
-        <x-input-label for="location" :value="__('Location')" />
-        <x-text-input id="location" name="location" type="text" class="mt-1 block w-full" :value="old('location', $client->location)" placeholder="Chania, Crete" required />
-    </div>
-</div>
-<details class="mt-4" {{ $errors->hasAny(['slug', 'code']) ? 'open' : '' }}>
-    <summary class="cursor-pointer text-sm text-gray-600">{{ __('Name in links and code in file names') }}@if ($client->exists): <span class="font-mono">{{ $client->slug }}</span>, <span class="font-mono">{{ $client->code }}</span>@endif</summary>
-    <div class="mt-2 grid gap-6 md:grid-cols-3">
-        <div>
-            <x-input-label for="slug" :value="__('In links')" />
-            <x-text-input id="slug" name="slug" type="text" class="mt-1 block w-full font-mono" :value="old('slug', $client->slug)" placeholder="almyra-beach-lounge" />
-            <p class="mt-1 text-xs text-gray-500">{{ __('Lowercase letters, digits and dashes. Made from the name when left empty; changing it later breaks links already sent.') }}</p>
         </div>
-        <div>
-            <x-input-label for="code" :value="__('In file and post names')" />
-            <x-text-input id="code" name="code" type="text" class="mt-1 block w-full font-mono uppercase" :value="old('code', $client->code)" placeholder="ALMYRA" />
-            <p class="mt-1 text-xs text-gray-500">{{ __('2 to 12 capital letters or digits. Made from the name when left empty.') }}</p>
+    </x-field>
+    <x-field :label="__('Languages')" for="p-languages" :help="__('Two-letter codes, the main one first (e.g. el, en). Extra languages are drafted only on request.')">
+        <div class="grid gap-3 sm:grid-cols-2">
+            <div>
+                <label for="p-languages" class="{{ $sub }}">{{ __('Caption languages') }}</label>
+                <x-text-input id="p-languages" name="p[languages]" type="text" class="block w-full text-sm" :value="$text('languages')" required />
+            </div>
+            <div>
+                <label for="p-extra" class="{{ $sub }}">{{ __('Extra languages') }}</label>
+                <x-text-input id="p-extra" name="p[extra_languages]" type="text" class="block w-full text-sm" :value="$text('extra_languages')" placeholder="de" />
+            </div>
         </div>
-    </div>
-</details>
+    </x-field>
+</x-section>
 
-<h3 class="mt-8 font-semibold text-gray-800">{{ __('Accounts') }}</h3>
-<p class="text-sm text-gray-500">{{ __('The name of each account as the client knows it. Connecting them happens on the Accounts page.') }}</p>
-<div class="mt-2 grid gap-4 md:grid-cols-4">
-    @foreach ($platforms as $platform => $label)
-        <div>
-            <x-input-label for="p-accounts-{{ $platform }}" :value="$label" />
-            <x-text-input id="p-accounts-{{ $platform }}" name="p[accounts][{{ $platform }}]" type="text" class="mt-1 block w-full" :value="$p('accounts.'.$platform)" placeholder="{{ $platform === 'google_business' ? 'Almyra Beach Lounge, Chania' : '@almyra.chania' }}" />
+<x-section x-show="tab === 'agency'" x-cloak :title="__('Agency')" :description="__('How the team tracks this client on the Clients board. The client never sees these.')">
+    <x-field :label="__('Status and person')" for="status">
+        <div class="grid gap-3 sm:grid-cols-2">
+            <select id="status" name="status" class="{{ $input }}">
+                @foreach (\App\Models\Client::STATUSES as $value => $label)<option value="{{ $value }}" @selected(old('status', $client->status ?? 'active') === $value)>{{ __($label) }}</option>@endforeach
+            </select>
+            <x-text-input id="owner" name="owner" type="text" list="staff-names" class="block w-full text-sm" :value="old('owner', $client->owner)" placeholder="{{ __('Person') }}" aria-label="{{ __('Person') }}" />
+            <datalist id="staff-names">@foreach (\App\Models\User::orderBy('name')->pluck('name') as $name)<option value="{{ $name }}">@endforeach</datalist>
         </div>
-    @endforeach
-</div>
-
-<h3 class="mt-8 font-semibold text-gray-800">{{ __('Languages') }}</h3>
-<div class="mt-2 grid gap-4 md:grid-cols-2">
-    <div>
-        <x-input-label for="p-languages" :value="__('Caption languages, the main one first (e.g. el, en)')" />
-        <x-text-input id="p-languages" name="p[languages]" type="text" class="mt-1 block w-full" :value="$text('languages')" required />
-    </div>
-    <div>
-        <x-input-label for="p-extra" :value="__('Extra languages drafted on request (e.g. de)')" />
-        <x-text-input id="p-extra" name="p[extra_languages]" type="text" class="mt-1 block w-full" :value="$text('extra_languages')" />
-    </div>
-</div>
-
-</div>
-<div x-show="tab === 'agency'" x-cloak>
-<p class="text-sm text-gray-500">{{ __('How the team tracks this client on the Clients board. The client never sees these.') }}</p>
-<div class="mt-2 grid gap-4 md:grid-cols-4">
-    <div>
-        <x-input-label for="status" :value="__('Status')" />
-        <select id="status" name="status" class="{{ $input }}">
-            @foreach (\App\Models\Client::STATUSES as $value => $label)<option value="{{ $value }}" @selected(old('status', $client->status ?? 'active') === $value)>{{ __($label) }}</option>@endforeach
-        </select>
-    </div>
-    <div>
-        <x-input-label for="owner" :value="__('Person')" />
-        <x-text-input id="owner" name="owner" type="text" list="staff-names" class="mt-1 block w-full" :value="old('owner', $client->owner)" />
-        <datalist id="staff-names">@foreach (\App\Models\User::orderBy('name')->pluck('name') as $name)<option value="{{ $name }}">@endforeach</datalist>
-    </div>
-    <div>
-        <x-input-label for="priority" :value="__('Priority')" />
-        <select id="priority" name="priority" class="{{ $input }}">
-            <option value="">—</option>
-            @foreach (\App\Models\Client::PRIORITIES as $value => $label)<option value="{{ $value }}" @selected(old('priority', $client->priority) === $value)>{{ __($label) }}</option>@endforeach
-        </select>
-    </div>
-    <div>
-        <x-input-label for="plan_due" :value="__('Next plan due')" />
-        <x-text-input id="plan_due" name="plan_due" type="date" class="mt-1 block w-full" :value="old('plan_due', $client->plan_due?->toDateString())" />
-    </div>
-    <div>
-        <x-input-label for="posts_per_week" :value="__('Posts per week')" />
-        <x-text-input id="posts_per_week" name="posts_per_week" type="number" min="0" max="31" class="mt-1 block w-full" :value="old('posts_per_week', $client->posts_per_week)" />
-    </div>
-    <div>
-        <x-input-label for="stories_per_week" :value="__('Stories per week')" />
-        <x-text-input id="stories_per_week" name="stories_per_week" type="number" min="0" max="31" class="mt-1 block w-full" :value="old('stories_per_week', $client->stories_per_week)" />
-    </div>
-    <div>
-        <x-input-label for="tiktoks_per_month" :value="__('TikToks per month')" />
-        <x-text-input id="tiktoks_per_month" name="tiktoks_per_month" type="number" min="0" max="31" class="mt-1 block w-full" :value="old('tiktoks_per_month', $client->tiktoks_per_month)" />
-    </div>
-    <div class="md:col-span-4">
-        <x-input-label for="pending" :value="__('Pending')" />
+    </x-field>
+    <x-field :label="__('Priority and next plan due')" for="priority">
+        <div class="grid gap-3 sm:grid-cols-2">
+            <select id="priority" name="priority" class="{{ $input }}">
+                <option value="">—</option>
+                @foreach (\App\Models\Client::PRIORITIES as $value => $label)<option value="{{ $value }}" @selected(old('priority', $client->priority) === $value)>{{ __($label) }}</option>@endforeach
+            </select>
+            <x-text-input id="plan_due" name="plan_due" type="date" class="block w-full text-sm" :value="old('plan_due', $client->plan_due?->toDateString())" aria-label="{{ __('Next plan due') }}" />
+        </div>
+    </x-field>
+    <x-field :label="__('Rhythm')" for="posts_per_week" :help="__('What the contract says: posts and stories per week, TikToks per month.')">
+        <div class="grid grid-cols-3 gap-3">
+            <div><label for="posts_per_week" class="{{ $sub }}">{{ __('Posts per week') }}</label><x-text-input id="posts_per_week" name="posts_per_week" type="number" min="0" max="31" class="block w-full text-sm" :value="old('posts_per_week', $client->posts_per_week)" /></div>
+            <div><label for="stories_per_week" class="{{ $sub }}">{{ __('Stories per week') }}</label><x-text-input id="stories_per_week" name="stories_per_week" type="number" min="0" max="31" class="block w-full text-sm" :value="old('stories_per_week', $client->stories_per_week)" /></div>
+            <div><label for="tiktoks_per_month" class="{{ $sub }}">{{ __('TikToks per month') }}</label><x-text-input id="tiktoks_per_month" name="tiktoks_per_month" type="number" min="0" max="31" class="block w-full text-sm" :value="old('tiktoks_per_month', $client->tiktoks_per_month)" /></div>
+        </div>
+    </x-field>
+    <x-field :label="__('Pending')" for="pending" :help="__('What we are waiting for right now, as shown on the Clients board.')">
         <textarea id="pending" name="pending" rows="2" class="{{ $input }}" placeholder="{{ __('e.g. 9 posts sent to the client, waiting for approval') }}">{{ old('pending', $client->pending) }}</textarea>
-    </div>
-    <div class="md:col-span-4">
-        <x-input-label :value="__('Links the team opens often (the Drive folder, the posts presentation)')" />
+    </x-field>
+    <x-field :label="__('Links')" :help="__('Links the team opens often (the Drive folder, the posts presentation).')">
         @foreach ($rows(old('links', $client->links ?? [])) as $i => $row)
-            <div class="mt-1 grid grid-cols-3 gap-2">
+            <div class="grid grid-cols-3 gap-2 {{ $i ? 'mt-2' : '' }}">
                 <x-text-input name="links[{{ $i }}][label]" type="text" class="block w-full text-sm" :value="$row['label'] ?? ''" placeholder="{{ __('Posts') }}" />
                 <x-text-input name="links[{{ $i }}][url]" type="url" pattern="https://.*" class="col-span-2 block w-full font-mono text-sm" :value="$row['url'] ?? ''" placeholder="https://docs.google.com/presentation/d/…" />
             </div>
         @endforeach
-    </div>
-</div>
-</div>
-<div x-show="tab === 'voice'" x-cloak>
-<h3 class="font-semibold text-gray-800">{{ __('Voice') }}</h3>
-<p class="text-sm text-gray-500">{{ __('How the captions sound. Claude follows this on every post, reply and report.') }}</p>
-<div class="mt-2 grid gap-4 md:grid-cols-2">
-    <div class="md:col-span-2">
-        <x-input-label for="p-tone" :value="__('Tone')" />
-        <x-text-input id="p-tone" name="p[voice][tone]" type="text" class="mt-1 block w-full" :value="$p('voice.tone')" placeholder="{{ __('relaxed, warm, confident; premium without sounding formal') }}" required />
-    </div>
-    <div>
-        <x-input-label for="p-person" :value="__('Speak as')" />
-        <x-text-input id="p-person" name="p[voice][person]" type="text" class="mt-1 block w-full" :value="$p('voice.person')" placeholder="{{ __('we, or the name of the place') }}" required />
-    </div>
-    <div>
-        <x-input-label for="p-emoji" :value="__('Emoji')" />
-        <x-text-input id="p-emoji" name="p[voice][emoji]" type="text" class="mt-1 block w-full" :value="$p('voice.emoji')" placeholder="{{ __('max 1 per caption, never in the first line') }}" required />
-    </div>
-    <div class="md:col-span-2">
-        <x-input-label for="p-cta" :value="__('Call to action')" />
-        <x-text-input id="p-cta" name="p[voice][cta_style]" type="text" class="mt-1 block w-full" :value="$p('voice.cta_style')" placeholder="{{ __('soft (book a table, link in bio), never pushy') }}" required />
-    </div>
-    <div>
-        <x-input-label for="p-facts" :value="__('Facts to keep consistent (one per line)')" />
+    </x-field>
+</x-section>
+
+<x-section x-show="tab === 'voice'" x-cloak :title="__('Voice')" :description="__('How the captions sound. Claude follows this on every post, reply and report.')">
+    <x-field :label="__('Tone')" for="p-tone">
+        <x-text-input id="p-tone" name="p[voice][tone]" type="text" class="block w-full text-sm" :value="$p('voice.tone')" placeholder="{{ __('relaxed, warm, confident; premium without sounding formal') }}" required />
+    </x-field>
+    <x-field :label="__('Speak as')" for="p-person" :help="__('We, or the name of the place.')">
+        <x-text-input id="p-person" name="p[voice][person]" type="text" class="block w-full text-sm" :value="$p('voice.person')" placeholder="{{ __('we, or the name of the place') }}" required />
+    </x-field>
+    <x-field :label="__('Emoji')" for="p-emoji">
+        <x-text-input id="p-emoji" name="p[voice][emoji]" type="text" class="block w-full text-sm" :value="$p('voice.emoji')" placeholder="{{ __('max 1 per caption, never in the first line') }}" required />
+    </x-field>
+    <x-field :label="__('Call to action')" for="p-cta">
+        <x-text-input id="p-cta" name="p[voice][cta_style]" type="text" class="block w-full text-sm" :value="$p('voice.cta_style')" placeholder="{{ __('soft (book a table, link in bio), never pushy') }}" required />
+    </x-field>
+    <x-field :label="__('Facts to keep consistent')" for="p-facts" :help="__('One per line: hours, season, how to book.')">
         <textarea id="p-facts" name="p[voice][facts]" rows="3" class="{{ $input }}" placeholder="{{ __('Open daily 10:00 to midnight, May to October') }}">{{ $text('voice.facts', "\n") }}</textarea>
-    </div>
-    <div>
-        <x-input-label for="p-banned" :value="__('Phrases never to use (one per line)')" />
+    </x-field>
+    <x-field :label="__('Phrases never to use')" for="p-banned" :help="__('One per line.')">
         <textarea id="p-banned" name="p[voice][banned_phrases]" rows="3" class="{{ $input }}">{{ $text('voice.banned_phrases', "\n") }}</textarea>
-    </div>
-    <div class="md:col-span-2">
-        <x-input-label for="p-notes" :value="__('Extra information')" />
-        <textarea id="p-notes" name="p[notes]" rows="4" class="{{ $input }}" placeholder="{{ __('Anything else the team and Claude should know: the story of the place, what the owner cares about, what to avoid.') }}">{{ $p('notes') }}</textarea>
-    </div>
-</div>
+    </x-field>
+    <x-field :label="__('Extra information')" for="p-notes" :help="__('Anything else the team and Claude should know: the story of the place, what the owner cares about, what to avoid.')">
+        <textarea id="p-notes" name="p[notes]" rows="5" class="{{ $input }}">{{ $p('notes') }}</textarea>
+    </x-field>
+</x-section>
 
-<h3 class="mt-8 font-semibold text-gray-800">{{ __('Content pillars') }}</h3>
-<p class="text-sm text-gray-500">{{ __('The topics the posts rotate through and the share of posts each gets. The shares add up to 100.') }}</p>
-@if ($client->exists)
-    @php($mix = \App\Planning\PillarMix::for($client))
-    <p class="mt-1 text-sm text-gray-500">{{ __('Posts per pillar, :days days back and ahead (:n posts):', ['days' => \App\Planning\PillarMix::DAYS, 'n' => $mix['posts']]) }}
-        @foreach ($mix['rows'] as $pillar => $row)<span class="{{ in_array($pillar, $mix['drifted']) ? 'font-medium text-red-600' : '' }}">{{ str_replace('_', ' ', $pillar) }} {{ $row['actual'] }}%</span>@if (! $loop->last) · @endif @endforeach
-    </p>
-@endif
-@php($pillars = old('p.pillars', collect($profile['pillars'] ?? [])->map(fn ($share, $name) => ['name' => str_replace('_', ' ', $name), 'share' => $share])->values()->all()))
-<div class="mt-2 grid gap-2 md:grid-cols-3">
-    @foreach ($rows($pillars) as $i => $row)
-        <div class="flex gap-2">
-            <x-text-input name="p[pillars][{{ $i }}][name]" type="text" class="block w-full text-sm" :value="$row['name'] ?? ''" placeholder="{{ __('food and drink') }}" />
-            <x-text-input name="p[pillars][{{ $i }}][share]" type="number" min="0" max="100" class="w-20 text-sm" :value="$row['share'] ?? ''" placeholder="%" />
+<x-section x-show="tab === 'content'" x-cloak :title="__('Content')" :description="__('The topics the posts rotate through, the hashtags and the text added to every post.')">
+    <x-field :label="__('Content pillars')" :help="__('The share of posts each topic gets. The shares add up to 100.')">
+        @php($pillars = old('p.pillars', collect($profile['pillars'] ?? [])->map(fn ($share, $name) => ['name' => str_replace('_', ' ', $name), 'share' => $share])->values()->all()))
+        <div class="grid gap-2 sm:grid-cols-2">
+            @foreach ($rows($pillars) as $i => $row)
+                <div class="flex gap-2">
+                    <x-text-input name="p[pillars][{{ $i }}][name]" type="text" class="block w-full text-sm" :value="$row['name'] ?? ''" placeholder="{{ __('food and drink') }}" />
+                    <x-text-input name="p[pillars][{{ $i }}][share]" type="number" min="0" max="100" class="w-20 text-sm" :value="$row['share'] ?? ''" placeholder="%" />
+                </div>
+            @endforeach
         </div>
-    @endforeach
-</div>
-
-<h3 class="mt-8 font-semibold text-gray-800">{{ __('Hashtags') }}</h3>
-<div class="mt-2 grid gap-4 md:grid-cols-3">
-    <div>
-        <x-input-label for="p-always" :value="__('On every post')" />
-        <x-text-input id="p-always" name="p[hashtags][always]" type="text" class="mt-1 block w-full" :value="$text('hashtags.always', ' ')" placeholder="#chania #crete" />
-    </div>
-    <div>
-        <x-input-label for="p-pool" :value="__('Pool Claude picks from')" />
-        <textarea id="p-pool" name="p[hashtags][pool]" rows="2" class="{{ $input }}" placeholder="#chaniabeach #cretesummer">{{ $text('hashtags.pool', ' ') }}</textarea>
-    </div>
-    <div>
-        <x-input-label for="p-max" :value="__('Per post, at most')" />
-        <x-text-input id="p-max" name="p[hashtags][max_per_post]" type="number" min="0" max="30" class="mt-1 w-28" :value="$p('hashtags.max_per_post', 5)" required />
-        <label class="mt-3 flex items-center gap-2 text-sm"><input type="checkbox" name="p[utm]" value="1" class="{{ $check }}" @checked($flag('utm'))> {{ __('Tag links so Google Analytics shows which post brought the visit') }}</label>
-    </div>
-</div>
-
-<h3 class="mt-8 font-semibold text-gray-800">{{ __('Text added to every post') }}</h3>
-<div class="mt-2 grid gap-4 md:grid-cols-2">
-    <div>
-        <x-input-label :value="__('Signature line under every caption, per platform (optional)')" />
-        @foreach ($platforms as $platform => $label)
-            <x-text-input name="p[signatures][{{ $platform }}]" type="text" class="mt-1 block w-full text-sm" :value="$p('signatures.'.$platform)" placeholder="{{ $label }}" />
-        @endforeach
-    </div>
-    <div>
-        <x-input-label :value="__('Placeholders for captions, written as :tag and filled at publish time', ['tag' => '{'.'{phone}}'])" />
+        @if ($client->exists)
+            @php($mix = \App\Planning\PillarMix::for($client))
+            <p class="mt-2 text-xs text-gray-500">{{ __('Posts per pillar, :days days back and ahead (:n posts):', ['days' => \App\Planning\PillarMix::DAYS, 'n' => $mix['posts']]) }}
+                @foreach ($mix['rows'] as $pillar => $row)<span class="{{ in_array($pillar, $mix['drifted']) ? 'font-medium text-red-600' : '' }}">{{ str_replace('_', ' ', $pillar) }} {{ $row['actual'] }}%</span>@if (! $loop->last) · @endif @endforeach
+            </p>
+        @endif
+    </x-field>
+    <x-field :label="__('Hashtags')" for="p-always" :help="__('The ones on every post, the pool Claude picks the rest from, and how many per post at most.')">
+        <div class="grid gap-3 sm:grid-cols-2">
+            <div>
+                <label for="p-always" class="{{ $sub }}">{{ __('On every post') }}</label>
+                <x-text-input id="p-always" name="p[hashtags][always]" type="text" class="block w-full text-sm" :value="$text('hashtags.always', ' ')" placeholder="#chania #crete" />
+            </div>
+            <div>
+                <label for="p-max" class="{{ $sub }}">{{ __('Per post, at most') }}</label>
+                <x-text-input id="p-max" name="p[hashtags][max_per_post]" type="number" min="0" max="30" class="block w-28 text-sm" :value="$p('hashtags.max_per_post', 5)" required />
+            </div>
+            <div class="sm:col-span-2">
+                <label for="p-pool" class="{{ $sub }}">{{ __('Pool Claude picks from') }}</label>
+                <textarea id="p-pool" name="p[hashtags][pool]" rows="2" class="{{ $input }}" placeholder="#chaniabeach #cretesummer">{{ $text('hashtags.pool', ' ') }}</textarea>
+            </div>
+        </div>
+    </x-field>
+    <x-field :label="__('Links in captions')">
+        <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="p[utm]" value="1" class="{{ $check }}" @checked($flag('utm'))> {{ __('Tag links so Google Analytics shows which post brought the visit') }}</label>
+    </x-field>
+    <x-field :label="__('Signature line')" :help="__('Added under every caption of that platform at publish time. Optional.')">
+        <div class="grid gap-3 sm:grid-cols-2">
+            @foreach ($platforms as $platform => $label)
+                <div>
+                    <label for="p-signature-{{ $platform }}" class="{{ $sub }}">{{ $label }}</label>
+                    <x-text-input id="p-signature-{{ $platform }}" name="p[signatures][{{ $platform }}]" type="text" class="block w-full text-sm" :value="$p('signatures.'.$platform)" />
+                </div>
+            @endforeach
+        </div>
+    </x-field>
+    <x-field :label="__('Placeholders')" :help="__('Written in captions as :tag and filled at publish time. Phone numbers, links and e-mails here also become the Link in bio buttons.', ['tag' => '{'.'{phone}}'])">
         @foreach ($rows(collect(old('p.fields', collect($profile['fields'] ?? [])->map(fn ($v, $k) => ['key' => $k, 'value' => $v])->values()->all()))->all()) as $i => $row)
-            <div class="mt-1 grid grid-cols-3 gap-2">
+            <div class="grid grid-cols-3 gap-2 {{ $i ? 'mt-2' : '' }}">
                 <x-text-input name="p[fields][{{ $i }}][key]" type="text" class="block w-full font-mono text-sm" :value="$row['key'] ?? ''" placeholder="phone" />
                 <x-text-input name="p[fields][{{ $i }}][value]" type="text" class="col-span-2 block w-full text-sm" :value="$row['value'] ?? ''" placeholder="+30 28210 00000" />
             </div>
         @endforeach
-    </div>
-</div>
+    </x-field>
+</x-section>
 
-</div>
-<div x-show="tab === 'approval'" x-cloak>
-<h3 class="font-semibold text-gray-800">{{ __('Approval') }}</h3>
-<div class="mt-2 grid gap-4 md:grid-cols-2">
-    <div>
-        <x-input-label for="p-policy" :value="__('Who approves the posts, and the hours the client has to answer')" />
-        <div class="mt-1 flex gap-2">
-            <select id="p-policy" name="p[approval][policy]" class="{{ $input }} mt-0">
+<x-section x-show="tab === 'approval'" x-cloak :title="__('Approval')" :description="__('Who approves the posts and how long the client has to answer.')">
+    <x-field :label="__('Policy')" for="p-policy" :help="__('The hours are how long the client has to answer before a reminder.')">
+        <div class="flex gap-2">
+            <select id="p-policy" name="p[approval][policy]" class="{{ $input }}">
                 @foreach (['none' => __('None: staff approve'), 'optional' => __('Optional: the client may answer'), 'required' => __('Required: the client must approve'), 'multi_level' => __('Multi-level')] as $value => $label)
                     <option value="{{ $value }}" @selected($p('approval.policy', 'required') === $value)>{{ $label }}</option>
                 @endforeach
             </select>
-            <x-text-input name="p[approval][sla_hours]" type="number" min="1" max="720" class="w-28" :value="$p('approval.sla_hours', 48)" title="{{ __('Hours the client has to answer') }}" required />
+            <x-text-input name="p[approval][sla_hours]" type="number" min="1" max="720" class="w-24 text-sm" :value="$p('approval.sla_hours', 48)" title="{{ __('Hours the client has to answer') }}" required />
         </div>
         <label class="mt-3 flex items-center gap-2 text-sm"><input type="checkbox" name="p[approval][auto_approve_on_timeout]" value="1" class="{{ $check }}" @checked($flag('approval.auto_approve_on_timeout'))> {{ __('Approve by itself when the client does not answer in time (only with "Optional")') }}</label>
         <label class="mt-2 flex items-center gap-2 text-sm"><input type="checkbox" name="p[approval][email_monthly_report]" value="1" class="{{ $check }}" @checked($flag('approval.email_monthly_report'))> {{ __('Email every monthly report to the approvers as soon as it is written') }}</label>
-    </div>
-    <div>
-        <x-input-label :value="__('Who gets the approval links (name, email, phone for reminders)')" />
+    </x-field>
+    <x-field :label="__('Approvers')" :help="__('Who gets the approval links: name, email, phone for reminders.')">
         @foreach ($rows(old('p.approval.approvers', $profile['approval']['approvers'] ?? [])) as $i => $row)
-            <div class="mt-1 grid grid-cols-3 gap-2">
+            <div class="grid grid-cols-3 gap-2 {{ $i ? 'mt-2' : '' }}">
                 <x-text-input name="p[approval][approvers][{{ $i }}][name]" type="text" class="block w-full text-sm" :value="$row['name'] ?? ''" placeholder="{{ __('Name') }}" />
                 <x-text-input name="p[approval][approvers][{{ $i }}][email]" type="email" class="block w-full text-sm" :value="$row['email'] ?? ''" placeholder="email" />
                 <x-text-input name="p[approval][approvers][{{ $i }}][phone]" type="text" class="block w-full text-sm" :value="$row['phone'] ?? ''" placeholder="+30 …" />
             </div>
         @endforeach
-    </div>
-</div>
+    </x-field>
+</x-section>
 
-<h3 class="mt-8 font-semibold text-gray-800">{{ __('When to post') }}</h3>
-@php($days = ['mon' => __('Monday'), 'tue' => __('Tuesday'), 'wed' => __('Wednesday'), 'thu' => __('Thursday'), 'fri' => __('Friday'), 'sat' => __('Saturday'), 'sun' => __('Sunday')])
-@php($slots = old('p.slots', array_map(fn ($s) => array_combine(['day', 'time'], explode(' ', $s) + [1 => '']), $profile['slots'] ?? [])))
-<div class="mt-2 grid gap-4 md:grid-cols-2">
-    <div>
-        <x-input-label :value="__('Weekly posting slots (the post form suggests the next free one)')" />
+<x-section x-show="tab === 'timing'" x-cloak :title="__('Timing')" :description="__('When the posts go out and the dates the plan should build around.')">
+    @php($days = ['mon' => __('Monday'), 'tue' => __('Tuesday'), 'wed' => __('Wednesday'), 'thu' => __('Thursday'), 'fri' => __('Friday'), 'sat' => __('Saturday'), 'sun' => __('Sunday')])
+    @php($slots = old('p.slots', array_map(fn ($s) => array_combine(['day', 'time'], explode(' ', $s) + [1 => '']), $profile['slots'] ?? [])))
+    <x-field :label="__('Weekly posting slots')" :help="__('The post form suggests the next free one and the planner dates the posts on them.')">
         @foreach ($rows($slots) as $i => $row)
-            <div class="mt-1 flex gap-2">
-                <select name="p[slots][{{ $i }}][day]" class="{{ $input }} mt-0 w-40">
+            <div class="flex gap-2 {{ $i ? 'mt-2' : '' }}">
+                <select name="p[slots][{{ $i }}][day]" class="{{ $input }} w-40">
                     <option value="">—</option>
                     @foreach ($days as $value => $label)<option value="{{ $value }}" @selected(strtolower($row['day'] ?? '') === $value)>{{ $label }}</option>@endforeach
                 </select>
@@ -269,81 +220,64 @@
         @if ($client->exists && ($best = \App\Planning\BestTimes::for($client)))
             <p class="mt-2 text-xs text-gray-500">{{ __('Best hours from our numbers of the last :days days: :list', ['days' => \App\Planning\BestTimes::DAYS, 'list' => collect($best)->map(fn ($s) => $days[$s['day']].' '.sprintf('%02d:00', $s['hour']).' ('.__(':n posts, :avg interactions each', ['n' => $s['posts'], 'avg' => $s['avg']]).')')->join(', ')]) }}</p>
         @endif
-    </div>
-    <div>
-        <x-input-label :value="__('Key dates (openings, events, anniversaries)')" />
+    </x-field>
+    <x-field :label="__('Key dates')" :help="__('Openings, events, anniversaries: marked on the calendar and given to the planner.')">
         @foreach ($rows(old('p.key_dates', $profile['key_dates'] ?? [])) as $i => $row)
-            <div class="mt-1 flex gap-2">
+            <div class="flex gap-2 {{ $i ? 'mt-2' : '' }}">
                 <x-text-input name="p[key_dates][{{ $i }}][date]" type="date" class="text-sm" :value="$row['date'] ?? ''" />
                 <x-text-input name="p[key_dates][{{ $i }}][label]" type="text" class="block w-full text-sm" :value="$row['label'] ?? ''" placeholder="{{ __('Season opening') }}" />
             </div>
         @endforeach
-    </div>
-</div>
+    </x-field>
+</x-section>
 
-</div>
-<div x-show="tab === 'research'" x-cloak>
-<h3 class="font-semibold text-gray-800">{{ __('Research') }}</h3>
-<p class="text-sm text-gray-500">{{ __('Steers the trend research, the planner and the weekly listening report.') }}</p>
-<div class="mt-2 grid gap-4 md:grid-cols-3">
-    <div>
-        <x-input-label for="p-sources" :value="__('Sites to search first (one per line)')" />
+<x-section x-show="tab === 'research'" x-cloak :title="__('Research')" :description="__('Steers the trend research, the planner and the weekly listening report.')">
+    <x-field :label="__('Sites to search first')" for="p-sources" :help="__('One per line.')">
         <textarea id="p-sources" name="p[research][sources]" rows="2" class="{{ $input }}" placeholder="cretalive.gr">{{ $text('research.sources', "\n") }}</textarea>
-    </div>
-    <div>
-        <x-input-label for="p-excluded-domains" :value="__('Sites never to cite (one per line)')" />
+    </x-field>
+    <x-field :label="__('Sites never to cite')" for="p-excluded-domains" :help="__('One per line.')">
         <textarea id="p-excluded-domains" name="p[research][excluded_domains]" rows="2" class="{{ $input }}">{{ $text('research.excluded_domains', "\n") }}</textarea>
-    </div>
-    <div>
-        <x-input-label for="p-excluded-topics" :value="__('Topics never to post about (one per line)')" />
+    </x-field>
+    <x-field :label="__('Topics never to post about')" for="p-excluded-topics" :help="__('One per line.')">
         <textarea id="p-excluded-topics" name="p[research][excluded_topics]" rows="2" class="{{ $input }}" placeholder="{{ __('politics') }}">{{ $text('research.excluded_topics', "\n") }}</textarea>
-    </div>
-    <div>
-        <x-input-label for="p-watch" :value="__('Hashtags to watch every week (up to 30)')" />
-        <x-text-input id="p-watch" name="p[research][hashtags_to_watch]" type="text" class="mt-1 block w-full" :value="$text('research.hashtags_to_watch', ' ')" placeholder="chaniabeach cretefood" />
-    </div>
-    <div>
-        <x-input-label for="p-competitors" :value="__('Competitor Instagram accounts to watch')" />
-        <x-text-input id="p-competitors" name="p[research][competitors]" type="text" class="mt-1 block w-full" :value="$text('research.competitors', ' ')" placeholder="@otherbeachbar" />
-    </div>
-</div>
-
-</div>
-<div x-show="tab === 'more'" x-cloak>
-<h3 class="font-semibold text-gray-800">{{ __('Comment replies') }}</h3>
-<x-input-label class="mt-2" :value="__('Saved replies for the comment inbox (label, text, and keywords that trigger it on a new Instagram or Facebook comment)')" />
-@foreach ($rows(old('p.saved_replies', $profile['saved_replies'] ?? [])) as $i => $row)
-    <div class="mt-1 grid gap-2 md:grid-cols-6">
-        <x-text-input name="p[saved_replies][{{ $i }}][label]" type="text" class="block w-full text-sm" :value="$row['label'] ?? ''" placeholder="{{ __('Opening hours') }}" />
-        <x-text-input name="p[saved_replies][{{ $i }}][text]" type="text" class="md:col-span-4 block w-full text-sm" :value="$row['text'] ?? ''" placeholder="{{ __('Ανοιχτά κάθε μέρα 10:00–02:00 / Open daily 10:00–02:00') }}" />
-        <x-text-input name="p[saved_replies][{{ $i }}][keywords]" type="text" class="block w-full text-sm" :value="is_array($row['keywords'] ?? null) ? implode(', ', $row['keywords']) : ($row['keywords'] ?? '')" placeholder="{{ __('ώρες, hours') }}" />
-    </div>
-@endforeach
-<p class="mt-1 text-xs text-gray-500">{{ __('An empty row is ignored; save to get a new empty row.') }}</p>
-
-<details class="mt-8" {{ $errors->any() || ($profile['webhooks'] ?? []) !== [] ? 'open' : '' }}>
-    <summary class="cursor-pointer text-sm font-medium text-gray-700">{{ __('For developers: webhooks') }}</summary>
-    <p class="mt-1 text-xs text-gray-500">{{ __('An https address that receives a signed JSON message when a post is published, fails or needs a human (docs/api.md).') }}</p>
-    @foreach ($rows(old('p.webhooks', $profile['webhooks'] ?? [])) as $i => $row)
-        <div class="mt-1 grid gap-2 md:grid-cols-6">
-            <x-text-input name="p[webhooks][{{ $i }}][url]" type="url" pattern="https://.*" class="md:col-span-3 block w-full font-mono text-sm" :value="$row['url'] ?? ''" placeholder="https://example.com/hook" />
-            <x-text-input name="p[webhooks][{{ $i }}][secret]" type="text" class="block w-full font-mono text-sm" :value="$row['secret'] ?? ''" placeholder="{{ __('secret') }}" />
-            <div class="md:col-span-2 flex flex-wrap items-center gap-3 text-xs">
-                @foreach (\App\Webhooks\Webhooks::EVENTS as $event)
-                    <label class="flex items-center gap-1"><input type="checkbox" name="p[webhooks][{{ $i }}][events][]" value="{{ $event }}" class="{{ $check }}" @checked(in_array($event, $row['events'] ?? []))> {{ $event }}</label>
-                @endforeach
-            </div>
+    </x-field>
+    <x-field :label="__('Watch every week')" for="p-watch" :help="__('Hashtags (up to 30) and competitor Instagram accounts for the listening report.')">
+        <div class="grid gap-3 sm:grid-cols-2">
+            <x-text-input id="p-watch" name="p[research][hashtags_to_watch]" type="text" class="block w-full text-sm" :value="$text('research.hashtags_to_watch', ' ')" placeholder="chaniabeach cretefood" />
+            <x-text-input id="p-competitors" name="p[research][competitors]" type="text" class="block w-full text-sm" :value="$text('research.competitors', ' ')" placeholder="@otherbeachbar" aria-label="{{ __('Competitor Instagram accounts to watch') }}" />
         </div>
-    @endforeach
-</details>
+    </x-field>
+</x-section>
 
-</div>
-</div>
+<x-section x-show="tab === 'more'" x-cloak :title="__('Replies and webhooks')" :description="__('Answers you give often, and the addresses developers connect.')">
+    <x-field :label="__('Saved replies')" :help="__('Label, text, and the keywords that trigger it on a new Instagram or Facebook comment. An empty row is ignored; save to get a new empty row.')">
+        @foreach ($rows(old('p.saved_replies', $profile['saved_replies'] ?? [])) as $i => $row)
+            <div class="grid gap-2 sm:grid-cols-6 {{ $i ? 'mt-2' : '' }}">
+                <x-text-input name="p[saved_replies][{{ $i }}][label]" type="text" class="block w-full text-sm" :value="$row['label'] ?? ''" placeholder="{{ __('Opening hours') }}" />
+                <x-text-input name="p[saved_replies][{{ $i }}][text]" type="text" class="block w-full text-sm sm:col-span-4" :value="$row['text'] ?? ''" placeholder="{{ __('Ανοιχτά κάθε μέρα 10:00–02:00 / Open daily 10:00–02:00') }}" />
+                <x-text-input name="p[saved_replies][{{ $i }}][keywords]" type="text" class="block w-full text-sm" :value="is_array($row['keywords'] ?? null) ? implode(', ', $row['keywords']) : ($row['keywords'] ?? '')" placeholder="{{ __('ώρες, hours') }}" />
+            </div>
+        @endforeach
+    </x-field>
+    <x-field :label="__('Webhooks')" :help="__('For developers: an https address that receives a signed JSON message when a post is published, fails or needs a human (docs/api.md).')">
+        @foreach ($rows(old('p.webhooks', $profile['webhooks'] ?? [])) as $i => $row)
+            <div class="grid gap-2 sm:grid-cols-6 {{ $i ? 'mt-2' : '' }}">
+                <x-text-input name="p[webhooks][{{ $i }}][url]" type="url" pattern="https://.*" class="block w-full font-mono text-sm sm:col-span-3" :value="$row['url'] ?? ''" placeholder="https://example.com/hook" />
+                <x-text-input name="p[webhooks][{{ $i }}][secret]" type="text" class="block w-full font-mono text-sm" :value="$row['secret'] ?? ''" placeholder="{{ __('secret') }}" />
+                <div class="flex flex-wrap items-center gap-3 text-xs sm:col-span-2">
+                    @foreach (\App\Webhooks\Webhooks::EVENTS as $event)
+                        <label class="flex items-center gap-1"><input type="checkbox" name="p[webhooks][{{ $i }}][events][]" value="{{ $event }}" class="{{ $check }}" @checked(in_array($event, $row['events'] ?? []))> {{ $event }}</label>
+                    @endforeach
+                </div>
+            </div>
+        @endforeach
+    </x-field>
+</x-section>
 
-<div class="mt-6 flex items-center gap-4">
+<div class="mt-4 flex items-center gap-4" x-show="['basics', 'agency', 'voice', 'content', 'approval', 'timing', 'research', 'more'].includes(tab)">
     <x-primary-button>{{ __('Save') }}</x-primary-button>
-    <a href="{{ route('clients.index') }}" class="text-sm text-gray-600 hover:underline">{{ __('Cancel') }}</a>
-    @if (session('status'))
+    <a href="{{ route('clients.index') }}" class="text-sm text-gray-600 hover:text-gray-900">{{ __('Cancel') }}</a>
+    @if (session('status') === 'client-updated')
         <p class="text-sm text-gray-600">{{ __('Saved.') }}</p>
     @endif
 </div>

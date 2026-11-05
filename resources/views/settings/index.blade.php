@@ -1,15 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('Settings') }}</h2>
+        <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ __('Settings') }}</h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <div class="py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             @if (session('status') === 'settings-saved')
                 <p class="text-sm text-green-600">{{ __('Saved. The app runs on the new values from the next page; the queue from its next minute.') }}</p>
             @endif
             <x-input-error class="text-sm" :messages="$errors->all()" />
-            <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+            <div class="bg-white p-6 rounded-xl border border-gray-200">
                 <p class="text-sm text-gray-600">{{ __('Every value of the server configuration (.env). FEATURE_ switches take true or false. A wrong database or APP_URL value locks the app; the previous file is kept on the server as .env.backup. APP_KEY cannot be changed here.') }}</p>
                 <form method="POST" action="{{ route('settings.update') }}" class="mt-4 space-y-3">
                     @csrf

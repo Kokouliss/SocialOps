@@ -1,7 +1,7 @@
 <x-app-layout :client="$client">
     <x-slot name="header">
         <div class="flex flex-wrap items-center gap-3">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $client->name }}: {{ __('Instagram grid') }}</h2>
+            <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ $client->name }}: {{ __('Instagram grid') }}</h2>
             <span class="text-sm text-gray-500">{{ __('Newest first, as it will look. Drag a post on the calendar to change the order.') }}</span>
             <a class="ml-auto px-2 py-1 border rounded text-sm" href="{{ route('calendar', ['client' => $client->slug]) }}">{{ __('Calendar') }}</a>
         </div>
