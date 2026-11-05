@@ -184,7 +184,7 @@
     // shortcut: JS counts UTF-16 units, so an emoji counts 2 where the server counts 1; the server's count decides at publish time
     document.querySelectorAll('fieldset[data-max]').forEach(set => {
         const max = +set.dataset.max, count = set.querySelector('.count'), fields = JSON.parse(set.dataset.fields || '{}');
-        const fill = s => s.replace(/\{\{\s*([a-z0-9_]+)\s*\}\}/gi, (m, k) => fields[k.toLowerCase()] ?? m);
+        const fill = s => s.replace(/\{\{\s*([\p{L}\p{N}_]+)\s*\}\}/gu, (m, k) => fields[k.toLowerCase()] ?? m);
         const tags = () => [...new Set([...set.querySelectorAll('input[name$="[hashtags]"]')].flatMap(i => i.value.trim().split(/\s+/).filter(Boolean)).map(t => '#' + t.replace(/^#/, '')))].join(' ');
         const update = () => {
             const n = fill([...[...set.querySelectorAll('textarea')].map(t => t.value.trim()), set.dataset.signature, tags()].filter(Boolean).join('\n\n')).length;

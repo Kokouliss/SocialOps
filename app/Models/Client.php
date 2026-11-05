@@ -131,7 +131,7 @@ class Client extends Model
     /** Fill {{phone}}-style placeholders from the profile's fields; an unknown one stays as written. */
     public function substitute(?string $text): string
     {
-        return preg_replace_callback('/\{\{\s*([a-z0-9_]+)\s*\}\}/i', fn ($m) => (string) ($this->profile['fields'][strtolower($m[1])] ?? $m[0]), (string) $text);
+        return preg_replace_callback('/\{\{\s*([\p{L}\p{N}_]+)\s*\}\}/u', fn ($m) => (string) ($this->profile['fields'][mb_strtolower($m[1])] ?? $m[0]), (string) $text);
     }
 
     /** With `utm: true` in the profile, every http(s) link in the text gets utm_source=platform, utm_medium=social and utm_campaign=post name; links that already carry utm_ stay as written. */

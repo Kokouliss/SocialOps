@@ -12,7 +12,7 @@ function profileForm(array $over = []): array
         'about' => ['description' => ' Beach lounge on the sand ', 'goals' => 'More bookings', 'bogus' => 'dropped'],
         'voice' => ['tone' => 'warm', 'person' => 'we', 'emoji' => 'none', 'cta_style' => 'soft', 'banned_phrases' => "Don't miss out\n\n", 'words' => "our beach\n", 'facts' => "Open daily\r\nBooking by phone"],
         'notes' => ' Family business since 1987. ',
-        'pillars' => [['name' => 'Food & drink', 'share' => '60'], ['name' => 'place', 'share' => '40'], ['name' => '', 'share' => '']],
+        'pillars' => [['name' => 'Food & drink', 'share' => '50'], ['name' => 'place', 'share' => '40'], ['name' => ' Προσφορές & Events ', 'share' => '10'], ['name' => '', 'share' => '']],
         'hashtags' => ['always' => 'chania #crete', 'pool' => "#sunset\n#villa", 'max_per_post' => '7'],
         'research' => ['sources' => "cretalive.gr\n", 'excluded_domains' => '', 'excluded_topics' => 'politics', 'hashtags_to_watch' => '#chaniabeach cretefood', 'competitors' => '@other'],
         'approval' => ['policy' => 'optional', 'sla_hours' => '24', 'auto_approve_on_timeout' => '1', 'email_monthly_report' => '1', 'approvers' => [['name' => 'Eleni', 'email' => 'eleni@example.com', 'phone' => ''], ['name' => '', 'email' => '', 'phone' => '']]],
@@ -49,7 +49,7 @@ test('every profile section is edited as a form field, without a YAML box', func
         ->and($profile['about'])->toBe(['description' => 'Beach lounge on the sand', 'audience' => '', 'offerings' => '', 'differentiators' => '', 'goals' => 'More bookings', 'current' => ''])
         ->and($profile['voice'])->toEqual(['tone' => 'warm', 'person' => 'we', 'emoji' => 'none', 'cta_style' => 'soft', 'banned_phrases' => ["Don't miss out"], 'words' => ['our beach'], 'facts' => ['Open daily', 'Booking by phone']])
         ->and($profile['notes'])->toBe('Family business since 1987.')
-        ->and($profile['pillars'])->toBe(['food_drink' => 60, 'place' => 40])
+        ->and($profile['pillars'])->toBe(['food_drink' => 50, 'place' => 40, 'προσφορές_events' => 10]) // Greek pillar names stay Greek
         ->and($profile['hashtags'])->toEqual(['always' => ['#chania', '#crete'], 'pool' => ['#sunset', '#villa'], 'max_per_post' => 7])
         ->and($profile['research'])->toEqual(['sources' => ['cretalive.gr'], 'excluded_domains' => [], 'excluded_topics' => ['politics'], 'hashtags_to_watch' => ['chaniabeach', 'cretefood'], 'competitors' => ['@other']])
         ->and($profile['approval'])->toEqual(['policy' => 'optional', 'sla_hours' => 24, 'auto_approve_on_timeout' => true, 'approvers' => [['name' => 'Eleni', 'email' => 'eleni@example.com', 'phone' => '']], 'email_monthly_report' => true])
@@ -65,7 +65,7 @@ test('every profile section is edited as a form field, without a YAML box', func
     $this->patch(route('clients.update', $client), ['name' => $client->name, 'slug' => 'almyra', 'code' => 'ALMYRA', 'type' => $client->type, 'location' => $client->location, 'p' => profileForm(['utm' => null, 'approval' => ['auto_approve_on_timeout' => null]])])
         ->assertSessionHasNoErrors();
     expect($client->fresh()->profile)->toMatchArray(['utm' => false])->and($client->fresh()->profile['approval']['auto_approve_on_timeout'])->toBeFalse();
-    $this->patch(route('clients.update', $client), ['name' => $client->name, 'slug' => 'almyra', 'code' => 'ALMYRA', 'type' => $client->type, 'location' => $client->location, 'p' => profileForm(['pillars' => [['share' => '50']]])])
+    $this->patch(route('clients.update', $client), ['name' => $client->name, 'slug' => 'almyra', 'code' => 'ALMYRA', 'type' => $client->type, 'location' => $client->location, 'p' => profileForm(['pillars' => [['share' => '40']]])])
         ->assertSessionHasErrors(['profile' => 'Pillar shares must add up to 100.']);
 });
 

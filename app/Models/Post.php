@@ -94,7 +94,7 @@ class Post extends Model
         $variants = $this->variants->where('platform', $platform)->keyBy('lang');
         $hashtags = $variants->flatMap(fn (PostVariant $v) => $v->hashtags ?? [])->map(fn ($t) => '#'.ltrim($t, '#'))->unique()->join(' ');
         $caption = $this->client->tagLinks($this->client->substitute(collect($languages)->map(fn ($lang) => trim((string) $variants->get($lang)?->caption))->push($this->signatureFor($platform))->push($hashtags)->filter()->join("\n\n")), $platform, $this->name);
-        if (preg_match('/\{\{\s*[a-z0-9_]+\s*\}\}/i', $caption, $m)) {
+        if (preg_match('/\{\{\s*[\p{L}\p{N}_]+\s*\}\}/u', $caption, $m)) {
             throw new PublishFailed(ucfirst($platform)." caption has the placeholder {$m[0]}, which is not in the profile's fields");
         }
         $max = PostRequest::CAPTION_MAX[$platform];
