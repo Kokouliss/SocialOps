@@ -2,6 +2,7 @@
 
 use App\Models\Client;
 use App\Planning\ContentPlanner;
+use App\Planning\PillarQuota;
 use App\Planning\PlanRequest;
 use App\Planning\TrendResearcher;
 use Carbon\CarbonImmutable;
@@ -43,6 +44,7 @@ it('lets an instruction from the team decide the topic instead of the pillar quo
     $body = json_decode((string) claudeRequests()[0]['request']->getBody(), true);
     expect($plan['posts'][0]['pillar'])->toBe('offers')->and($plan['warnings'])->toBe([])
         ->and($body['messages'][0]['content'])->toContain('Instruction from the team: A Reel about the sunset cocktails')->toContain('Posts per pillar (exact): none, the instruction decides')
+        ->and(PillarQuota::line([], ''))->toContain('the profile has no pillars')
         ->and($body['output_config']['format']['schema']['properties']['posts']['items']['properties']['pillar']['enum'])->toBe(['place', 'food_drink', 'people', 'guests_ugc', 'offers']);
 });
 

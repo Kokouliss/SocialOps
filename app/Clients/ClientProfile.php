@@ -37,7 +37,7 @@ final class ClientProfile
         $validator = Validator::make($data, self::rules());
 
         $validator->after(function ($v) use ($data) {
-            if (is_array($data['pillars'] ?? null) && array_sum($data['pillars']) !== 100) {
+            if (is_array($data['pillars'] ?? null) && $data['pillars'] !== [] && array_sum($data['pillars']) !== 100) { // no pillars is fine: Claude then picks the topics
                 $v->errors()->add('pillars', __('Pillar shares must add up to 100.'));
             }
             foreach (array_keys(is_array($data['fields'] ?? null) ? $data['fields'] : []) as $key) {
@@ -232,7 +232,7 @@ final class ClientProfile
             'voice.facts' => ['present', 'array'],
             'voice.facts.*' => ['string'],
             'notes' => ['nullable', 'string', 'max:5000'],
-            'pillars' => ['required', 'array', 'min:1'],
+            'pillars' => ['present', 'array'],
             'pillars.*' => ['integer', 'min:0', 'max:100'],
             'hashtags' => ['required', 'array'],
             'hashtags.always' => ['present', 'array'],

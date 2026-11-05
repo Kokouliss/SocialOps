@@ -153,7 +153,7 @@
 </x-section>
 
 <x-section x-show="tab === 'content'" x-cloak :title="__('Content')" :description="__('The topics the posts rotate through, the hashtags and the text added to every post.')">
-    <x-field :label="__('Content pillars')" :help="__('The share of posts each topic gets. The shares add up to 100.')">
+    <x-field :label="__('Content pillars')" :help="__('The share of posts each topic gets; the shares add up to 100. Optional: without pillars Claude picks the topics from About the client, the season and the trends.')">
         @php($pillars = old('p.pillars', collect($profile['pillars'] ?? [])->map(fn ($share, $name) => ['name' => str_replace('_', ' ', $name), 'share' => $share])->values()->all()))
         <div class="grid gap-2 sm:grid-cols-2">
             @foreach ($rows($pillars) as $i => $row)
@@ -163,7 +163,7 @@
                 </div>
             @endforeach
         </div>
-        @if ($client->exists)
+        @if ($client->exists && $client->profile['pillars'])
             @php($mix = \App\Planning\PillarMix::for($client))
             <p class="mt-2 text-xs text-gray-500">{{ __('Posts per pillar, :days days back and ahead (:n posts):', ['days' => \App\Planning\PillarMix::DAYS, 'n' => $mix['posts']]) }}
                 @foreach ($mix['rows'] as $pillar => $row)<span class="{{ in_array($pillar, $mix['drifted']) ? 'font-medium text-red-600' : '' }}">{{ str_replace('_', ' ', $pillar) }} {{ $row['actual'] }}%</span>@if (! $loop->last) · @endif @endforeach

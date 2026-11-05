@@ -65,8 +65,13 @@ test('every profile section is edited as a form field, without a YAML box', func
     $this->patch(route('clients.update', $client), ['name' => $client->name, 'slug' => 'almyra', 'code' => 'ALMYRA', 'type' => $client->type, 'location' => $client->location, 'p' => profileForm(['utm' => null, 'approval' => ['auto_approve_on_timeout' => null]])])
         ->assertSessionHasNoErrors();
     expect($client->fresh()->profile)->toMatchArray(['utm' => false])->and($client->fresh()->profile['approval']['auto_approve_on_timeout'])->toBeFalse();
-    $this->patch(route('clients.update', $client), ['name' => $client->name, 'slug' => 'almyra', 'code' => 'ALMYRA', 'type' => $client->type, 'location' => $client->location, 'p' => profileForm(['pillars' => [['share' => '40']]])])
+    $this->patch(route('clients.update', $client), ['name' => $client->name, 'slug' => 'almyra', 'code' => 'ALMYRA', 'type' => $client->type, 'location' => $client->location, 'p' => profileForm(['pillars' => [['name' => 'place', 'share' => '40']]])])
         ->assertSessionHasErrors(['profile' => 'Pillar shares must add up to 100.']);
+
+    // no pillars at all is allowed: Claude then picks the topics
+    $this->patch(route('clients.update', $client), ['name' => $client->name, 'slug' => 'almyra', 'code' => 'ALMYRA', 'type' => $client->type, 'location' => $client->location, 'p' => ['pillars' => []] + profileForm()])
+        ->assertSessionHasNoErrors();
+    expect($client->fresh()->profile['pillars'])->toBe([]);
 });
 
 test('a new client starts from the template without the example values, and gets its link name and code from its name', function () {
