@@ -26,6 +26,15 @@ test('get-planning-brief hands Claude the profile, the quota, the window and the
     SocialOpsServer::tool(GetPlanningBrief::class, ['client' => 'almyra', 'platforms' => ['pinterest']])->assertHasErrors(['subset of the client accounts']);
 });
 
+test('save-plan files a plan without pillars when the profile has none', function () {
+    $this->client->update(['profile' => ['pillars' => []] + $this->client->profile]);
+
+    SocialOpsServer::tool(SavePlan::class, ['client' => 'almyra', 'posts' => [['date' => '2027-05-12', 'platforms' => ['instagram'], 'format' => 'feed', 'title' => 'No pillar', 'angle' => 'Topic from About.']]])
+        ->assertOk()->assertSee('"drafts":1');
+
+    expect(Post::where('name', 'ALMYRA_20270512_IG_FEED_MISC_EL-EN_v1')->firstOrFail()->pillar)->toBeNull();
+});
+
 test('save-plan files the posts as Drafts with captions, the trend brief and the review sheet, publishing nothing', function () {
     $this->client->update(['profile' => ['slots' => ['tue 18:00']] + $this->client->profile]);
     $posts = [

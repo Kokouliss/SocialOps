@@ -87,7 +87,7 @@ class PlanWriter
         foreach ($result['posts'] as $i => $post) {
             $captions = $post['captions'] ?? [];
             $md .= "\n## ".($i + 1).". {$post['title']} ({$post['date']})\n\n";
-            $md .= '- '.$t('Name:')." `{$post['name']}`\n- ".$t('Platforms:').' '.implode(', ', $post['platforms']).' | '.$t('Format:')." {$post['format']} | ".$t('Pillar:')." {$post['pillar']}\n";
+            $md .= '- '.$t('Name:')." `{$post['name']}`\n- ".$t('Platforms:').' '.implode(', ', $post['platforms']).' | '.$t('Format:')." {$post['format']} | ".$t('Pillar:').' '.($post['pillar'] ?? '')."\n";
             $md .= '- '.$t('Trend:').' '.($post['trend_signal'] ?? $t('evergreen')).' | '.$t('Why now:')." {$post['why_now']}\n";
             $md .= '- '.$t('Angle:')." {$post['angle']}\n- ".$t('Asset:')." {$post['asset_brief']}\n";
             if (($post['caption_brief'] ?? '') !== '') {
