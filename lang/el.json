@@ -269,7 +269,7 @@
     "failed jobs": "αποτυχημένες εργασίες",
     "Failed or waiting for a human": "Απέτυχαν ή περιμένουν άνθρωπο",
     "Feed": "Ανάρτηση",
-    "Field names are lowercase letters, digits and underscores: ':key' is not.": "Τα ονόματα των πεδίων είναι πεζά λατινικά γράμματα, ψηφία και κάτω παύλες: το ':key' δεν είναι.",
+    "Field names are lowercase letters (Greek or Latin), digits and underscores: ':key' is not.": "Τα ονόματα των πεδίων είναι πεζά γράμματα (ελληνικά ή λατινικά), ψηφία και κάτω παύλες: το ':key' δεν είναι.",
     "Files": "Αρχεία",
     "Fill in at least one account handle in the profile above and save first.": "Συμπλήρωσε τουλάχιστον ένα handle λογαριασμού στο προφίλ πάνω και αποθήκευσε πρώτα.",
     "Find": "Αναζήτηση",

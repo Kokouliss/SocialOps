@@ -21,4 +21,7 @@ test('names follow CLIENT_YYYYMMDD_ANY_KIND_PILLAR_LANG_v#', function () {
 
     expect(AssetNamer::name($client, UploadedFile::fake()->image('x.png'), 'guests & ugc!', $date))
         ->toBe('ALMYRA_20270512_ANY_IMG_GUESTSUGC_EL-EN_v1.png');
+
+    expect(AssetNamer::name($client, UploadedFile::fake()->image('x.png'), 'προσφορές_events', $date))
+        ->toBe('ALMYRA_20270512_ANY_IMG_PROSFORESEVENTS_EL-EN_v1.png'); // a Greek pillar is transliterated in the file name
 });

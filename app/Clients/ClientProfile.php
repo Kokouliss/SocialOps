@@ -6,7 +6,6 @@ use App\Models\Client;
 use App\Webhooks\Webhooks;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\Yaml\Exception\ParseException;
@@ -40,8 +39,8 @@ final class ClientProfile
                 $v->errors()->add('pillars', __('Pillar shares must add up to 100.'));
             }
             foreach (array_keys(is_array($data['fields'] ?? null) ? $data['fields'] : []) as $key) {
-                if (! preg_match('/^[a-z][a-z0-9_]*$/', (string) $key)) {
-                    $v->errors()->add('fields', __("Field names are lowercase letters, digits and underscores: ':key' is not.", ['key' => $key]));
+                if (! preg_match('/^\p{Ll}[\p{L}\p{N}_]*$/u', (string) $key)) { // Greek or Latin, as long as it is lowercase
+                    $v->errors()->add('fields', __("Field names are lowercase letters (Greek or Latin), digits and underscores: ':key' is not.", ['key' => $key]));
                 }
             }
             if (($data['approval']['auto_approve_on_timeout'] ?? false) && ($data['approval']['policy'] ?? null) !== 'optional') {
@@ -82,7 +81,7 @@ final class ClientProfile
                 'facts' => $lines($form['voice']['facts'] ?? ''),
             ],
             'notes' => $text($form['notes'] ?? ''),
-            'pillars' => collect($rows($form['pillars'] ?? [], fn ($r) => ($r['name'] ?? '') !== ''))->mapWithKeys(fn ($r) => [Str::slug($r['name'], '_') => (int) ($r['share'] ?? 0)])->all(),
+            'pillars' => collect($rows($form['pillars'] ?? [], fn ($r) => ($r['name'] ?? '') !== ''))->mapWithKeys(fn ($r) => [self::key($r['name']) => (int) ($r['share'] ?? 0)])->all(),
             'hashtags' => [
                 'always' => $tags($form['hashtags']['always'] ?? ''),
                 'pool' => $tags($form['hashtags']['pool'] ?? ''),
@@ -110,6 +109,12 @@ final class ClientProfile
             'webhooks' => array_map(fn ($r) => ['url' => $r['url'], 'secret' => $r['secret'] ?? '', 'events' => array_values((array) ($r['events'] ?? []))], $rows($form['webhooks'] ?? [], fn ($r) => ($r['url'] ?? '') !== '')),
             'key_dates' => $rows($form['key_dates'] ?? [], fn ($r) => ($r['date'] ?? '') !== '' || ($r['label'] ?? '') !== ''),
         ];
+    }
+
+    /** A pillar name as its key: lowercase, words joined with underscores, Greek letters kept (the file names transliterate them). */
+    public static function key(string $name): string
+    {
+        return trim(mb_strtolower(preg_replace('/[^\p{L}\p{N}]+/u', '_', $name)), '_');
     }
 
     /**

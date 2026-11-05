@@ -6,6 +6,7 @@ use App\Models\Asset;
 use App\Models\Client;
 use Carbon\CarbonInterface;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Str;
 
 /**
  * Builds the agency file name CLIENT_YYYYMMDD_PLATFORM_FORMAT_PILLAR_LANG_v#.
@@ -18,7 +19,7 @@ final class AssetNamer
     {
         $date ??= now();
         $kind = str_starts_with((string) $file->getMimeType(), 'video/') ? 'VID' : 'IMG';
-        $pillar = strtoupper(preg_replace('/[^a-z0-9]+/i', '', (string) $pillar)) ?: 'MISC';
+        $pillar = strtoupper(preg_replace('/[^a-z0-9]+/i', '', Str::ascii((string) $pillar))) ?: 'MISC'; // a Greek pillar is transliterated
         $lang = strtoupper(implode('-', $client->profile['languages']));
         $base = sprintf('%s_%s_ANY_%s_%s_%s_v', $client->code, $date->format('Ymd'), $kind, $pillar, $lang);
 

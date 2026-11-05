@@ -3,6 +3,7 @@
 namespace App\Bio;
 
 use App\Models\Client;
+use Illuminate\Support\Str;
 
 /** The buttons of a client's link-in-bio page: the profile placeholders that hold a link, a phone number or an e-mail, then the social accounts. */
 final class BioLinks
@@ -15,7 +16,7 @@ final class BioLinks
         $links = [];
         foreach ((array) ($client->profile['fields'] ?? []) as $name => $value) {
             $value = trim((string) $value);
-            $label = __(self::LABELS[$name] ?? ucfirst(str_replace('_', ' ', (string) $name)));
+            $label = __(self::LABELS[$name] ?? Str::ucfirst(str_replace('_', ' ', (string) $name)));
             $phone = preg_match('/^\+?[\d\s]{6,}$/', $value);
             if ($name === 'whatsapp' && $phone) {
                 $links[] = ['label' => $label, 'url' => 'https://wa.me/'.preg_replace('/\D/', '', $value), 'kind' => 'link'];
