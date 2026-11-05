@@ -20,11 +20,13 @@ final class PostNamer
         $lang = strtoupper(implode('-', $client->profile['languages']));
         $base = sprintf('%s_%s_%s_%s_%s_%s_v', $client->code, $date->format('Ymd'), $platform, $clean($format), $clean($pillar) ?: 'MISC', $lang);
 
-        $version = Post::where('client_id', $client->id)
+        // names are unique and a post in the recycle bin keeps its own, so the next version is one past the highest there is, binned posts included
+        $version = Post::withTrashed()->where('client_id', $client->id)
             ->where('name', '>=', $base)
             ->pluck('name')
             ->filter(fn (string $name) => str_starts_with($name, $base))
-            ->count() + 1;
+            ->map(fn (string $name) => (int) substr($name, strlen($base)))
+            ->max() + 1;
 
         return $base.$version;
     }

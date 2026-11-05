@@ -16,7 +16,8 @@ final class PostImporter
     public function import(Account $account): int
     {
         $client = $account->client;
-        $known = Post::where('client_id', $client->id)->whereNotNull('external_ids')->pluck('external_ids')->pluck($account->platform)->filter()->all();
+        // withTrashed: a post in the recycle bin is not imported a second time
+        $known = Post::withTrashed()->where('client_id', $client->id)->whereNotNull('external_ids')->pluck('external_ids')->pluck($account->platform)->filter()->all();
         $imported = 0;
         foreach ($this->meta->recentPosts($account) as $remote) {
             if (in_array($remote['id'], $known, true)) {

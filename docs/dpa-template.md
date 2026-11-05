@@ -63,7 +63,7 @@ For the Controller: ________________  For the Processor: ________________
 | **Categories of data subjects** | The Controller's staff and approvers; customers and guests who appear in photos and videos (user-generated content, venue clips); people who comment on or message the Controller's accounts; people named in captions. |
 | **Categories of personal data** | Names, e-mail addresses and phone numbers of approvers and staff; photos and videos, including faces, with the consent and repost-permission records the Controller gives; social media profile names and the text of comments, messages and reviews, with a sentiment and intent tag; access tokens for the Controller's accounts (encrypted); publishing statistics (aggregated numbers); captions and notes. |
 | **Special categories** | None intended. The Controller does not provide content revealing health, religion or similar data (for example a customer's prescription in a pharmacy photo); the Processor flags such content to the Controller instead of using it. |
-| **Retention in Social Ops** | Media and posts: until the Controller deletes them or the services end. Comments, messages and reviews: read from the networks for the last 30 days and kept until deleted. AI call records: [12] months, with the cost and size of each call. Access logs: [6] months. |
+| **Retention in Social Ops** | Media and posts: until the Controller deletes them or the services end; a deleted post stays in the client's recycle bin until it is deleted for good there. Comments, messages and reviews: read from the networks for the last 30 days and kept until deleted. AI call records: [12] months, with the cost and size of each call. Access logs: [6] months. |
 
 ## Annex 2: Sub-processors
 

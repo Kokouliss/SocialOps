@@ -35,6 +35,8 @@ test('ticked posts on the list view are sent for approval per client, moved to a
     $this->post(route('posts.bulk'), ['action' => 'move', 'posts' => [$draftA->id]])->assertSessionHasErrors('date');
 
     $this->post(route('posts.bulk'), ['action' => 'delete', 'posts' => [$draftA->id, $published->id, $foreign->id]])->assertSessionHasErrors('posts.2');
-    $this->post(route('posts.bulk'), ['action' => 'delete', 'posts' => [$draftA->id, $published->id]])->assertSessionHas('status', '1 deleted, 1 left as they are (published or already in review)');
-    expect(Post::find($draftA->id))->toBeNull()->and(Post::find($published->id))->not->toBeNull();
+    $this->post(route('posts.bulk'), ['action' => 'delete', 'posts' => [$draftA->id, $published->id]])->assertSessionHas('status', '1 moved to the recycle bin, 1 left as they are (published or already in review)');
+    expect(Post::find($draftA->id))->toBeNull()->and(Post::find($published->id))->not->toBeNull()
+        ->and(Post::onlyTrashed()->find($draftA->id)->deleted_by)->toBe($me->id); // in the client's recycle bin, not gone
+    $this->post(route('posts.bulk'), ['action' => 'delete', 'posts' => [$draftA->id]])->assertSessionHasErrors('posts.0'); // a binned post cannot be ticked again
 });

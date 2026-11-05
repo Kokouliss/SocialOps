@@ -118,8 +118,8 @@ test('the calendar shows posts by month and client and reschedules by drag and d
     $this->actingAs($this->staff)->patch("/posts/{$published->id}", postInput())->assertForbidden();
     $this->actingAs($this->staff)->delete("/posts/{$published->id}")->assertStatus(422);
 
-    $this->actingAs($this->staff)->delete("/posts/{$theirs->id}")->assertRedirect('/calendar');
-    expect(Post::count())->toBe(3);
+    $this->actingAs($this->staff)->delete("/posts/{$theirs->id}")->assertRedirect(route('calendar', ['client' => $theirs->client->slug]));
+    expect(Post::count())->toBe(3)->and(Post::onlyTrashed()->whereKey($theirs->id)->exists())->toBeTrue(); // deleted = in the recycle bin
 });
 
 test('a post exports as a ZIP of media and captions, and a client month as a CSV', function () {

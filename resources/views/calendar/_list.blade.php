@@ -54,7 +54,7 @@
                 <input type="date" name="date" value="{{ old('date') }}" class="rounded-md border-gray-300 py-1.5 text-sm" aria-label="{{ __('Move to') }}">
                 <button name="action" value="move" class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40">{{ __('Move') }}</button>
             </span>
-            <button name="action" value="delete" class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-40" onclick="return confirm('{{ __('Delete the ticked posts? Published posts stay.') }}')">{{ __('Delete') }}</button>
+            <button name="action" value="delete" class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-red-700 hover:bg-red-50 disabled:opacity-40" onclick="return confirm('{{ __('Move the ticked posts to the recycle bin? Published posts stay.') }}')">{{ __('Delete') }}</button>
             @if ($errors->hasAny(['posts', 'date']))
                 <span class="text-red-600">{{ $errors->first('posts') ?: $errors->first('date') }}</span>
             @endif

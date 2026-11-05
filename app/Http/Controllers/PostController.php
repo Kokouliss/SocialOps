@@ -89,8 +89,12 @@ class PostController extends Controller
         return redirect()->route('calendar', ['client' => $client->slug])->with('status', __(':n drafts imported', ['n' => $result['imported']]));
     }
 
-    public function edit(Post $post): View
+    public function edit(Post $post): View|RedirectResponse
     {
+        if ($post->trashed()) { // an old link (Slack, a mail, the Back button): the post is in the recycle bin, where it can be restored
+            return redirect()->route('clients.bin', $post->client_id);
+        }
+
         return view('posts.edit', [
             'client' => $post->client,
             'post' => $post,
@@ -275,7 +279,7 @@ class PostController extends Controller
             'action' => ['required', Rule::in(['review', 'move', 'delete'])],
             'date' => ['required_if:action,move', 'nullable', 'date_format:Y-m-d'],
             'posts' => ['required', 'array', 'min:1'],
-            'posts.*' => [Rule::exists('posts', 'id')->whereIn('client_id', $request->user()->clients()->pluck('id'))],
+            'posts.*' => [Rule::exists('posts', 'id')->whereIn('client_id', $request->user()->clients()->pluck('id'))->withoutTrashed()],
         ]);
         $posts = Post::with('client')->whereIn('id', $data['posts'])->get();
 
@@ -290,8 +294,8 @@ class PostController extends Controller
             session()->flash('warning', ReviewController::mailWarning($reviews));
         } else {
             [$skipped, $todo] = $posts->partition(fn (Post $p) => $p->state === PostState::Published);
-            $todo->each(fn (Post $p) => $data['action'] === 'move' ? $this->move($p, $data['date']) : $p->delete());
-            $done = __($data['action'] === 'move' ? ':n moved' : ':n deleted', ['n' => $todo->count()]);
+            $todo->each(fn (Post $p) => $data['action'] === 'move' ? $this->move($p, $data['date']) : $p->moveToBin($request->user()->id));
+            $done = __($data['action'] === 'move' ? ':n moved' : ':n moved to the recycle bin', ['n' => $todo->count()]);
         }
 
         return back()->with('status', $done.($skipped->isNotEmpty() ? ', '.__(':n left as they are (published or already in review)', ['n' => $skipped->count()]) : ''));
@@ -307,12 +311,13 @@ class PostController extends Controller
         return redirect()->route('posts.edit', $copy)->with('status', $client->is($post->client) ? 'duplicated-as-a-draft' : 'duplicated-as-a-draft-without-the-media-which-stays-with-its-client');
     }
 
-    public function destroy(Post $post): RedirectResponse
+    /** Delete = into the client's recycle bin (RecycleBinController restores it or deletes it for good). */
+    public function destroy(Request $request, Post $post): RedirectResponse
     {
         abort_if($post->state === PostState::Published, 422, 'Published posts cannot be deleted.');
-        $post->delete();
+        $post->moveToBin($request->user()->id);
 
-        return redirect()->route('calendar')->with('status', 'post-deleted');
+        return redirect()->route('calendar', ['client' => $post->client->slug])->with('status', 'post-moved-to-the-recycle-bin');
     }
 
     /** ZIP with the media files and a captions.txt, for posting by hand or designing in Canva while no account is connected. */

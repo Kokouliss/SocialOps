@@ -40,7 +40,7 @@
                 <button type="submit" class="{{ $btn }} border-brand-300 text-brand-700 hover:bg-brand-50">{{ __('Draft captions with Claude') }}</button>
             </form>
             @endif
-            <form method="POST" action="{{ route('posts.destroy', $post) }}" class="ml-auto" onsubmit="return confirm('{{ __('Delete this post?') }}')">
+            <form method="POST" action="{{ route('posts.destroy', $post) }}" class="ml-auto" onsubmit="return confirm('{{ __('Move this post to the recycle bin? It can be restored from there.') }}')">
                 @csrf
                 @method('DELETE')
                 <button type="submit" class="text-sm text-red-600 hover:underline">{{ __('Delete') }}</button>
