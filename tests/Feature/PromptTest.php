@@ -17,7 +17,7 @@ it('fills the caption prompt from the example profile and leaves no placeholder 
         ->toContain('Platforms: instagram, facebook')
         ->toContain('Sunset cocktails')
         ->toContain('Client-specific banned phrases: none')
-        ->toContain('Words and phrases the client likes: none')
+        ->toContain('Words and phrases the client likes, for when they fit (not in every post): none')
         ->toContain('What it offers: Sunbeds and umbrellas, the cocktail list')
         ->toContain('Extra information about the client: none')
         ->not->toContain('Used by the AI Drafting Service')
@@ -26,7 +26,7 @@ it('fills the caption prompt from the example profile and leaves no placeholder 
     // a profile saved before the About section existed still renders
     unset($profile['about'], $profile['voice']['words']);
     expect(Prompt::render('caption-draft', Prompt::profileVars($profile) + ['examples' => 'none yet', 'post' => ['platforms' => [], 'format' => 'feed', 'pillar' => 'place', 'brief' => '', 'asset_description' => '', 'photo' => 'none']]))
-        ->toContain('What it is: none')->toContain('Words and phrases the client likes: none');
+        ->toContain('What it is: none')->toContain('(not in every post): none');
 });
 
 it('renders the trend and plan prompts with key dates as bullet lines', function () {

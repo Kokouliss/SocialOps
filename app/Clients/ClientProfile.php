@@ -32,6 +32,8 @@ final class ClientProfile
     {
         $data = Arr::only(self::parseYaml($yaml), self::SECTIONS) + ['extra_languages' => [], 'about' => [], 'notes' => '', 'slots' => [], 'saved_replies' => [], 'signatures' => [], 'fields' => [], 'utm' => false, 'webhooks' => [], 'key_dates' => [], 'research' => ['sources' => [], 'excluded_domains' => [], 'excluded_topics' => []]];
 
+        $data['accounts'] = self::handles((array) ($data['accounts'] ?? []));
+
         $validator = Validator::make($data, self::rules());
 
         $validator->after(function ($v) use ($data) {
@@ -67,7 +69,7 @@ final class ClientProfile
         $rows = fn ($rows, $keep) => array_values(array_filter(array_map(fn ($r) => array_map(fn ($v) => is_array($v) ? $v : trim((string) $v), (array) $r), (array) $rows), $keep));
 
         return [
-            'accounts' => array_map($text, array_replace(array_fill_keys(self::PLATFORMS, ''), Arr::only((array) ($form['accounts'] ?? []), self::PLATFORMS))),
+            'accounts' => self::handles((array) ($form['accounts'] ?? [])),
             'languages' => $list($form['languages'] ?? ''),
             'extra_languages' => $list($form['extra_languages'] ?? ''),
             'about' => array_map($text, array_replace(array_fill_keys(self::ABOUT, ''), Arr::only((array) ($form['about'] ?? []), self::ABOUT))),
@@ -109,6 +111,16 @@ final class ClientProfile
             'webhooks' => array_map(fn ($r) => ['url' => $r['url'], 'secret' => $r['secret'] ?? '', 'events' => array_values((array) ($r['events'] ?? []))], $rows($form['webhooks'] ?? [], fn ($r) => ($r['url'] ?? '') !== '')),
             'key_dates' => $rows($form['key_dates'] ?? [], fn ($r) => ($r['date'] ?? '') !== '' || ($r['label'] ?? '') !== ''),
         ];
+    }
+
+    /**
+     * The account handles per platform as lists: a client can have two Instagrams; a profile from before holds one string per platform.
+     *
+     * @return array<string, list<string>>
+     */
+    public static function handles(array $accounts): array
+    {
+        return array_map(fn ($v) => array_values(array_filter(array_map(fn ($h) => trim((string) $h), (array) $v), 'strlen')), array_replace(array_fill_keys(self::PLATFORMS, []), Arr::only($accounts, self::PLATFORMS)));
     }
 
     /** A pillar name as its key: lowercase, words joined with underscores, Greek letters kept (the file names transliterate them). */
@@ -178,7 +190,7 @@ final class ClientProfile
             'slug' => ['required', 'string', 'max:40', 'regex:/^[a-z0-9]+(-[a-z0-9]+)*$/', Rule::unique('clients', 'slug')->ignore($ignoreId)],
             'code' => ['required', 'string', 'regex:/^[A-Z0-9]{2,12}$/', Rule::unique('clients', 'code')->ignore($ignoreId)],
             'name' => ['required', 'string', 'max:120'],
-            'type' => ['required', Rule::in(Client::TYPES)],
+            'type' => ['required', 'string', 'max:60'], // free text; Client::TYPES are only the suggestions
             'location' => ['required', 'string', 'max:120'],
             // the agency's board fields (Agency tab of the form), all optional
             'status' => ['sometimes', 'required', Rule::in(array_keys(Client::STATUSES))],
@@ -200,10 +212,8 @@ final class ClientProfile
     {
         return [
             'accounts' => ['required', 'array'],
-            'accounts.instagram' => ['nullable', 'string'],
-            'accounts.facebook' => ['nullable', 'string'],
-            'accounts.tiktok' => ['nullable', 'string'],
-            'accounts.linkedin' => ['nullable', 'string'],
+            'accounts.*' => ['present', 'array', 'max:10'],
+            'accounts.*.*' => ['string', 'max:120'],
             'languages' => ['required', 'array', 'min:1'],
             'languages.*' => ['string', 'size:2'],
             'extra_languages' => ['present', 'array'],

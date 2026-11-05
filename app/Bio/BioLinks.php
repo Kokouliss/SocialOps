@@ -2,6 +2,7 @@
 
 namespace App\Bio;
 
+use App\Clients\ClientProfile;
 use App\Models\Client;
 use Illuminate\Support\Str;
 
@@ -30,12 +31,12 @@ final class BioLinks
                 $links[] = ['label' => $label, 'url' => 'mailto:'.$value, 'kind' => 'email'];
             }
         }
-        $accounts = (array) ($client->profile['accounts'] ?? []);
-        if ($handle = ltrim(trim((string) ($accounts['instagram'] ?? '')), '@')) {
-            $links[] = ['label' => 'Instagram', 'url' => 'https://www.instagram.com/'.$handle, 'kind' => 'social'];
-        }
-        if ($handle = ltrim(trim((string) ($accounts['tiktok'] ?? '')), '@')) {
-            $links[] = ['label' => 'TikTok', 'url' => 'https://www.tiktok.com/@'.$handle, 'kind' => 'social'];
+        $accounts = ClientProfile::handles((array) ($client->profile['accounts'] ?? []));
+        foreach (['instagram' => ['Instagram', 'https://www.instagram.com/'], 'tiktok' => ['TikTok', 'https://www.tiktok.com/@']] as $platform => [$label, $base]) {
+            foreach ($accounts[$platform] as $handle) {
+                $handle = ltrim($handle, '@');
+                $links[] = ['label' => count($accounts[$platform]) > 1 ? "{$label} @{$handle}" : $label, 'url' => $base.$handle, 'kind' => 'social'];
+            }
         }
         if ($page = $client->accounts->firstWhere('platform', 'facebook')?->external_id) {
             $links[] = ['label' => 'Facebook', 'url' => 'https://www.facebook.com/'.$page, 'kind' => 'social'];

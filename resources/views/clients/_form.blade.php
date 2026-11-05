@@ -22,11 +22,12 @@
     </x-field>
     <x-field :label="__('Type and location')" for="type">
         <div class="grid gap-3 sm:grid-cols-2">
-            <select id="type" name="type" class="{{ $input }}" required>
+            <x-text-input id="type" name="type" type="text" list="client-types" class="block w-full text-sm" :value="old('type', str_replace('_', ' ', (string) $client->type))" placeholder="{{ __('villa, hotel, pharmacy, anything') }}" required aria-label="{{ __('Type') }}" />
+            <datalist id="client-types">
                 @foreach (\App\Models\Client::TYPES as $type)
-                    <option value="{{ $type }}" @selected(old('type', $client->type) === $type)>{{ __(str_replace('_', ' ', $type)) }}</option>
+                    <option value="{{ __(str_replace('_', ' ', $type)) }}"></option>
                 @endforeach
-            </select>
+            </datalist>
             <x-text-input id="location" name="location" type="text" class="block w-full text-sm" :value="old('location', $client->location)" placeholder="Chania, Crete" required aria-label="{{ __('Location') }}" />
         </div>
     </x-field>
@@ -36,12 +37,16 @@
             <x-text-input id="code" name="code" type="text" class="block w-full font-mono text-sm uppercase" :value="old('code', $client->code)" placeholder="ALMYRA" aria-label="{{ __('In file and post names') }}" />
         </div>
     </x-field>
-    <x-field :label="__('Accounts')" :help="__('The name of each account as the client knows it.')">
+    <x-field :label="__('Accounts')" :help="__('The name of each account as the client knows it. A client can have more than one on a platform: + adds a line.')">
         <div class="grid gap-3 sm:grid-cols-2">
             @foreach ($platforms as $platform => $label)
-                <div>
-                    <label for="p-accounts-{{ $platform }}" class="{{ $sub }}">{{ $label }}</label>
-                    <x-text-input id="p-accounts-{{ $platform }}" name="p[accounts][{{ $platform }}]" type="text" class="block w-full text-sm" :value="$p('accounts.'.$platform)" placeholder="@almyra.chania" />
+                @php($handles = array_values(array_filter(array_map(fn ($h) => trim((string) $h), (array) $p('accounts.'.$platform, [])), 'strlen')) ?: [''])
+                <div x-data="{ rows: @js($handles) }">
+                    <label for="p-accounts-{{ $platform }}-0" class="{{ $sub }}">{{ $label }}</label>
+                    <template x-for="(row, i) in rows" :key="i">
+                        <x-text-input ::id="'p-accounts-{{ $platform }}-' + i" name="p[accounts][{{ $platform }}][]" type="text" class="mb-1 block w-full text-sm" x-model="rows[i]" placeholder="@almyra.chania" />
+                    </template>
+                    <button type="button" class="text-xs font-medium text-gray-600 hover:text-gray-900" x-on:click="rows.push('')">+ {{ __('Add another account') }}</button>
                 </div>
             @endforeach
         </div>
@@ -139,7 +144,7 @@
     <x-field :label="__('Phrases never to use')" for="p-banned" :help="__('One per line.')">
         <textarea id="p-banned" name="p[voice][banned_phrases]" rows="3" class="{{ $input }}">{{ $text('voice.banned_phrases', "\n") }}</textarea>
     </x-field>
-    <x-field :label="__('Words and phrases to use')" for="p-words" :help="__('One per line: how the client names the place, the dishes, the rooms.')">
+    <x-field :label="__('Words and phrases to use')" for="p-words" :help="__('One per line: how the client names the place, the dishes, the rooms. Claude uses them when they fit, not in every post.')">
         <textarea id="p-words" name="p[voice][words]" rows="3" class="{{ $input }}">{{ $text('voice.words', "\n") }}</textarea>
     </x-field>
     <x-field :label="__('Extra information')" for="p-notes" :help="__('Anything else the team and Claude should know: the story of the place, what the owner cares about, what to avoid.')">

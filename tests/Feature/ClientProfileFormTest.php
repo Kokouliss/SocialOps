@@ -7,7 +7,7 @@ use App\Models\User;
 function profileForm(array $over = []): array
 {
     return array_replace_recursive([
-        'accounts' => ['instagram' => '@almyra.chania', 'facebook' => '', 'tiktok' => '', 'linkedin' => 'almyra-beach'],
+        'accounts' => ['instagram' => ['@almyra.chania', ' @almyra.events '], 'facebook' => [''], 'tiktok' => [], 'linkedin' => ['almyra-beach']],
         'languages' => 'el, en, de', 'extra_languages' => '',
         'about' => ['description' => ' Beach lounge on the sand ', 'goals' => 'More bookings', 'bogus' => 'dropped'],
         'voice' => ['tone' => 'warm', 'person' => 'we', 'emoji' => 'none', 'cta_style' => 'soft', 'banned_phrases' => "Don't miss out\n\n", 'words' => "our beach\n", 'facts' => "Open daily\r\nBooking by phone"],
@@ -44,7 +44,7 @@ test('every profile section is edited as a form field, without a YAML box', func
         ->assertSessionHasNoErrors()->assertRedirect(route('clients.edit', $client));
 
     $profile = $client->fresh()->profile;
-    expect($profile['accounts'])->toEqual(['instagram' => '@almyra.chania', 'facebook' => '', 'tiktok' => '', 'linkedin' => 'almyra-beach'])
+    expect($profile['accounts'])->toEqual(['instagram' => ['@almyra.chania', '@almyra.events'], 'facebook' => [], 'tiktok' => [], 'linkedin' => ['almyra-beach']]) // two Instagrams
         ->and($profile['languages'])->toBe(['el', 'en', 'de'])->and($profile['extra_languages'])->toBe([])
         ->and($profile['about'])->toBe(['description' => 'Beach lounge on the sand', 'audience' => '', 'offerings' => '', 'differentiators' => '', 'goals' => 'More bookings', 'current' => ''])
         ->and($profile['voice'])->toEqual(['tone' => 'warm', 'person' => 'we', 'emoji' => 'none', 'cta_style' => 'soft', 'banned_phrases' => ["Don't miss out"], 'words' => ['our beach'], 'facts' => ['Open daily', 'Booking by phone']])
@@ -76,11 +76,11 @@ test('a new client starts from the template without the example values, and gets
         ->assertDontSee('owner@example.com')->assertDontSee('value="relaxed, warm', false) // the tone is only a placeholder
         ->assertSee('value="food drink"', false)->assertSee('value="el, en"', false);
 
-    $this->post(route('clients.store'), ['name' => 'Αλμύρα Beach Lounge', 'slug' => '', 'code' => '', 'type' => 'beach_bar', 'location' => 'Chania', 'p' => profileForm()])
+    $this->post(route('clients.store'), ['name' => 'Αλμύρα Beach Lounge', 'slug' => '', 'code' => '', 'type' => 'Φαρμακείο', 'location' => 'Chania', 'p' => profileForm()])
         ->assertSessionHasNoErrors();
 
     $client = Client::where('name', 'Αλμύρα Beach Lounge')->firstOrFail();
-    expect($client->slug)->toBe('almyra-beach-lounge')->and($client->code)->toBe('ALMYRA')
+    expect($client->slug)->toBe('almyra-beach-lounge')->and($client->code)->toBe('ALMYRA')->and($client->type)->toBe('Φαρμακείο') // the type is free text
         ->and($client->profile['notes'])->toBe('Family business since 1987.');
 
     expect(ClientProfile::template())->toMatchArray(['accounts' => [], 'key_dates' => []])

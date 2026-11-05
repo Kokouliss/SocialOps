@@ -23,7 +23,8 @@ class Client extends Model
     /** @use HasFactory<ClientFactory> */
     use HasFactory;
 
-    public const TYPES = ['villa', 'hotel', 'beach_bar', 'restaurant', 'brand'];
+    /** Suggestions for the type field, which takes any text. */
+    public const TYPES = ['villa', 'hotel', 'apartments', 'rooms', 'beach_bar', 'restaurant', 'taverna', 'cafe', 'bar', 'club', 'winery', 'tour_operator', 'car_rental', 'shop', 'pharmacy', 'clinic', 'gym', 'spa', 'real_estate', 'brand'];
 
     /** Where the client stands for the agency, on the Clients board. */
     public const STATUSES = ['active' => 'Active', 'waiting_dates' => 'Client tells us when', 'waiting' => 'Waiting', 'seasonal' => 'Seasonal', 'stopped' => 'Stopped'];
