@@ -74,13 +74,13 @@
                                 </td>
                                 <td class="px-4 py-3 {{ $priorities[$client->priority] ?? '' }}">{{ $client->priority ? __(\App\Models\Client::PRIORITIES[$client->priority]) : '—' }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    @if ($client->plan_due)<span class="{{ $client->plan_due->isPast() ? 'text-red-600 font-medium' : '' }}">{{ $client->plan_due->translatedFormat('j M') }}</span>@else — @endif
+                                    @if ($client->plan_due)<span class="{{ $client->plan_due->isPast() ? 'text-red-600 font-medium' : '' }}">{{ $client->plan_due->format('d-m-Y') }}</span>@else — @endif
                                 </td>
                                 <td class="px-4 py-3 text-xs text-gray-700">
                                     @if ($client->posts_per_week !== null || $client->stories_per_week !== null)<p>{{ __(':posts posts, :stories stories a week', ['posts' => $client->posts_per_week ?? 0, 'stories' => $client->stories_per_week ?? 0]) }}</p>@endif
                                     @if ($client->tiktoks_per_month !== null)<p>{{ __(':n TikToks a month', ['n' => $client->tiktoks_per_month]) }}</p>@endif
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap">{{ $client->scheduled_until ? \Carbon\Carbon::parse($client->scheduled_until)->translatedFormat('j M') : '—' }}</td>
+                                <td class="px-4 py-3 whitespace-nowrap">{{ $client->scheduled_until ? \Carbon\Carbon::parse($client->scheduled_until)->format('d-m-Y') : '—' }}</td>
                                 <td class="px-4 py-3 text-xs text-gray-700 whitespace-pre-line max-w-sm">{{ $client->pending }}</td>
                                 <td class="px-4 py-3 text-xs">
                                     @foreach ($client->links ?? [] as $link)

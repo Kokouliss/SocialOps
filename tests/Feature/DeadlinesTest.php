@@ -19,7 +19,7 @@ test('deadlines per client: added, grouped by month, ticked, and the ones due th
 
     $staff->get(route('clients.deadlines', $client))->assertOk()
         ->assertSeeInOrder(['November 2026', 'December products', 'December topic plan', 'December 2026', 'TikTok videos December', 'No date', 'Sometime'])
-        ->assertSee('<span class="text-xs text-red-600 font-medium">Mon 2 Nov</span>', false)->assertDontSee('Elsewhere');
+        ->assertSee('<span class="text-xs text-red-600 font-medium">Mon 02-11-2026</span>', false)->assertDontSee('Elsewhere');
     $staff->get(route('clients.reviews', $client))->assertSee('Deadlines<span class="ml-1 rounded-full bg-brand-100 px-1.5 text-xs text-brand-700">2</span>', false);
 
     $overdue = Deadline::where('title', 'December products')->firstOrFail();

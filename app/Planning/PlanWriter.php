@@ -31,7 +31,7 @@ class PlanWriter
 
         $t = fn (string $key, array $replace = []) => __($key, $replace, $client->uiLocale()); // the sheet is read by the team and the client
         if ($fileBrief && trim($result['trend_brief'] ?? '') !== '') {
-            $client->reports()->create(['kind' => 'trend_brief', 'title' => $t('Trend brief :date', ['date' => now()->toDateString()]), 'body' => $result['trend_brief']]);
+            $client->reports()->create(['kind' => 'trend_brief', 'title' => $t('Trend brief :date', ['date' => now()->format('d-m-Y')]), 'body' => $result['trend_brief']]);
         }
 
         return $client->reports()->create(['kind' => 'plan', 'title' => $t('Content batch :start to :end', $result['window']), 'body' => $this->reviewSheet($result, $t), 'meta' => $result]);

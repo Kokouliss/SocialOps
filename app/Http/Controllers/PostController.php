@@ -329,7 +329,7 @@ class PostController extends Controller
                 // no image asset, or one GD cannot read: the captions still export
             }
         }
-        $text = "{$post->name}\nScheduled: ".($post->scheduled_at?->format('Y-m-d H:i') ?? '-')."\nState: {$post->state->label()}\nBrief: {$post->brief}\nMedia: {$post->assets->pluck('name')->join(', ')}\n";
+        $text = "{$post->name}\nScheduled: ".($post->scheduled_at?->format('d-m-Y H:i') ?? '-')."\nState: {$post->state->label()}\nBrief: {$post->brief}\nMedia: {$post->assets->pluck('name')->join(', ')}\n";
         foreach (array_filter($post->settings['design'] ?? []) as $lang => $design) {
             $text .= "\n== Design text ".strtoupper($lang)." ==\n{$design}\n";
         }

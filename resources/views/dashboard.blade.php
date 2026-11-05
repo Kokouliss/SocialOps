@@ -41,7 +41,7 @@
                             <h3 class="font-semibold text-gray-900">{{ __('Due within 7 days, not sent for approval yet') }}</h3>
                             <ul class="mt-2 space-y-1">
                                 @foreach ($drafts as $post)
-                                    <li><span class="font-medium text-gray-700">{{ $post->scheduled_at->translatedFormat('D j M H:i') }}</span> {!! $line($post) !!} <x-state-badge :state="$post->state" /></li>
+                                    <li><span class="font-medium text-gray-700">{{ $post->scheduled_at->translatedFormat('D d-m-Y H:i') }}</span> {!! $line($post) !!} <x-state-badge :state="$post->state" /></li>
                                 @endforeach
                             </ul>
                         </div>
@@ -79,7 +79,7 @@
                             <h3 class="font-semibold text-gray-900">{{ __('Deadlines in the next 7 days') }}</h3>
                             <ul class="mt-2 space-y-1">
                                 @foreach ($deadlines as $deadline)
-                                    <li><span class="{{ $deadline->due_on->lt(today()) ? 'rounded bg-red-100 px-2 py-0.5 text-xs text-red-800' : 'font-medium text-gray-700' }}">{{ $deadline->due_on->translatedFormat('D j M') }}</span>
+                                    <li><span class="{{ $deadline->due_on->lt(today()) ? 'rounded bg-red-100 px-2 py-0.5 text-xs text-red-800' : 'font-medium text-gray-700' }}">{{ $deadline->due_on->translatedFormat('D d-m-Y') }}</span>
                                         <a class="text-brand-600 hover:underline" href="{{ route('clients.deadlines', $deadline->client) }}">{{ $deadline->client->name }}</a> · {{ $deadline->title }}
                                         <span class="rounded px-2 py-0.5 text-xs {{ $deadline->side === 'client' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800' }}">{{ __(\App\Models\Deadline::SIDES[$deadline->side]) }}</span>
                                     </li>

@@ -52,7 +52,7 @@ test('the post form and the client form suggest the best time', function () {
 
     bestTimePosts($this->client);
     $this->actingAs($me)->get(route('posts.create', $this->client))->assertOk()
-        ->assertSee('Best time from our numbers: Tue 10 Nov 19:00')->assertSee("value = '2026-11-10T19:00'", false);
+        ->assertSee('Best time from our numbers: Tue 10-11-2026 19:00')->assertSee("value = '2026-11-10T19:00'", false);
     $this->actingAs($me)->get(route('clients.edit', $this->client))->assertOk()
         ->assertSee('Best hours from our numbers of the last 90 days: Tuesday 19:00 (3 posts, 136 interactions each), Friday 12:00 (3 posts, 32 interactions each)');
 });

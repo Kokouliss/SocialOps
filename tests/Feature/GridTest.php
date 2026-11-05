@@ -26,7 +26,7 @@ test('the grid shows Instagram feed posts newest first with their first image, a
 
     $this->get(route('clients.grid', $client))->assertRedirect(route('login'));
     $this->actingAs($staff)->get(route('clients.grid', $client))->assertOk()
-        ->assertSeeInOrder(['REEL', 'video', '12 Nov', 'FEED', "/assets/{$photo->id}/thumb", '10 Nov'])
+        ->assertSeeInOrder(['REEL', 'video', '12-11-2026', 'FEED', "/assets/{$photo->id}/thumb", '10-11-2026'])
         ->assertDontSee('STORY')->assertDontSee('FBONLY')->assertDontSee('NODATE');
     $thumb = $this->actingAs($staff)->get(route('assets.thumb', $photo))->assertOk()->assertHeader('Content-Type', 'image/jpeg');
     expect(getimagesizefromstring($thumb->getContent())[0])->toBe(600);

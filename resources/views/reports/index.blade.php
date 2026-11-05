@@ -35,7 +35,7 @@
                     <tbody>
                         @forelse ($reports as $report)
                             <tr class="border-t">
-                                <td class="py-2 whitespace-nowrap">{{ $report->created_at->format('Y-m-d H:i') }}</td>
+                                <td class="py-2 whitespace-nowrap">{{ $report->created_at->format('d-m-Y H:i') }}</td>
                                 <td class="pr-4">{{ __(\App\Models\Report::KINDS[$report->kind] ?? $report->kind) }}</td>
                                 <td><a href="{{ route('reports.show', $report) }}" class="text-brand-600 hover:underline">{{ $report->title }}</a></td>
                             </tr>

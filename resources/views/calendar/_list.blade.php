@@ -7,7 +7,7 @@
         @php($day = $key ? \Illuminate\Support\Carbon::parse($key) : null)
         <div class="p-3">
             <div class="flex items-center gap-2 font-medium {{ $day?->isToday() ? 'text-brand-600' : 'text-gray-800' }}">
-                {{ $day ? $day->translatedFormat('l j F') : __('No date yet') }}
+                {{ $day ? $day->translatedFormat('l d-m-Y') : __('No date yet') }}
                 @foreach ($marks[$key] ?? [] as $mark)
                     <span class="font-normal text-amber-700">· {{ $mark }}</span>
                 @endforeach

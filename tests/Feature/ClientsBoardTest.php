@@ -36,8 +36,8 @@ test('the agency fields are saved from the Agency tab and shown on the clients b
     $this->get(route('clients.index'))->assertOk()
         ->assertSeeInOrder(['Almyra Beach Lounge', 'Blue Villa', 'Groom Room'])
         ->assertSee('Waiting')->assertSee('Katerina')->assertSee('High')
-        ->assertSee('<span class="text-red-600 font-medium">1 Nov</span>', false) // overdue
-        ->assertSee('3 posts, 2 stories a week')->assertSee('1 TikToks a month')->assertSee('20 Nov') // scheduled until, Drafts not counted
+        ->assertSee('<span class="text-red-600 font-medium">01-11-2026</span>', false) // overdue
+        ->assertSee('3 posts, 2 stories a week')->assertSee('1 TikToks a month')->assertSee('20-11-2026') // scheduled until, Drafts not counted
         ->assertSee('9 posts sent to the client')->assertSee('https://docs.google.com/presentation/d/abc');
 
     $this->patch(route('clients.update', $client), boardInput($client, ['status' => 'bogus', 'links' => [['label' => 'x', 'url' => 'http://insecure.example.com']]]))

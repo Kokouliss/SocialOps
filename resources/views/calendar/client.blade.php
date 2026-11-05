@@ -3,7 +3,7 @@
     <p class="mt-1 text-sm text-gray-600">{{ __('What is planned, waiting for you, scheduled and published this month and the next. Posts waiting for your approval come with their own email.') }}</p>
 
     @forelse ($days as $date => $posts)
-        <h2 class="mt-5 text-sm font-semibold text-gray-800">{{ \Illuminate\Support\Carbon::parse($date)->translatedFormat('l j F') }}</h2>
+        <h2 class="mt-5 text-sm font-semibold text-gray-800">{{ \Illuminate\Support\Carbon::parse($date)->translatedFormat('l d-m-Y') }}</h2>
         <ul class="mt-1 divide-y divide-gray-100 text-sm">
             @foreach ($posts as $post)
                 <li class="py-2">
