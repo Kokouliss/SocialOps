@@ -1,17 +1,17 @@
 <x-app-layout :client="$client">
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $client->name }}: {{ __('approvals') }}</h2>
+        <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ $client->name }}: {{ __('approvals') }}</h2>
     </x-slot>
 
     @php($approval = $client->profile['approval'])
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <div class="py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             @if (session('status'))
                 <p class="text-sm text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
             @error('posts') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
-            <form method="POST" action="{{ route('reviews.store', $client) }}" class="bg-white p-6 shadow-sm sm:rounded-lg">
+            <form method="POST" action="{{ route('reviews.store', $client) }}" class="bg-white p-6 rounded-xl border border-gray-200">
                 @csrf
                 <h3 class="font-semibold text-gray-900">{{ __('Send posts for approval') }}</h3>
                 <p class="mt-1 text-sm text-gray-600">
@@ -36,7 +36,7 @@
             </form>
 
             @foreach ($reviews as $review)
-                <div class="bg-white p-6 shadow-sm sm:rounded-lg text-sm">
+                <div class="bg-white p-6 rounded-xl border border-gray-200 text-sm">
                     <div class="flex flex-wrap items-center gap-3">
                         <span class="font-semibold text-gray-900">{{ __('Sent :at', ['at' => $review->created_at->translatedFormat('D d-m-Y H:i')]) }}</span>
                         <span class="text-gray-500">{{ __('due :at', ['at' => $review->due_at->translatedFormat('D d-m-Y H:i')]) }}</span>
@@ -52,7 +52,7 @@
                     <ul class="mt-3 divide-y divide-gray-100">
                         @foreach ($review->posts as $post)
                             <li class="py-2 flex flex-wrap items-baseline gap-3">
-                                <a href="{{ route('posts.edit', $post) }}" class="font-mono text-brand-600 hover:underline">{{ $post->name }}</a>
+                                <a href="{{ route('posts.edit', $post) }}" class="font-mono font-medium text-gray-900 hover:text-brand-600">{{ $post->name }}</a>
                                 @if ($post->pivot->decision)
                                     <span class="{{ $post->pivot->decision === 'approved' ? 'text-green-700' : 'text-orange-700' }}">{{ __($post->pivot->decision === 'approved' ? 'Approved' : 'Changes requested') }} · {{ $post->pivot->decided_by }}</span>
                                     @if ($post->pivot->comment) <span class="text-gray-700">“{{ $post->pivot->comment }}”</span> @endif

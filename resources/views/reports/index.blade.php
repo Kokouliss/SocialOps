@@ -1,11 +1,11 @@
 <x-app-layout :client="$client">
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $client->name }}: {{ __('reports') }}</h2>
+        <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ $client->name }}: {{ __('reports') }}</h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white p-6 shadow-sm sm:rounded-lg text-sm">
+    <div class="py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="bg-white p-6 rounded-xl border border-gray-200 text-sm">
                 <p class="text-gray-500">{{ __('Every trend brief, content plan and monthly report for this client, newest first. Monthly reports are built on the 1st for last month; ask for another month here.') }}</p>
                 @if (session('status') === 'report-queued')
                     <p class="mt-2 text-green-600">{{ __('Report queued. It appears below in a few minutes.') }}</p>
@@ -37,7 +37,7 @@
                             <tr class="border-t">
                                 <td class="py-2 whitespace-nowrap">{{ $report->created_at->format('d-m-Y H:i') }}</td>
                                 <td class="pr-4">{{ __(\App\Models\Report::KINDS[$report->kind] ?? $report->kind) }}</td>
-                                <td><a href="{{ route('reports.show', $report) }}" class="text-brand-600 hover:underline">{{ $report->title }}</a></td>
+                                <td><a href="{{ route('reports.show', $report) }}" class="font-medium text-gray-900 hover:text-brand-600">{{ $report->title }}</a></td>
                             </tr>
                         @empty
                             <tr><td colspan="3" class="py-2"><x-empty-state :action="__('Plan with Claude')" :href="route('clients.edit', $client)">{{ __('No reports yet. "Monthly report" above writes the first one from last month\'s numbers; "Plan with Claude" on the client page files its trend brief and content plan here.') }}</x-empty-state></td></tr>

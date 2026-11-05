@@ -1,7 +1,7 @@
 {{-- The posts of the period in date order, one row each with a thumbnail: what phones get instead of the grid, and the "List" button on a desktop. --}}
 @php($groups = $days->filter(fn ($d) => $posts->has($d->toDateString()) || isset($marks[$d->toDateString()]))->mapWithKeys(fn ($d) => [$d->toDateString() => $posts->get($d->toDateString(), collect())]))
 @php($unscheduled->isEmpty() || $groups->put('', $unscheduled))
-<form method="POST" action="{{ route('posts.bulk') }}" class="bg-white shadow-sm sm:rounded-lg divide-y divide-gray-100 text-sm {{ $class }}" data-view="list" data-bulk>
+<form method="POST" action="{{ route('posts.bulk') }}" class="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100 text-sm {{ $class }}" data-view="list" data-bulk>
     @csrf
     @foreach ($groups as $key => $dayPosts)
         @php($day = $key ? \Illuminate\Support\Carbon::parse($key) : null)
@@ -40,9 +40,9 @@
             {{ __('Nothing scheduled here yet.') }}
             <x-slot:action>
                 @if ($clientSlug)
-                    <a href="{{ route('posts.create', $clients->firstWhere('slug', $clientSlug)) }}" class="inline-flex items-center rounded-full bg-brand-500 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-brand-600">{{ __('New post') }}</a>
+                    <a href="{{ route('posts.create', $clients->firstWhere('slug', $clientSlug)) }}" class="inline-flex items-center rounded-full bg-brand-500 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-600">{{ __('New post') }}</a>
                 @else
-                    <button type="button" data-new-post="" class="inline-flex items-center rounded-full bg-brand-500 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-brand-600">{{ __('New post') }}</button>
+                    <button type="button" data-new-post="" class="inline-flex items-center rounded-full bg-brand-500 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-600">{{ __('New post') }}</button>
                 @endif
             </x-slot:action>
         </x-empty-state>

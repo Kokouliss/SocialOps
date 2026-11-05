@@ -39,11 +39,11 @@
         <x-input-error class="mt-2" :messages="$errors->get('scheduled_at')" />
         <div class="mt-1 flex flex-wrap gap-3 text-xs">
             @if ($slot = $client->nextFreeSlot())
-                <button type="button" class="text-brand-600 hover:underline" onclick="document.getElementById('scheduled_at').value = '{{ $slot->format('Y-m-d\TH:i') }}'">{{ __('Next free slot') }}: {{ $slot->translatedFormat('D d-m-Y H:i') }}</button>
+                <button type="button" class="font-medium text-gray-900 hover:text-brand-600" onclick="document.getElementById('scheduled_at').value = '{{ $slot->format('Y-m-d\TH:i') }}'">{{ __('Next free slot') }}: {{ $slot->translatedFormat('D d-m-Y H:i') }}</button>
             @endif
             @if ($best = \App\Planning\BestTimes::for($client))
                 @php($at = \App\Planning\BestTimes::next($best[0]))
-                <button type="button" class="text-brand-600 hover:underline" onclick="document.getElementById('scheduled_at').value = '{{ $at->format('Y-m-d\TH:i') }}'">{{ __('Best time from our numbers') }}: {{ $at->translatedFormat('D d-m-Y H:i') }}</button>
+                <button type="button" class="font-medium text-gray-900 hover:text-brand-600" onclick="document.getElementById('scheduled_at').value = '{{ $at->format('Y-m-d\TH:i') }}'">{{ __('Best time from our numbers') }}: {{ $at->translatedFormat('D d-m-Y H:i') }}</button>
             @endif
         </div>
     </div>
@@ -146,7 +146,7 @@
     <fieldset class="mt-4 border rounded-md p-4" data-for="{{ $platform }}" data-platform="{{ $platform }}" data-max="{{ \App\Http\Requests\PostRequest::CAPTION_MAX[$platform] }}" data-signature="{{ trim($client->profile['signatures'][$platform] ?? '') }}" data-fields="{{ json_encode((object) ($client->profile['fields'] ?? [])) }}">
         <legend class="px-1 text-sm font-medium">{{ str_replace('_', ' ', $platform) }} <span class="count text-gray-400" title="{{ __('Characters of the published text: every language, then the hashtags') }}"></span>
             @if ($post->exists && config('features.claude_api'))
-                <button type="button" class="shorten ml-2 text-xs text-brand-600 hover:underline" data-url="{{ route('posts.shorten', $post) }}">{{ __('Shorten with Claude') }}</button>
+                <button type="button" class="shorten ml-2 text-xs font-medium text-gray-900 hover:text-brand-600" data-url="{{ route('posts.shorten', $post) }}">{{ __('Shorten with Claude') }}</button>
             @endif
         </legend>
         <div class="grid gap-4 md:grid-cols-{{ count($languages) }}">

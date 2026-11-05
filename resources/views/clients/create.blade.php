@@ -1,12 +1,16 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('New client') }}</h2>
+        <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ __('New client') }}</h2>
     </x-slot>
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <form method="POST" action="{{ route('clients.store') }}" class="bg-white p-6 shadow-sm sm:rounded-lg">
-                @include('clients._form')
-            </form>
+    <div class="py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <style>[x-cloak] { display: none !important }</style>
+            <div x-data="{ tab: localStorage.getItem('client-tab') || 'basics' }" x-init="if (! $el.querySelector(`[data-tab='${tab}']`)) tab = 'basics'; $watch('tab', t => localStorage.setItem('client-tab', t))" class="md:flex md:gap-8">
+                @include('clients._nav')
+                <form method="POST" action="{{ route('clients.store') }}" class="min-w-0 flex-1">
+                    @include('clients._form')
+                </form>
+            </div>
         </div>
     </div>
 </x-app-layout>

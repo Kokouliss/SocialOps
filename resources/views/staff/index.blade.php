@@ -1,14 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('Staff') }}</h2>
+        <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ __('Staff') }}</h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <div class="py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             @if (session('status'))
                 <p class="text-sm text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="bg-white overflow-hidden rounded-xl border border-gray-200">
                 <table class="min-w-full text-sm">
                     <thead class="bg-gray-50 text-left text-gray-600">
                         <tr>
@@ -61,7 +61,7 @@
             @if (session('token'))
                 <p class="text-sm text-yellow-800 bg-yellow-50 rounded-md p-3">{{ __('New API token, copy it now, it is not shown again:') }} <code class="font-mono select-all">{{ session('token') }}</code></p>
             @endif
-            <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+            <div class="bg-white p-6 rounded-xl border border-gray-200">
                 <h3 class="text-lg font-medium text-gray-900">{{ __('API tokens') }} <span class="text-sm font-normal text-gray-500">({{ __('for scripts and other tools, see docs/api.md') }})</span></h3>
                 <table class="mt-3 min-w-full text-sm">
                     <thead class="text-left text-gray-600"><tr><th class="py-1 pr-6">{{ __('Name') }}</th><th class="py-1 pr-6">{{ __('Client') }}</th><th class="py-1 pr-6">{{ __('Last used') }}</th><th></th></tr></thead>
@@ -86,7 +86,7 @@
                     <x-primary-button>{{ __('Create token') }}</x-primary-button>
                 </form>
             </div>
-            <div class="bg-white p-6 shadow-sm sm:rounded-lg max-w-xl">
+            <div class="bg-white p-6 rounded-xl border border-gray-200 max-w-xl">
                 <h3 class="text-lg font-medium text-gray-900">{{ __('Add a login') }}</h3>
                 <form method="POST" action="{{ route('staff.store') }}" class="mt-4 space-y-4">
                     @csrf

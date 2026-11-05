@@ -1,22 +1,22 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('Clients') }}</h2>
-            <a href="{{ route('clients.create') }}" class="inline-flex items-center px-4 py-2 bg-brand-500 border border-transparent rounded-full font-semibold text-xs text-white uppercase tracking-widest hover:bg-brand-600">{{ __('New client') }}</a>
+            <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ __('Clients') }}</h2>
+            <a href="{{ route('clients.create') }}" class="inline-flex items-center rounded-lg bg-brand-500 px-3.5 py-2 text-sm font-medium text-white hover:bg-brand-600">{{ __('New client') }}</a>
         </div>
     </x-slot>
 
     @php($colors = ['active' => 'bg-green-100 text-green-800', 'waiting_dates' => 'bg-gray-100 text-gray-700', 'waiting' => 'bg-yellow-100 text-yellow-800', 'seasonal' => 'bg-blue-100 text-blue-800', 'stopped' => 'bg-red-100 text-red-800'])
     @php($priorities = ['high' => 'text-red-600 font-medium', 'medium' => 'text-orange-800', 'low' => 'text-gray-500'])
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div class="py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             @if (session('status'))
                 <p class="mb-4 text-sm text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
             @if ($clients->isEmpty())
                 <x-empty-state class="bg-white" :action="__('Add the first client')" :href="route('clients.create')">{{ __('No clients yet. A client profile holds the accounts, the voice, the pillars and the approvers; everything else hangs off it.') }}</x-empty-state>
             @else
-            <div class="bg-white shadow-sm sm:rounded-lg overflow-x-auto">
+            <div class="bg-white rounded-xl border border-gray-200 overflow-x-auto">
                 <table class="min-w-full text-sm">
                     <thead class="bg-gray-50 text-left text-gray-600">
                         <tr>
@@ -51,16 +51,16 @@
                                         @endif
                                     </div>
                                     <div class="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs">
-                                        <a href="{{ route('clients.edit', $client) }}" class="text-brand-600 hover:underline">{{ __('Profile') }}</a>
-                                        <a href="{{ route('clients.assets', $client) }}" class="text-brand-600 hover:underline">{{ __('Assets') }}</a>
-                                        <a href="{{ route('clients.grid', $client) }}" class="text-brand-600 hover:underline">{{ __('Grid') }}</a>
-                                        <a href="{{ route('clients.reviews', $client) }}" class="text-brand-600 hover:underline">{{ __('Approvals') }}</a>
+                                        <a href="{{ route('clients.edit', $client) }}" class="font-medium text-gray-900 hover:text-brand-600">{{ __('Profile') }}</a>
+                                        <a href="{{ route('clients.assets', $client) }}" class="font-medium text-gray-900 hover:text-brand-600">{{ __('Assets') }}</a>
+                                        <a href="{{ route('clients.grid', $client) }}" class="font-medium text-gray-900 hover:text-brand-600">{{ __('Grid') }}</a>
+                                        <a href="{{ route('clients.reviews', $client) }}" class="font-medium text-gray-900 hover:text-brand-600">{{ __('Approvals') }}</a>
                                         @if (config('features.publishing'))
-                                        <a href="{{ route('clients.comments', $client) }}" class="text-brand-600 hover:underline">{{ __('Comments') }}</a>
-                                        <a href="{{ route('clients.accounts', $client) }}" class="text-brand-600 hover:underline">{{ __('Accounts') }}</a>
+                                        <a href="{{ route('clients.comments', $client) }}" class="font-medium text-gray-900 hover:text-brand-600">{{ __('Comments') }}</a>
+                                        <a href="{{ route('clients.accounts', $client) }}" class="font-medium text-gray-900 hover:text-brand-600">{{ __('Accounts') }}</a>
                                         @endif
-                                        <a href="{{ route('clients.reports', $client) }}" class="text-brand-600 hover:underline">{{ __('Reports') }}</a>
-                                        <a href="{{ route('posts.create', $client) }}" class="text-brand-600 hover:underline">{{ __('New post') }}</a>
+                                        <a href="{{ route('clients.reports', $client) }}" class="font-medium text-gray-900 hover:text-brand-600">{{ __('Reports') }}</a>
+                                        <a href="{{ route('posts.create', $client) }}" class="font-medium text-gray-900 hover:text-brand-600">{{ __('New post') }}</a>
                                         <form method="POST" action="{{ route('clients.destroy', $client) }}" onsubmit="return confirm('{{ __('Delete this client and everything it owns?') }}')">
                                             @csrf
                                             @method('DELETE')
@@ -84,7 +84,7 @@
                                 <td class="px-4 py-3 text-xs text-gray-700 whitespace-pre-line max-w-sm">{{ $client->pending }}</td>
                                 <td class="px-4 py-3 text-xs">
                                     @foreach ($client->links ?? [] as $link)
-                                        <a href="{{ $link['url'] }}" target="_blank" rel="noopener" class="block text-brand-600 hover:underline">{{ $link['label'] ?: parse_url($link['url'], PHP_URL_HOST) }}</a>
+                                        <a href="{{ $link['url'] }}" target="_blank" rel="noopener" class="block font-medium text-gray-900 hover:text-brand-600">{{ $link['label'] ?: parse_url($link['url'], PHP_URL_HOST) }}</a>
                                     @endforeach
                                 </td>
                             </tr>

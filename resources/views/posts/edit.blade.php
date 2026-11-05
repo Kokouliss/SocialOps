@@ -1,7 +1,7 @@
 <x-app-layout :client="$client">
     <x-slot name="header">
         <div class="flex flex-wrap items-center gap-3">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $client->name }} <span class="font-mono text-sm text-gray-500">{{ $post->name }}</span></h2>
+            <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ $client->name }} <span class="font-mono text-sm text-gray-500">{{ $post->name }}</span></h2>
             <x-state-badge :state="$post->state" />
             @foreach ($post->state->next() as $next)
                 @continue($next->needsPublishing() && ! config('features.publishing'))
@@ -48,8 +48,8 @@
             @endif
         </div>
     </x-slot>
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-4">
+    <div class="py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
             @if (session('status'))
                 <p class="text-sm text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
@@ -73,7 +73,7 @@
             <div class="lg:grid lg:grid-cols-3 lg:gap-6 lg:items-start">
             <div class="lg:col-span-2">
             @if ($post->state !== \App\Posts\PostState::Published)
-                <form id="post-form" method="POST" action="{{ route('posts.update', $post) }}" class="bg-white p-6 shadow-sm sm:rounded-lg">
+                <form id="post-form" method="POST" action="{{ route('posts.update', $post) }}" class="bg-white p-6 rounded-xl border border-gray-200">
                     @method('PATCH')
                     @include('posts._form')
                 </form>
@@ -82,7 +82,7 @@
 
             <div class="mt-4 lg:mt-0 space-y-4 lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
             @include('posts._preview')
-            <div id="notes" class="bg-white p-6 shadow-sm sm:rounded-lg text-sm">
+            <div id="notes" class="bg-white p-6 rounded-xl border border-gray-200 text-sm">
                 <h3 class="font-medium">{{ __('Team notes') }} <span class="text-gray-400 font-normal">({{ __('internal, the client never sees them; @FirstName pings a colleague on Slack') }})</span></h3>
                 @foreach ($post->notes as $note)
                     <p class="mt-3 border-l-2 border-gray-200 pl-3 whitespace-pre-line"><span class="font-semibold">{{ $note->user?->name ?? __('removed login') }}</span> <span class="text-xs text-gray-500">{{ $note->created_at->format('d-m-Y H:i') }}</span><br>{{ $note->body }}</p>

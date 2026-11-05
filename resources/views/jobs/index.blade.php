@@ -1,15 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('Jobs') }}</h2>
+        <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ __('Jobs') }}</h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6 text-sm">
+    <div class="py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 text-sm">
             @if (session('status'))
                 <p class="text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
 
-            <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+            <div class="bg-white p-6 rounded-xl border border-gray-200">
                 <h3 class="font-semibold text-gray-900">{{ __('Waiting') }}</h3>
                 <p class="mt-1 text-gray-500">{{ __('Publishing and planning run on the queue, which the per-minute scheduled task works through.') }}</p>
                 <table class="mt-3 w-full">
@@ -24,7 +24,7 @@
                 </table>
             </div>
 
-            <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+            <div class="bg-white p-6 rounded-xl border border-gray-200">
                 <h3 class="font-semibold text-gray-900">{{ __('Failed') }}</h3>
                 <table class="mt-3 w-full">
                     <thead><tr class="text-left text-gray-500"><th class="py-1">{{ __('Job') }}</th><th>{{ __('Error') }}</th><th>{{ __('Failed at') }}</th><th></th></tr></thead>
@@ -35,7 +35,7 @@
                                 <td class="py-1 pr-3 text-red-600">{{ Str::limit($job->error, 160) }}</td>
                                 <td class="py-1 whitespace-nowrap">{{ $job->at }}</td>
                                 <td class="py-1 whitespace-nowrap">
-                                    <form method="POST" action="{{ route('jobs.retry', $job->uuid) }}" class="inline">@csrf<button class="text-brand-600 hover:underline">{{ __('Retry') }}</button></form>
+                                    <form method="POST" action="{{ route('jobs.retry', $job->uuid) }}" class="inline">@csrf<button class="font-medium text-gray-900 hover:text-brand-600">{{ __('Retry') }}</button></form>
                                     <form method="POST" action="{{ route('jobs.forget', $job->uuid) }}" class="inline ml-2">@csrf @method('DELETE')<button class="text-gray-500 hover:underline">{{ __('Remove') }}</button></form>
                                 </td>
                             </tr>
@@ -46,7 +46,7 @@
                 </table>
             </div>
 
-            <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+            <div class="bg-white p-6 rounded-xl border border-gray-200">
                 <h3 class="font-semibold text-gray-900">{{ __('Claude, last 30 days') }}</h3>
                 @php($priced = \App\Models\ClaudeCall::cost(1, 1) !== null)
                 @unless ($priced)

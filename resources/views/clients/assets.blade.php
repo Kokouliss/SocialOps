@@ -1,20 +1,20 @@
 <x-app-layout :client="$client">
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $client->name }}: {{ __('assets') }}</h2>
+        <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ $client->name }}: {{ __('assets') }}</h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+    <div class="py-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
             @if (session('status'))
                 <p class="text-sm text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
 
-            <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+            <div class="bg-white p-6 rounded-xl border border-gray-200">
                 <x-input-label for="inbox-url" :value="__('Upload link for the client (no login, valid :days days, anyone with it can upload)', ['days' => \App\Http\Controllers\AssetController::LINK_DAYS])" />
                 <x-text-input id="inbox-url" type="text" class="mt-1 block w-full font-mono text-xs" :value="$inboxUrl" readonly onclick="this.select()" />
             </div>
 
-            <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+            <div class="bg-white p-6 rounded-xl border border-gray-200">
                 <h3 class="text-lg font-medium text-gray-900">Canva</h3>
                 @error('canva') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 @if ($canva)
@@ -67,14 +67,14 @@
                 @endif
             </div>
 
-            <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+            <div class="bg-white p-6 rounded-xl border border-gray-200">
                 <h3 class="text-lg font-medium text-gray-900">Google Drive</h3>
                 @error('drive') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 @if ($drive)
                     <div class="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-600">
                         <span>{{ __('Watching the folder “:name”: new photos and videos land in this inbox every hour.', ['name' => $drive->name]) }}
                             @if ($drive->meta['pulled_at'] ?? null) {{ __('Last check :when, :n files in the folder.', ['when' => \Illuminate\Support\Carbon::parse($drive->meta['pulled_at'])->diffForHumans(), 'n' => $drive->meta['files'] ?? 0]) }} @endif</span>
-                        <form method="POST" action="{{ route('folders.pull', [$client, 'drive']) }}">@csrf<button class="text-brand-600 hover:underline">{{ __('Check now') }}</button></form>
+                        <form method="POST" action="{{ route('folders.pull', [$client, 'drive']) }}">@csrf<button class="font-medium text-gray-900 hover:text-brand-600">{{ __('Check now') }}</button></form>
                         <form method="POST" action="{{ route('accounts.destroy', $drive) }}" onsubmit="return confirm('{{ __('Stop watching this folder?') }}')">@csrf @method('DELETE')<button class="text-red-600 hover:underline">{{ __('Stop watching') }}</button></form>
                     </div>
                 @elseif ($driveEmail)
@@ -88,14 +88,14 @@
                 @endif
             </div>
 
-            <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+            <div class="bg-white p-6 rounded-xl border border-gray-200">
                 <h3 class="text-lg font-medium text-gray-900">Dropbox</h3>
                 @error('dropbox') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                 @if ($dropbox && ($dropbox->meta['folder'] ?? null))
                     <div class="mt-1 flex flex-wrap items-center gap-3 text-sm text-gray-600">
                         <span>{{ __('Watching the folder “:name”: new photos and videos land in this inbox every hour.', ['name' => $dropbox->meta['folder_name']]) }}
                             @if ($dropbox->meta['pulled_at'] ?? null) {{ __('Last check :when, :n files in the folder.', ['when' => \Illuminate\Support\Carbon::parse($dropbox->meta['pulled_at'])->diffForHumans(), 'n' => $dropbox->meta['files'] ?? 0]) }} @endif</span>
-                        <form method="POST" action="{{ route('folders.pull', [$client, 'dropbox']) }}">@csrf<button class="text-brand-600 hover:underline">{{ __('Check now') }}</button></form>
+                        <form method="POST" action="{{ route('folders.pull', [$client, 'dropbox']) }}">@csrf<button class="font-medium text-gray-900 hover:text-brand-600">{{ __('Check now') }}</button></form>
                         <form method="POST" action="{{ route('accounts.destroy', $dropbox) }}" onsubmit="return confirm('{{ __('Stop watching this folder?') }}')">@csrf @method('DELETE')<button class="text-red-600 hover:underline">{{ __('Stop watching') }}</button></form>
                     </div>
                 @elseif ($dropbox)
@@ -115,7 +115,7 @@
             </div>
 
             @if ($hasVideos)
-                <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+                <div class="bg-white p-6 rounded-xl border border-gray-200">
                     <h3 class="text-lg font-medium text-gray-900">{{ __('Make a Reel') }}</h3>
                     @if ($reelReady)
                         <p class="mt-1 text-sm text-gray-600">{{ __('Tick the clips below (2 to 10). They play in file-name order, each cut to the chosen seconds, vertical 1080×1920 without sound; add music in the Instagram app and give the result its final cut.') }}</p>
@@ -144,7 +144,7 @@
                 </div>
             @endif
 
-            <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+            <div class="bg-white p-6 rounded-xl border border-gray-200">
                 <form method="GET" action="{{ route('clients.assets', $client) }}" class="flex flex-wrap items-center gap-2 text-sm">
                     <h3 class="font-semibold text-gray-900 mr-2">{{ __('Files') }} <span class="font-normal text-gray-500">({{ $assets->count() }})</span></h3>
                     <select name="kind" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm">
@@ -182,7 +182,7 @@
                             @endif
                             <p class="mt-1">
                                 @forelse ($asset->posts as $post)
-                                    <a href="{{ route('posts.edit', $post) }}" class="block truncate text-brand-600 hover:underline" title="{{ $post->name }}">{{ __('In') }} {{ $post->name }}</a>
+                                    <a href="{{ route('posts.edit', $post) }}" class="block truncate font-medium text-gray-900 hover:text-brand-600" title="{{ $post->name }}">{{ __('In') }} {{ $post->name }}</a>
                                 @empty
                                     <span class="text-gray-400">{{ __('Not used in a post yet') }}</span>
                                 @endforelse
@@ -190,7 +190,7 @@
                             <form method="POST" action="{{ route('assets.destroy', $asset) }}" class="mt-1" onsubmit="return confirm('{{ __('Delete this file?') }}')">
                                 @csrf
                                 @method('DELETE')
-                                <a href="{{ route('assets.download', $asset) }}" class="text-brand-600 hover:underline">{{ __('Download') }}</a>
+                                <a href="{{ route('assets.download', $asset) }}" class="font-medium text-gray-900 hover:text-brand-600">{{ __('Download') }}</a>
                                 <button type="submit" class="ml-2 text-red-600 hover:underline">{{ __('Delete') }}</button>
                             </form>
                         </div>

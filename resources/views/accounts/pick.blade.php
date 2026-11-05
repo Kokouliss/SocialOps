@@ -1,12 +1,12 @@
 <x-dynamic-component :component="auth()->check() ? 'app-layout' : 'guest-layout'">
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ $client->name }}: {{ __('which accounts belong to this client?') }}</h2>
+        <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ $client->name }}: {{ __('which accounts belong to this client?') }}</h2>
     </x-slot>
 
-    <div class="{{ auth()->check() ? 'py-12' : '' }}">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div class="{{ auth()->check() ? 'py-6' : '' }}">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             @guest <p class="mb-3 text-sm text-gray-600">{{ __('Tick the page, profile or location that belongs to :client.', ['client' => $client->name]) }}</p> @endguest
-            <form method="POST" action="{{ route('accounts.attach', $client) }}" class="bg-white p-6 shadow-sm sm:rounded-lg text-sm space-y-3">
+            <form method="POST" action="{{ route('accounts.attach', $client) }}" class="bg-white p-6 rounded-xl border border-gray-200 text-sm space-y-3">
                 @csrf
                 @forelse ($candidates as $i => $candidate)
                     <label class="flex items-center gap-3">

@@ -1,12 +1,12 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">{{ __('Needs attention') }}</h2>
+        <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ __('Needs attention') }}</h2>
     </x-slot>
 
     @php($quiet = $week->isEmpty() && $drafts->isEmpty() && $stuck->isEmpty() && $waiting->isEmpty() && $deadlines->isEmpty() && $unanswered->isEmpty() && $tokens->isEmpty() && $drift->isEmpty() && ! $failedJobs)
-    @php($line = fn ($post) => '<a class="text-brand-600 hover:underline" href="'.route('posts.edit', $post).'">'.e($post->name).'</a> <span class="text-gray-500">'.e($post->client->code.' · '.collect($post->platforms)->map(fn ($p) => str_replace('_', ' ', ucfirst($p)))->join(', ')).'</span>')
+    @php($line = fn ($post) => '<a class="font-medium text-gray-900 hover:text-brand-600" href="'.route('posts.edit', $post).'">'.e($post->name).'</a> <span class="text-gray-500">'.e($post->client->code.' · '.collect($post->platforms)->map(fn ($p) => str_replace('_', ' ', ucfirst($p)))->join(', ')).'</span>')
     <div class="py-6">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-4 text-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4 text-sm">
             @if (session('status'))
                 <p class="text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
@@ -19,7 +19,7 @@
             <div class="grid gap-4 lg:grid-cols-2 lg:items-start">
                 <div class="space-y-4">
                     @if ($today->isNotEmpty() || $tomorrow->isNotEmpty())
-                        <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+                        <div class="bg-white p-6 rounded-xl border border-gray-200">
                             <h3 class="font-semibold text-gray-900">{{ __('Going out') }}</h3>
                             @foreach ([__('Today') => $today, __('Tomorrow') => $tomorrow] as $label => $posts)
                                 @if ($posts->isNotEmpty())
@@ -37,7 +37,7 @@
                     @endif
 
                     @if ($drafts->isNotEmpty())
-                        <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+                        <div class="bg-white p-6 rounded-xl border border-gray-200">
                             <h3 class="font-semibold text-gray-900">{{ __('Due within 7 days, not sent for approval yet') }}</h3>
                             <ul class="mt-2 space-y-1">
                                 @foreach ($drafts as $post)
@@ -48,23 +48,23 @@
                     @endif
 
                     @if ($stuck->isNotEmpty())
-                        <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+                        <div class="bg-white p-6 rounded-xl border border-gray-200">
                             <h3 class="font-semibold text-gray-900">{{ __('Failed or waiting for a human') }}</h3>
                             <ul class="mt-2 space-y-1">
                                 @foreach ($stuck as $post)
-                                    <li><a class="text-brand-600 hover:underline" href="{{ route('posts.edit', $post) }}">{{ $post->name }}</a> <x-state-badge :state="$post->state" /> <span class="text-red-600">{{ Str::limit($post->publish_error, 120) }}</span></li>
+                                    <li><a class="font-medium text-gray-900 hover:text-brand-600" href="{{ route('posts.edit', $post) }}">{{ $post->name }}</a> <x-state-badge :state="$post->state" /> <span class="text-red-600">{{ Str::limit($post->publish_error, 120) }}</span></li>
                                 @endforeach
                             </ul>
                         </div>
                     @endif
 
                     @if ($drift->isNotEmpty())
-                        <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+                        <div class="bg-white p-6 rounded-xl border border-gray-200">
                             <h3 class="font-semibold text-gray-900">{{ __('Pillar mix off target') }}</h3>
                             <p class="mt-1 text-xs text-gray-500">{{ __('Share of posts per pillar, :days days back and ahead, against the profile.', ['days' => \App\Planning\PillarMix::DAYS]) }}</p>
                             <ul class="mt-2 space-y-1">
                                 @foreach ($drift as $row)
-                                    <li><a class="text-brand-600 hover:underline" href="{{ route('clients.edit', $row['client']) }}">{{ $row['client']->name }}</a>:
+                                    <li><a class="font-medium text-gray-900 hover:text-brand-600" href="{{ route('clients.edit', $row['client']) }}">{{ $row['client']->name }}</a>:
                                         @foreach ($row['mix']['drifted'] as $pillar){{ __(':pillar at :actual%, target :target%', ['pillar' => str_replace('_', ' ', $pillar), 'actual' => $row['mix']['rows'][$pillar]['actual'], 'target' => $row['mix']['rows'][$pillar]['target']]) }}@if (! $loop->last) · @endif @endforeach
                                     </li>
                                 @endforeach
@@ -75,12 +75,12 @@
 
                 <div class="space-y-4">
                     @if ($deadlines->isNotEmpty())
-                        <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+                        <div class="bg-white p-6 rounded-xl border border-gray-200">
                             <h3 class="font-semibold text-gray-900">{{ __('Deadlines in the next 7 days') }}</h3>
                             <ul class="mt-2 space-y-1">
                                 @foreach ($deadlines as $deadline)
                                     <li><span class="{{ $deadline->due_on->lt(today()) ? 'rounded bg-red-100 px-2 py-0.5 text-xs text-red-800' : 'font-medium text-gray-700' }}">{{ $deadline->due_on->translatedFormat('D d-m-Y') }}</span>
-                                        <a class="text-brand-600 hover:underline" href="{{ route('clients.deadlines', $deadline->client) }}">{{ $deadline->client->name }}</a> · {{ $deadline->title }}
+                                        <a class="font-medium text-gray-900 hover:text-brand-600" href="{{ route('clients.deadlines', $deadline->client) }}">{{ $deadline->client->name }}</a> · {{ $deadline->title }}
                                         <span class="rounded px-2 py-0.5 text-xs {{ $deadline->side === 'client' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800' }}">{{ __(\App\Models\Deadline::SIDES[$deadline->side]) }}</span>
                                     </li>
                                 @endforeach
@@ -89,11 +89,11 @@
                     @endif
 
                     @if ($waiting->isNotEmpty())
-                        <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+                        <div class="bg-white p-6 rounded-xl border border-gray-200">
                             <h3 class="font-semibold text-gray-900">{{ __('Waiting for the client') }}</h3>
                             <ul class="mt-2 space-y-1">
                                 @foreach ($waiting as $review)
-                                    <li><a class="text-brand-600 hover:underline" href="{{ route('clients.reviews', $review->client) }}">{{ $review->client->name }}</a> · {{ $review->pending_count }} {{ __('posts waiting') }},
+                                    <li><a class="font-medium text-gray-900 hover:text-brand-600" href="{{ route('clients.reviews', $review->client) }}">{{ $review->client->name }}</a> · {{ $review->pending_count }} {{ __('posts waiting') }},
                                         <span class="{{ $review->due_at->isPast() ? 'rounded bg-red-100 px-2 py-0.5 text-xs text-red-800' : 'text-gray-500' }}">{{ __('due') }} {{ $review->due_at->diffForHumans() }}</span>
                                     </li>
                                 @endforeach
@@ -102,35 +102,35 @@
                     @endif
 
                     @if ($unanswered->isNotEmpty())
-                        <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+                        <div class="bg-white p-6 rounded-xl border border-gray-200">
                             <h3 class="font-semibold text-gray-900">{{ __('Comments without a reply') }}</h3>
                             <ul class="mt-2 space-y-1">
                                 @foreach ($unanswered as $row)
-                                    <li><a class="text-brand-600 hover:underline" href="{{ route('clients.comments', $row->client) }}">{{ $row->client->name }}</a> · {{ $row->n }}</li>
+                                    <li><a class="font-medium text-gray-900 hover:text-brand-600" href="{{ route('clients.comments', $row->client) }}">{{ $row->client->name }}</a> · {{ $row->n }}</li>
                                 @endforeach
                             </ul>
                         </div>
                     @endif
 
                     @if ($tokens->isNotEmpty())
-                        <div class="bg-white p-6 shadow-sm sm:rounded-lg">
+                        <div class="bg-white p-6 rounded-xl border border-gray-200">
                             <h3 class="font-semibold text-gray-900">{{ __('Tokens expiring') }}</h3>
                             <ul class="mt-2 space-y-1">
                                 @foreach ($tokens as $account)
-                                    <li><a class="text-brand-600 hover:underline" href="{{ route('clients.accounts', $account->client) }}">{{ $account->client->name }} {{ $account->platform }}</a> · {{ $account->token_expires_at->isPast() ? __('expired') : __('expires').' '.$account->token_expires_at->diffForHumans() }}</li>
+                                    <li><a class="font-medium text-gray-900 hover:text-brand-600" href="{{ route('clients.accounts', $account->client) }}">{{ $account->client->name }} {{ $account->platform }}</a> · {{ $account->token_expires_at->isPast() ? __('expired') : __('expires').' '.$account->token_expires_at->diffForHumans() }}</li>
                                 @endforeach
                             </ul>
                         </div>
                     @endif
 
                     @if ($failedJobs)
-                        <p class="bg-white p-6 shadow-sm sm:rounded-lg"><a class="text-brand-600 hover:underline" href="{{ route('jobs.index') }}">{{ $failedJobs }} {{ __('failed jobs') }}</a></p>
+                        <p class="bg-white p-6 rounded-xl border border-gray-200"><a class="font-medium text-gray-900 hover:text-brand-600" href="{{ route('jobs.index') }}">{{ $failedJobs }} {{ __('failed jobs') }}</a></p>
                     @endif
                 </div>
             </div>
 
             @if ($clients->isNotEmpty())
-                <div class="bg-white p-6 shadow-sm sm:rounded-lg overflow-x-auto">
+                <div class="bg-white p-6 rounded-xl border border-gray-200 overflow-x-auto">
                     <h3 class="font-semibold text-gray-900">{{ __('Per client, the next 7 days') }}</h3>
                     <table class="mt-2 w-full text-left">
                         <thead class="text-xs uppercase tracking-wide text-gray-500">
@@ -140,7 +140,7 @@
                             @foreach ($clients as $client)
                                 @php($cells = [[$week->where('client_id', $client->id)->count(), route('calendar', ['client' => $client->slug]), ''], [$waiting->where('client_id', $client->id)->sum('pending_count'), route('clients.reviews', $client), 'text-yellow-700'], [$drafts->where('client_id', $client->id)->count(), route('calendar', ['client' => $client->slug]), ''], ...(config('features.publishing') ? [[$stuck->where('client_id', $client->id)->count(), route('calendar', ['client' => $client->slug]), 'text-red-700'], [$unanswered->firstWhere('client_id', $client->id)?->n ?? 0, route('clients.comments', $client), 'text-red-700']] : [])])
                                 <tr>
-                                    <td class="py-1.5 pr-4"><a class="text-brand-600 hover:underline" href="{{ route('calendar', ['client' => $client->slug]) }}">{{ $client->name }}</a></td>
+                                    <td class="py-1.5 pr-4"><a class="font-medium text-gray-900 hover:text-brand-600" href="{{ route('calendar', ['client' => $client->slug]) }}">{{ $client->name }}</a></td>
                                     @foreach ($cells as [$n, $url, $color])
                                         <td class="py-1.5 pr-4 tabular-nums {{ $n ? $color : 'text-gray-400' }}">@if ($n)<a class="hover:underline" href="{{ $url }}">{{ $n }}</a>@else 0 @endif</td>
                                     @endforeach
@@ -151,7 +151,7 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('refresh') }}" class="bg-white p-6 shadow-sm sm:rounded-lg">
+            <form method="POST" action="{{ route('refresh') }}" class="bg-white p-6 rounded-xl border border-gray-200">
                 @csrf
                 <x-primary-button>{{ __('Refresh after update') }}</x-primary-button>
                 <p class="mt-2 text-gray-500">{{ __('Press this once after "Pull now" in Plesk Git: it runs new database migrations and rebuilds the caches.') }}</p>
