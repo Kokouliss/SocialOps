@@ -41,10 +41,10 @@ class GetPlanningBrief extends Tool
             throw ValidationException::withMessages(['posts' => $e->getMessage()]);
         }
 
-        $quota = $plan->instruction === '' ? PillarQuota::split($profile['pillars'], $plan->count) : [];
+        $quota = $plan->instruction === '' && $profile['pillars'] ? PillarQuota::split($profile['pillars'], $plan->count) : [];
         $languages = array_merge($profile['languages'], $profile['extra_languages'] ?? []);
         $prompt = Prompt::render('content-plan', $plan->promptVars() + [
-            'quota' => $quota ? implode(', ', array_map(fn ($pillar, $n) => "{$pillar}: {$n}", array_keys($quota), $quota)) : 'none, the instruction decides',
+            'quota' => PillarQuota::line($quota, $plan->instruction),
             'trend_brief' => "Research it yourself before planning (the last30days skill, or web search): what people in {$profile['location']} and the guests of a {$profile['type']} talk about between {$plan->from->toDateString()} and {$plan->to->toDateString()}, the formats and sounds that work now on ".implode(', ', $plan->platforms).', and the moments of the season. Name each signal you use.',
             'recent' => $client->recentTopics(),
         ]);

@@ -23,13 +23,13 @@ class ContentPlanner
     public function plan(PlanRequest $request, string $trendBrief, array $recent = []): array
     {
         // an instruction from the team decides the topic, so the pillar quota does not apply
-        $quota = $request->instruction === '' ? PillarQuota::split($request->profile['pillars'], $request->count) : [];
+        $quota = $request->instruction === '' && $request->profile['pillars'] ? PillarQuota::split($request->profile['pillars'], $request->count) : [];
 
         $message = $this->claude->messages->create(
             model: config('services.anthropic.model'),
             maxTokens: 16000,
             messages: [['role' => 'user', 'content' => Prompt::render('content-plan', $request->promptVars() + [
-                'quota' => $quota ? implode(', ', array_map(fn ($pillar, $n) => "{$pillar}: {$n}", array_keys($quota), $quota)) : 'none, the instruction decides',
+                'quota' => PillarQuota::line($quota, $request->instruction),
                 'trend_brief' => $trendBrief,
                 'recent' => $recent,
             ])]],

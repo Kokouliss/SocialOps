@@ -790,7 +790,6 @@
     "The hours are how long the client has to answer before a reminder.": "Οι ώρες είναι ο χρόνος που έχει ο πελάτης να απαντήσει πριν την υπενθύμιση.",
     "The ones on every post, the pool Claude picks the rest from, and how many per post at most.": "Αυτά που μπαίνουν σε κάθε ανάρτηση, η δεξαμενή από την οποία διαλέγει τα υπόλοιπα ο Claude, και πόσα το πολύ ανά ανάρτηση.",
     "The post form suggests the next free one and the planner dates the posts on them.": "Η φόρμα ανάρτησης προτείνει την επόμενη ελεύθερη και ο σχεδιασμός βάζει τις αναρτήσεις πάνω τους.",
-    "The share of posts each topic gets. The shares add up to 100.": "Το ποσοστό αναρτήσεων που παίρνει κάθε θέμα. Τα ποσοστά αθροίζουν 100.",
     "The topics the posts rotate through, the hashtags and the text added to every post.": "Τα θέματα που εναλλάσσονται στις αναρτήσεις, τα hashtags και το κείμενο που μπαίνει σε κάθε ανάρτηση.",
     "Timing": "Χρόνος",
     "Tools": "Εργαλεία",
@@ -857,5 +856,6 @@
     "clinic": "κλινική",
     "gym": "γυμναστήριο",
     "spa": "spa",
-    "real estate": "μεσιτικό"
+    "real estate": "μεσιτικό",
+    "The share of posts each topic gets; the shares add up to 100. Optional: without pillars Claude picks the topics from About the client, the season and the trends.": "Το ποσοστό αναρτήσεων που παίρνει κάθε θέμα· τα ποσοστά αθροίζουν 100. Προαιρετικό: χωρίς πυλώνες το Claude διαλέγει τα θέματα από το Σχετικά με τον πελάτη, την εποχή και τις τάσεις."
 }
