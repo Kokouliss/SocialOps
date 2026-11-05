@@ -13,11 +13,11 @@ use Carbon\CarbonInterface;
 final class Holidays
 {
     /** @return array<string, string> date => label(s), inside the range, sorted; several on one day are joined with " · " */
-    public static function between(CarbonInterface $from, CarbonInterface $to, bool $cyprus = false): array
+    public static function between(CarbonInterface $from, CarbonInterface $to, array $countries = []): array
     {
         $days = [];
         for ($year = $from->year; $year <= $to->year; $year++) {
-            $days += self::forYear($year, $cyprus);
+            $days += self::forYear($year, $countries);
         }
         $days = array_filter($days, fn (string $date) => $date >= $from->toDateString() && $date <= $to->toDateString(), ARRAY_FILTER_USE_KEY);
         ksort($days);
@@ -26,9 +26,9 @@ final class Holidays
     }
 
     /** @return list<string> "date label" lines for a prompt */
-    public static function lines(CarbonInterface $from, CarbonInterface $to, bool $cyprus = false): array
+    public static function lines(CarbonInterface $from, CarbonInterface $to, array $countries = []): array
     {
-        $days = self::between($from, $to, $cyprus);
+        $days = self::between($from, $to, $countries);
 
         return array_map(fn (string $date, string $label) => "{$date} {$label}", array_keys($days), $days);
     }
@@ -38,12 +38,35 @@ final class Holidays
         return (bool) preg_match('/cyprus|κ[υύ]προς/iu', (string) $location);
     }
 
-    /** @return array<string, string> */
-    public static function forYear(int $year, bool $cyprus = false): array
+    /** The countries whose holidays a client's guests care about: from the caption languages, plus Cyprus from the location. */
+    public const COUNTRIES = ['en' => ['UK', 'IE', 'US'], 'de' => ['DE', 'AT', 'CH'], 'fr' => ['FR', 'BE', 'CH'], 'it' => ['IT'], 'es' => ['ES'], 'nl' => ['NL', 'BE'], 'pl' => ['PL'], 'ru' => ['RU'], 'sv' => ['SE'], 'da' => ['DK'], 'no' => ['NO'], 'nb' => ['NO'], 'fi' => ['FI'], 'pt' => ['PT']];
+
+    /** @return list<string> */
+    public static function countries(array $profile): array
+    {
+        $languages = [...($profile['languages'] ?? []), ...($profile['extra_languages'] ?? [])];
+        $codes = array_merge([], ...array_map(fn ($lang) => self::COUNTRIES[strtolower(substr((string) $lang, 0, 2))] ?? [], $languages));
+        if (self::inCyprus($profile['location'] ?? null)) {
+            $codes[] = 'CY';
+        }
+
+        return array_values(array_unique($codes));
+    }
+
+    /**
+     * Greek days and world days always; an entry tagged with countries only when one of them is in $countries.
+     *
+     * @return array<string, string>
+     */
+    public static function forYear(int $year, array $countries = []): array
     {
         $days = [];
-        foreach ([self::greek($year), self::nameDays($year), $cyprus ? self::cyprus($year) : [], self::europe($year), self::world($year)] as $section) {
-            foreach ($section as [$date, $label]) {
+        foreach ([self::greek($year), self::nameDays($year), self::cyprus($year), self::europe($year), self::world($year)] as $section) {
+            foreach ($section as $entry) {
+                [$date, $label] = $entry;
+                if (isset($entry[2]) && ! array_intersect(explode(' ', $entry[2]), $countries)) {
+                    continue;
+                }
                 $days[$date] = isset($days[$date]) ? "{$days[$date]} · {$label}" : $label;
             }
         }
@@ -105,26 +128,33 @@ final class Holidays
             [$easter->addDays(5)->toDateString(), 'Ζωοδόχου Πηγής'],
             // Saint George moves to Easter Monday when the 23rd falls in Lent or on Easter
             [($georgios->lte($easter) ? $easter->addDay() : $georgios)->toDateString(), 'Αγίου Γεωργίου (Γιώργος, Γεωργία)'],
-            ["{$year}-05-01", 'Πρωτομαγιά · Labour Day (most of Europe)'],
-            [CarbonImmutable::parse("second sunday of may {$year}")->toDateString(), "Γιορτή της Μητέρας · Mother's Day (DE, IT, AT, CH, NL, BE)"],
+            ["{$year}-05-01", 'Πρωτομαγιά'],
+            ["{$year}-05-01", 'Labour Day (most of Europe)', 'DE FR IT ES NL AT CH PL PT BE SE NO DK FI RU'],
+            [CarbonImmutable::parse("second sunday of may {$year}")->toDateString(), 'Γιορτή της Μητέρας'],
+            [CarbonImmutable::parse("second sunday of may {$year}")->toDateString(), "Mother's Day (DE, IT, AT, CH, NL, BE, US)", 'DE IT AT CH NL BE US'],
             ["{$year}-05-19", 'Ημέρα Μνήμης Γενοκτονίας των Ποντίων'],
             ["{$year}-05-20", 'Επέτειος Μάχης της Κρήτης (20–30 Μαΐου)'],
             ["{$year}-05-21", 'Αγίων Κωνσταντίνου και Ελένης (Κώστας, Ελένη)'],
             [$easter->addDays(39)->toDateString(), 'Ανάληψη'],
             [$easter->addDays(49)->toDateString(), 'Πεντηκοστή'],
             [$easter->addDays(50)->toDateString(), 'Αγίου Πνεύματος (Whit Monday, Κατακλυσμός στην Κύπρο)'],
-            [CarbonImmutable::parse("third sunday of june {$year}")->toDateString(), 'Γιορτή του Πατέρα (GR, UK, FR, NL)'],
+            [CarbonImmutable::parse("third sunday of june {$year}")->toDateString(), 'Γιορτή του Πατέρα'],
+            [CarbonImmutable::parse("third sunday of june {$year}")->toDateString(), "Father's Day (UK, IE, US, FR, NL)", 'UK IE US FR NL'],
             ["{$year}-08-06", 'Μεταμόρφωση του Σωτήρος'],
-            ["{$year}-08-15", 'Δεκαπενταύγουστος (Μαρία, Παναγιώτης, Δέσποινα) · Assumption, Ferragosto (IT, FR, ES, AT, PL, BE)'],
+            ["{$year}-08-15", 'Δεκαπενταύγουστος (Μαρία, Παναγιώτης, Δέσποινα)'],
+            ["{$year}-08-15", 'Assumption, Ferragosto (IT, FR, ES, AT, PL, BE, PT)', 'IT FR ES AT PL BE PT'],
             ["{$year}-08-25", 'Αγίου Τίτου (πολιούχος Ηρακλείου)'],
             ["{$year}-10-28", '28η Οκτωβρίου'],
             ["{$year}-11-08", 'Ολοκαύτωμα Αρκαδίου (Ρέθυμνο) · Ταξιαρχών (Μιχάλης, Γαβριήλ, Αγγελική)'],
-            ["{$year}-11-11", 'Αγίου Μηνά (πολιούχος Ηρακλείου) · Armistice Day (FR, BE) · St Martin\'s Day (DE, NL)'],
+            ["{$year}-11-11", 'Αγίου Μηνά (πολιούχος Ηρακλείου)'],
+            ["{$year}-11-11", 'Armistice Day (FR, BE)', 'FR BE'],
+            ["{$year}-11-11", 'St Martin\'s Day (DE, NL)', 'DE NL'],
             ["{$year}-11-17", 'Επέτειος Πολυτεχνείου'],
             ["{$year}-11-21", 'Εισόδια της Θεοτόκου · Ημέρα Ενόπλων Δυνάμεων'],
             ["{$year}-12-24", 'Παραμονή Χριστουγέννων (κάλαντα)'],
             ["{$year}-12-25", 'Χριστούγεννα · Christmas Day'],
-            ["{$year}-12-26", 'Δεύτερη μέρα Χριστουγέννων · Boxing Day (UK), St Stephen\'s Day'],
+            ["{$year}-12-26", 'Δεύτερη μέρα Χριστουγέννων'],
+            ["{$year}-12-26", 'Boxing Day (UK), St Stephen\'s Day', 'UK IE DE AT CH IT NL PL'],
             ["{$year}-12-31", 'Παραμονή Πρωτοχρονιάς · New Year\'s Eve'],
         ];
     }
@@ -133,11 +163,14 @@ final class Holidays
     private static function nameDays(int $year): array
     {
         return [
-            ["{$year}-01-07", 'Αγίου Ιωάννη (Γιάννης, Ιωάννα) · Orthodox Christmas (RU, RS)'],
+            ["{$year}-01-07", 'Αγίου Ιωάννη (Γιάννης, Ιωάννα)'],
+            ["{$year}-01-07", 'Orthodox Christmas (RU, RS)', 'RU'],
             ["{$year}-01-17", 'Αγίου Αντωνίου (Αντώνης, Αντωνία)'],
             ["{$year}-01-18", 'Αγίου Αθανασίου (Θανάσης, Αθανασία)'],
             ["{$year}-02-10", 'Αγίου Χαραλάμπους (Χαράλαμπος, Χαρά)'],
-            ["{$year}-05-05", 'Αγίας Ειρήνης (Ειρήνη) · Liberation Day (NL) · World Hand Hygiene Day'],
+            ["{$year}-05-05", 'Αγίας Ειρήνης (Ειρήνη)'],
+            ["{$year}-05-05", 'Liberation Day (NL)', 'NL'],
+            ["{$year}-05-05", 'World Hand Hygiene Day'],
             ["{$year}-06-29", 'Αγίων Πέτρου και Παύλου (Πέτρος, Παύλος)'],
             ["{$year}-07-17", 'Αγίας Μαρίνας (Μαρίνα) · World Emoji Day'],
             ["{$year}-07-20", 'Προφήτη Ηλία (Ηλίας)'],
@@ -146,13 +179,17 @@ final class Holidays
             ["{$year}-08-30", 'Αγίου Αλεξάνδρου (Αλέξανδρος, Αλεξάνδρα)'],
             ["{$year}-09-14", 'Ύψωση Τιμίου Σταυρού (Σταύρος, Σταυρούλα)'],
             ["{$year}-09-17", 'Αγίας Σοφίας (Σοφία, Ελπίδα, Πίστη, Αγάπη)'],
-            ["{$year}-10-26", 'Αγίου Δημητρίου (Δημήτρης, Δήμητρα) · National Day (AT)'],
-            ["{$year}-11-01", 'Αγίων Αναργύρων (Κοσμάς, Δαμιανός) · All Saints\' Day (FR, IT, ES, PL, AT, BE) · World Vegan Day'],
+            ["{$year}-10-26", 'Αγίου Δημητρίου (Δημήτρης, Δήμητρα)'],
+            ["{$year}-10-26", 'National Day (AT)', 'AT'],
+            ["{$year}-11-01", 'Αγίων Αναργύρων (Κοσμάς, Δαμιανός)'],
+            ["{$year}-11-01", 'All Saints\' Day (FR, IT, ES, PL, AT, BE)', 'FR IT ES PL AT BE'],
+            ["{$year}-11-01", 'World Vegan Day'],
             ["{$year}-11-14", 'Αγίου Φιλίππου (Φίλιππος) · Παγκόσμια Ημέρα Διαβήτη (World Diabetes Day)'],
             ["{$year}-11-25", 'Αγίας Αικατερίνης (Κατερίνα) · International Day for the Elimination of Violence against Women'],
             ["{$year}-11-30", 'Αγίου Ανδρέα (Ανδρέας)'],
             ["{$year}-12-04", 'Αγίας Βαρβάρας (Βαρβάρα)'],
-            ["{$year}-12-06", 'Αγίου Νικολάου (Νίκος, Νικολέτα) · St Nicholas (DE, AT, NL, BE, PL)'],
+            ["{$year}-12-06", 'Αγίου Νικολάου (Νίκος, Νικολέτα)'],
+            ["{$year}-12-06", 'St Nicholas (DE, AT, NL, BE, PL)', 'DE AT NL BE PL'],
             ["{$year}-12-12", 'Αγίου Σπυρίδωνα (Σπύρος)'],
             ["{$year}-12-15", 'Αγίου Ελευθερίου (Λευτέρης)'],
             ["{$year}-12-27", 'Αγίου Στεφάνου (Στέφανος, Στεφανία)'],
@@ -161,7 +198,7 @@ final class Holidays
 
     private static function cyprus(int $year): array
     {
-        return [["{$year}-04-01", 'Εθνική επέτειος Κύπρου'], ["{$year}-10-01", 'Ανεξαρτησία Κύπρου']];
+        return [["{$year}-04-01", 'Εθνική επέτειος Κύπρου', 'CY'], ["{$year}-10-01", 'Ανεξαρτησία Κύπρου', 'CY']];
     }
 
     /** The holidays of the countries the guests come from, labelled by country. */
@@ -175,49 +212,55 @@ final class Holidays
         }
 
         return [
-            ["{$year}-01-06", 'Epiphany (IT, ES, AT, PL, south DE)'],
-            [$easter->subDays(48)->toDateString(), 'Carnival Monday, Rosenmontag (DE, NL, BE)'],
-            [$easter->subDays(47)->toDateString(), 'Shrove Tuesday, Mardi Gras, Pancake Day (UK, FR, IT)'],
-            [$easter->subDays(46)->toDateString(), 'Ash Wednesday (Western Lent begins)'],
-            ["{$year}-02-23", 'Defender of the Fatherland Day (RU)'],
-            ["{$year}-03-17", 'St Patrick\'s Day (IE, UK)'],
-            ["{$year}-03-19", 'St Joseph\'s Day: Father\'s Day (IT, ES)'],
-            [$easter->subDays(21)->toDateString(), 'Mothering Sunday (UK)'],
-            [$easter->subDays(2)->toDateString(), 'Good Friday (Western: DE, UK, ES, Nordics)'],
-            [$easter->toDateString(), 'Easter Sunday (Western)'],
-            [$easter->addDay()->toDateString(), 'Easter Monday (Western: DE, UK, FR, IT, NL, AT, CH, PL)'],
-            ["{$year}-04-25", 'Liberation Day (IT)'],
-            ["{$year}-04-27", 'King\'s Day (NL)'],
-            [CarbonImmutable::parse("first sunday of may {$year}")->toDateString(), 'Mother\'s Day (ES, PT)'],
-            [CarbonImmutable::parse("first monday of may {$year}")->toDateString(), 'Early May bank holiday (UK)'],
-            ["{$year}-05-08", 'Victory in Europe Day (FR) · World Red Cross Day'],
-            ["{$year}-05-26", 'Mother\'s Day (PL)'],
-            ["{$year}-05-09", 'Europe Day · Victory Day (RU)'],
-            [$easter->addDays(39)->toDateString(), 'Ascension Day (DE, FR, NL, BE, AT, CH, Nordics) · Vatertag (DE)'],
-            [$frenchMothers->toDateString(), 'Fête des Mères (FR)'],
-            [CarbonImmutable::parse("last monday of may {$year}")->toDateString(), 'Spring bank holiday (UK)'],
-            [$pentecost->toDateString(), 'Pentecost (Western)'],
-            [$pentecost->addDay()->toDateString(), 'Whit Monday (DE, FR, NL, BE, AT, CH)'],
-            [$easter->addDays(60)->toDateString(), 'Corpus Christi (south DE, AT, PL, PT)'],
-            ["{$year}-06-02", 'Republic Day (IT)'],
-            ["{$year}-06-06", 'National Day (SE)'],
-            ["{$year}-06-12", 'Russia Day (RU)'],
-            [CarbonImmutable::create($year, 6, 18)->next(CarbonInterface::FRIDAY)->toDateString(), 'Midsummer Eve (SE, FI)'],
-            ["{$year}-06-23", 'Sankt Hans, Midsummer Eve (NO, DK) · Father\'s Day (PL)'],
-            ["{$year}-07-14", 'Bastille Day (FR)'],
-            ["{$year}-07-21", 'National Day (BE)'],
-            ["{$year}-08-01", 'National Day (CH)'],
-            [CarbonImmutable::parse("last monday of august {$year}")->toDateString(), 'Summer bank holiday (UK)'],
-            [CarbonImmutable::create($year, 9, 15)->next(CarbonInterface::SATURDAY)->toDateString(), 'Oktoberfest opens (Munich)'],
-            ["{$year}-10-03", 'German Unity Day (DE)'],
-            ["{$year}-10-12", 'National Day (ES)'],
-            ["{$year}-10-31", 'Halloween · Reformation Day (north DE)'],
-            ["{$year}-11-04", 'Unity Day (RU)'],
-            ["{$year}-11-05", 'Bonfire Night (UK)'],
-            [CarbonImmutable::parse("second sunday of november {$year}")->toDateString(), 'Father\'s Day (SE, FI, NO)'],
-            ["{$year}-12-05", 'Sinterklaas (NL) · International Volunteer Day'],
-            ["{$year}-12-08", 'Immaculate Conception (IT, ES, AT)'],
-            ["{$year}-12-13", 'St Lucia (SE)'],
+            ["{$year}-01-06", 'Epiphany (IT, ES, AT, PL, south DE)', 'DE IT ES AT PL'],
+            [$easter->subDays(48)->toDateString(), 'Carnival Monday, Rosenmontag (DE, NL, BE)', 'DE NL BE'],
+            [$easter->subDays(47)->toDateString(), 'Shrove Tuesday, Mardi Gras, Pancake Day (UK, FR, IT)', 'UK IE FR IT'],
+            [$easter->subDays(46)->toDateString(), 'Ash Wednesday (Western Lent begins)', 'DE UK IE US FR IT ES NL AT CH PL PT BE SE NO DK FI'],
+            ["{$year}-02-23", 'Defender of the Fatherland Day (RU)', 'RU'],
+            ["{$year}-03-17", 'St Patrick\'s Day (IE, UK)', 'UK IE'],
+            ["{$year}-03-19", 'St Joseph\'s Day: Father\'s Day (IT, ES)', 'IT ES'],
+            [$easter->subDays(21)->toDateString(), 'Mothering Sunday (UK)', 'UK IE'],
+            [$easter->subDays(2)->toDateString(), 'Good Friday (Western: DE, UK, ES, Nordics)', 'DE UK IE US FR IT ES NL AT CH PL PT BE SE NO DK FI'],
+            [$easter->toDateString(), 'Easter Sunday (Western)', 'DE UK IE US FR IT ES NL AT CH PL PT BE SE NO DK FI'],
+            [$easter->addDay()->toDateString(), 'Easter Monday (Western: DE, UK, FR, IT, NL, AT, CH, PL)', 'DE UK IE US FR IT ES NL AT CH PL PT BE SE NO DK FI'],
+            ["{$year}-04-25", 'Liberation Day (IT)', 'IT'],
+            ["{$year}-04-27", 'King\'s Day (NL)', 'NL'],
+            [CarbonImmutable::parse("first sunday of may {$year}")->toDateString(), 'Mother\'s Day (ES, PT)', 'ES PT'],
+            [CarbonImmutable::parse("first monday of may {$year}")->toDateString(), 'Early May bank holiday (UK)', 'UK IE'],
+            ["{$year}-05-08", 'Victory in Europe Day (FR)', 'FR'],
+            ["{$year}-05-08", 'World Red Cross Day'],
+            ["{$year}-05-26", 'Mother\'s Day (PL)', 'PL'],
+            ["{$year}-05-09", 'Europe Day'],
+            ["{$year}-05-09", 'Victory Day (RU)', 'RU'],
+            [$easter->addDays(39)->toDateString(), 'Ascension Day (DE, FR, NL, BE, AT, CH, Nordics)', 'DE FR NL AT CH BE SE NO DK FI'],
+            [$easter->addDays(39)->toDateString(), 'Vatertag (DE)', 'DE'],
+            [$frenchMothers->toDateString(), 'Fête des Mères (FR)', 'FR'],
+            [CarbonImmutable::parse("last monday of may {$year}")->toDateString(), 'Spring bank holiday (UK)', 'UK IE'],
+            [$pentecost->toDateString(), 'Pentecost (Western)', 'DE UK IE US FR IT ES NL AT CH PL PT BE SE NO DK FI'],
+            [$pentecost->addDay()->toDateString(), 'Whit Monday (DE, FR, NL, BE, AT, CH)', 'DE FR NL AT CH BE'],
+            [$easter->addDays(60)->toDateString(), 'Corpus Christi (south DE, AT, PL, PT)', 'DE AT PL PT'],
+            ["{$year}-06-02", 'Republic Day (IT)', 'IT'],
+            ["{$year}-06-06", 'National Day (SE)', 'SE'],
+            ["{$year}-06-12", 'Russia Day (RU)', 'RU'],
+            [CarbonImmutable::create($year, 6, 18)->next(CarbonInterface::FRIDAY)->toDateString(), 'Midsummer Eve (SE, FI)', 'SE FI'],
+            ["{$year}-06-23", 'Sankt Hans, Midsummer Eve (NO, DK)', 'NO DK'],
+            ["{$year}-06-23", 'Father\'s Day (PL)', 'PL'],
+            ["{$year}-07-14", 'Bastille Day (FR)', 'FR'],
+            ["{$year}-07-21", 'National Day (BE)', 'BE'],
+            ["{$year}-08-01", 'National Day (CH)', 'CH'],
+            [CarbonImmutable::parse("last monday of august {$year}")->toDateString(), 'Summer bank holiday (UK)', 'UK IE'],
+            [CarbonImmutable::create($year, 9, 15)->next(CarbonInterface::SATURDAY)->toDateString(), 'Oktoberfest opens (Munich)', 'DE AT CH'],
+            ["{$year}-10-03", 'German Unity Day (DE)', 'DE'],
+            ["{$year}-10-12", 'National Day (ES)', 'ES'],
+            ["{$year}-10-31", 'Halloween'],
+            ["{$year}-10-31", 'Reformation Day (north DE)', 'DE'],
+            ["{$year}-11-04", 'Unity Day (RU)', 'RU'],
+            ["{$year}-11-05", 'Bonfire Night (UK)', 'UK IE'],
+            [CarbonImmutable::parse("second sunday of november {$year}")->toDateString(), 'Father\'s Day (SE, FI, NO)', 'SE NO FI'],
+            ["{$year}-12-05", 'Sinterklaas (NL)', 'NL'],
+            ["{$year}-12-05", 'International Volunteer Day'],
+            ["{$year}-12-08", 'Immaculate Conception (IT, ES, AT)', 'IT ES AT'],
+            ["{$year}-12-13", 'St Lucia (SE)', 'SE'],
         ];
     }
 
@@ -308,7 +351,7 @@ final class Holidays
             ["{$year}-11-18", 'World Antimicrobial Awareness Week (18–24 November)'],
             ["{$year}-11-19", 'International Men\'s Day'],
             ["{$year}-11-20", 'Παγκόσμια Ημέρα Δικαιωμάτων του Παιδιού (World Children\'s Day)'],
-            [$thanksgiving->toDateString(), 'Thanksgiving (US)'],
+            [$thanksgiving->toDateString(), 'Thanksgiving (US)', 'US'],
             [$thanksgiving->addDay()->toDateString(), 'Black Friday'],
             [$thanksgiving->addDays(4)->toDateString(), 'Cyber Monday'],
             [$thanksgiving->addDays(5)->toDateString(), 'Giving Tuesday'],
