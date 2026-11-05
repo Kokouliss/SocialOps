@@ -64,7 +64,7 @@ final class ClientProfile
     {
         $text = fn ($s) => trim((string) $s);
         $list = fn ($s) => array_values(array_filter(array_map('trim', preg_split('/[\s,]+/', (string) $s))));
-        $lines = fn ($s) => array_values(array_filter(array_map('trim', preg_split('/\R/', (string) $s)), 'strlen'));
+        $lines = fn ($s) => array_values(array_filter(array_map('trim', preg_split('/\R/u', (string) $s) ?: []), 'strlen')); // without /u, \R splits inside a Greek υ (its byte 0x85)
         $tags = fn ($s) => array_map(fn ($h) => '#'.ltrim($h, '#'), $list($s));
         $rows = fn ($rows, $keep) => array_values(array_filter(array_map(fn ($r) => array_map(fn ($v) => is_array($v) ? $v : trim((string) $v), (array) $r), (array) $rows), $keep));
 

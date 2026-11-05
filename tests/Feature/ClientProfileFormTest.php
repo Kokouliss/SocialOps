@@ -10,7 +10,7 @@ function profileForm(array $over = []): array
         'accounts' => ['instagram' => ['@almyra.chania', ' @almyra.events '], 'facebook' => [''], 'tiktok' => [], 'linkedin' => ['almyra-beach']],
         'languages' => 'el, en, de', 'extra_languages' => '',
         'about' => ['description' => ' Beach lounge on the sand ', 'goals' => 'More bookings', 'bogus' => 'dropped'],
-        'voice' => ['tone' => 'warm', 'person' => 'we', 'emoji' => 'none', 'cta_style' => 'soft', 'banned_phrases' => "Don't miss out\n\n", 'words' => "our beach\n", 'facts' => "Open daily\r\nBooking by phone"],
+        'voice' => ['tone' => 'warm', 'person' => 'we', 'emoji' => 'none', 'cta_style' => 'soft', 'banned_phrases' => "Don't miss out\nδημιουργία\n", 'words' => "our beach\n", 'facts' => "Open daily\r\nΚρατήσεις μόνο τηλεφωνικά"],
         'notes' => ' Family business since 1987. ',
         'pillars' => [['name' => 'Food & drink', 'share' => '50'], ['name' => 'place', 'share' => '40'], ['name' => ' Προσφορές & Events ', 'share' => '10'], ['name' => '', 'share' => '']],
         'hashtags' => ['always' => 'chania #crete', 'pool' => "#sunset\n#villa", 'max_per_post' => '7'],
@@ -47,7 +47,7 @@ test('every profile section is edited as a form field, without a YAML box', func
     expect($profile['accounts'])->toEqual(['instagram' => ['@almyra.chania', '@almyra.events'], 'facebook' => [], 'tiktok' => [], 'linkedin' => ['almyra-beach']]) // two Instagrams
         ->and($profile['languages'])->toBe(['el', 'en', 'de'])->and($profile['extra_languages'])->toBe([])
         ->and($profile['about'])->toBe(['description' => 'Beach lounge on the sand', 'audience' => '', 'offerings' => '', 'differentiators' => '', 'goals' => 'More bookings', 'current' => ''])
-        ->and($profile['voice'])->toEqual(['tone' => 'warm', 'person' => 'we', 'emoji' => 'none', 'cta_style' => 'soft', 'banned_phrases' => ["Don't miss out"], 'words' => ['our beach'], 'facts' => ['Open daily', 'Booking by phone']])
+        ->and($profile['voice'])->toEqual(['tone' => 'warm', 'person' => 'we', 'emoji' => 'none', 'cta_style' => 'soft', 'banned_phrases' => ["Don't miss out", 'δημιουργία'], 'words' => ['our beach'], 'facts' => ['Open daily', 'Κρατήσεις μόνο τηλεφωνικά']]) // Greek lines with υ stay whole (the save used to 500 on them)
         ->and($profile['notes'])->toBe('Family business since 1987.')
         ->and($profile['pillars'])->toBe(['food_drink' => 50, 'place' => 40, 'προσφορές_events' => 10]) // Greek pillar names stay Greek
         ->and($profile['hashtags'])->toEqual(['always' => ['#chania', '#crete'], 'pool' => ['#sunset', '#villa'], 'max_per_post' => 7])
