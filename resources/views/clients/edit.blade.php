@@ -5,8 +5,8 @@
     <div class="py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <style>[x-cloak] { display: none !important }</style>
-            @php($tools = ['plan' => __('Plan with Claude'), 'import' => __('Import posts'), 'bio' => __('Link in bio')])
-            <div x-data="{ tab: location.hash === '#bio' ? 'bio' : (localStorage.getItem('client-tab') || 'basics') }" x-init="if (! $el.querySelector(`[data-tab='${tab}']`)) tab = 'basics'; $watch('tab', t => localStorage.setItem('client-tab', t))" class="md:flex md:gap-8">
+            @php($tools = ['plan' => __('Plan with Claude'), 'import' => __('Import posts')])
+            <div x-data="{ tab: localStorage.getItem('client-tab') || 'basics' }" x-init="if (! $el.querySelector(`[data-tab='${tab}']`)) tab = 'basics'; $watch('tab', t => localStorage.setItem('client-tab', t))" class="md:flex md:gap-8">
                 @include('clients._nav', ['tools' => $tools])
                 <div class="min-w-0 flex-1 space-y-6">
                     <form method="POST" action="{{ route('clients.update', $client) }}">
@@ -135,41 +135,6 @@
                                 <a href="{{ route('posts.import.template', $client) }}" class="text-sm font-medium text-gray-900 hover:text-brand-600">{{ __('Download the template') }}</a>
                             </form>
                             <x-input-error class="mt-2" :messages="$errors->get('csv')" />
-                        </div>
-                    </x-section>
-
-                    <x-section id="bio" x-show="tab === 'bio'" x-cloak :title="__('Link in bio')" :description="__('Put this address in the Instagram and TikTok bio. The buttons come from the profile placeholders that hold a link, a phone number or an e-mail (booking, site, menu, phone, whatsapp…) and from the accounts.')">
-                        <div class="py-5">
-                            <div class="flex gap-2">
-                                <x-text-input type="text" class="block w-full font-mono text-xs" :value="route('bio', $client)" readonly onclick="this.select()" />
-                                <a href="{{ route('bio', $client) }}" target="_blank" class="inline-flex items-center rounded-lg border border-gray-300 px-3 py-1 text-xs hover:bg-gray-50">{{ __('Open') }}</a>
-                            </div>
-                        </div>
-                        <div class="py-5">
-                            <p class="text-sm text-gray-600">{{ __('Or put the same buttons on a page of the WordPress site of the client: connect with a WordPress user that may edit pages and an application password made for Social Ops (WordPress → Users → Profile → Application Passwords), then press Publish; press it again after changing the profile.') }}</p>
-                            @if (session('status') === 'wordpress-published')
-                                <p class="mt-2 text-sm text-green-600">{{ __('The page is on WordPress.') }}</p>
-                            @elseif (session('status') === 'wordpress-connected')
-                                <p class="mt-2 text-sm text-green-600">{{ __('WordPress connected. Press Publish to make the page.') }}</p>
-                            @elseif (session('status') === 'wordpress-disconnected')
-                                <p class="mt-2 text-sm text-green-600">{{ __('WordPress disconnected.') }}</p>
-                            @endif
-                            <x-input-error class="mt-2" :messages="$errors->wordpress->all()" />
-                            @if ($wordpress)
-                                <p class="mt-2 text-sm text-gray-800">{{ __('Connected to :site as :user', ['site' => $wordpress->name, 'user' => $wordpress->meta['user']]) }}@if ($wordpress->meta['url'] ?? null) · <a href="{{ $wordpress->meta['url'] }}" target="_blank" class="underline">{{ $wordpress->meta['url'] }}</a>@endif</p>
-                                <div class="mt-2 flex gap-2">
-                                    <form method="post" action="{{ route('wordpress.publish', $client) }}">@csrf<x-primary-button>{{ ($wordpress->meta['page_id'] ?? null) ? __('Update on WordPress') : __('Publish to WordPress') }}</x-primary-button></form>
-                                    <form method="post" action="{{ route('wordpress.disconnect', $client) }}">@csrf @method('delete')<x-secondary-button type="submit">{{ __('Disconnect') }}</x-secondary-button></form>
-                                </div>
-                            @else
-                                <form method="post" action="{{ route('wordpress.connect', $client) }}" class="mt-3 grid gap-3 sm:grid-cols-3">
-                                    @csrf
-                                    <div><x-input-label for="wp-site" :value="__('Site address')" /><x-text-input id="wp-site" name="site" type="text" class="mt-1 block w-full" :value="old('site')" placeholder="https://client.gr" required /></div>
-                                    <div><x-input-label for="wp-user" :value="__('WordPress user')" /><x-text-input id="wp-user" name="user" type="text" class="mt-1 block w-full" :value="old('user')" required /></div>
-                                    <div><x-input-label for="wp-password" :value="__('Application password')" /><x-text-input id="wp-password" name="password" type="password" class="mt-1 block w-full" required autocomplete="off" /></div>
-                                    <div class="sm:col-span-3"><x-primary-button>{{ __('Connect') }}</x-primary-button></div>
-                                </form>
-                            @endif
                         </div>
                     </x-section>
                 </div>

@@ -199,7 +199,7 @@
             @endforeach
         </div>
     </x-field>
-    <x-field :label="__('Placeholders')" :help="__('Written in captions as :tag and filled at publish time. Phone numbers, links and e-mails here also become the Link in bio buttons.', ['tag' => '{'.'{phone}}'])">
+    <x-field :label="__('Placeholders')" :help="__('Written in captions as :tag and filled at publish time.', ['tag' => '{'.'{phone}}'])">
         @foreach ($rows(collect(old('p.fields', collect($profile['fields'] ?? [])->map(fn ($v, $k) => ['key' => $k, 'value' => $v])->values()->all()))->all()) as $i => $row)
             <div class="grid grid-cols-3 gap-2 {{ $i ? 'mt-2' : '' }}">
                 <x-text-input name="p[fields][{{ $i }}][key]" type="text" class="block w-full font-mono text-sm" :value="$row['key'] ?? ''" placeholder="phone" />
@@ -303,7 +303,7 @@
     </x-field>
 </x-section>
 
-<div class="mt-4 flex items-center gap-4" x-show="!['plan', 'import', 'bio'].includes(tab)">
+<div class="mt-4 flex items-center gap-4" x-show="!['plan', 'import'].includes(tab)">
     <x-primary-button>{{ __('Save') }}</x-primary-button>
     <a href="{{ route('clients.index') }}" class="text-sm text-gray-600 hover:text-gray-900">{{ __('Cancel') }}</a>
     @if (session('status') === 'client-updated')
