@@ -42,7 +42,7 @@ class CalendarController extends Controller
 
         $clients = $request->user()->clients()->get();
         $client = $clients->firstWhere('slug', $clientSlug);
-        $marks = array_map(fn (string $label) => explode(' · ', $label), Holidays::between($start, $end, Holidays::inCyprus($client?->location)));
+        $marks = array_map(fn (string $label) => explode(' · ', $label), Holidays::between($start, $end, Holidays::countries($client?->toProfileArray() ?? [])));
         foreach ($client ? [$client] : $clients as $owner) {
             foreach ($owner->profile['key_dates'] ?? [] as $keyDate) {
                 $day = Carbon::parse($keyDate['date'])->toDateString();
