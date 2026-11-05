@@ -15,7 +15,7 @@ test('the list view lists the month in date order with thumbnails, and the grid 
     Post::factory()->create(['client_id' => $client->id, 'scheduled_at' => null, 'name' => 'ALMYRA_UNDATED_IG_FEED_FOOD_EL-EN_v1']);
 
     $this->actingAs(User::factory()->create())->get(route('calendar', ['view' => 'list']))->assertOk()
-        ->assertSeeInOrder(['Wednesday 4 November', 'ALMYRA_20261104_IG_FEED_FOOD_EL-EN_v1', 'Tuesday 10 November', "/assets/{$asset->id}/thumb", $post->name, 'No date yet', 'ALMYRA_UNDATED_IG_FEED_FOOD_EL-EN_v1'], false)
+        ->assertSeeInOrder(['Wednesday 04-11-2026', 'ALMYRA_20261104_IG_FEED_FOOD_EL-EN_v1', 'Tuesday 10-11-2026', "/assets/{$asset->id}/thumb", $post->name, 'No date yet', 'ALMYRA_UNDATED_IG_FEED_FOOD_EL-EN_v1'], false)
         ->assertDontSee('grid-cols-7');
 
     $this->get(route('calendar'))->assertOk()->assertSee('hidden sm:grid', false)->assertSee('sm:hidden" data-view="list"', false)->assertSee("/assets/{$asset->id}/thumb");

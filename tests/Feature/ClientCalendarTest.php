@@ -18,7 +18,7 @@ test('the view-only calendar link shows the client their own posts in their own 
 
     $this->get(route('calendar.client', $client))->assertForbidden();
     $this->withSession(['locale' => 'en'])->get(URL::temporarySignedRoute('calendar.client', now()->addDay(), ['client' => $client->slug]))->assertOk()
-        ->assertSeeInOrder(['Tuesday 10 November', '18:00', 'Instagram, Facebook', 'Waiting for your approval', 'Καλημέρα από την παραλία', 'Thursday 24 December', 'Published'])
+        ->assertSeeInOrder(['Tuesday 10-11-2026', '18:00', 'Instagram, Facebook', 'Waiting for your approval', 'Καλημέρα από την παραλία', 'Thursday 24-12-2026', 'Published'])
         ->assertDontSee('January')->assertDontSee('OTHER_')->assertDontSee('In review');
 
     $this->actingAs(User::factory()->create())->get(route('calendar', ['client' => 'almyra']))->assertOk()->assertSee('/calendar/almyra?');

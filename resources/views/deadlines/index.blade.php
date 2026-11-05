@@ -42,8 +42,8 @@
                                 <form method="POST" action="{{ route('deadlines.toggle', $deadline) }}">@csrf @method('PATCH')<button type="submit" class="rounded border border-gray-300 px-2 py-0.5 text-xs hover:bg-gray-50" title="{{ $deadline->done_at ? __('Reopen') : __('Mark done') }}">{{ $deadline->done_at ? '✓' : '○' }}</button></form>
                                 <span class="{{ $deadline->done_at ? 'text-gray-400 line-through' : 'text-gray-900' }}">{{ $deadline->title }}</span>
                                 <span class="rounded px-2 py-0.5 text-xs {{ $deadline->side === 'client' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800' }}">{{ __(\App\Models\Deadline::SIDES[$deadline->side]) }}</span>
-                                @if ($deadline->due_on)<span class="text-xs {{ ! $deadline->done_at && $deadline->due_on->lt(today()) ? 'text-red-600 font-medium' : 'text-gray-500' }}">{{ $deadline->due_on->translatedFormat('D j M') }}</span>@endif
-                                @if ($deadline->done_at)<span class="text-xs text-gray-400">{{ __('done') }} {{ $deadline->done_at->translatedFormat('j M') }}</span>@endif
+                                @if ($deadline->due_on)<span class="text-xs {{ ! $deadline->done_at && $deadline->due_on->lt(today()) ? 'text-red-600 font-medium' : 'text-gray-500' }}">{{ $deadline->due_on->translatedFormat('D d-m-Y') }}</span>@endif
+                                @if ($deadline->done_at)<span class="text-xs text-gray-400">{{ __('done') }} {{ $deadline->done_at->format('d-m-Y') }}</span>@endif
                                 <form method="POST" action="{{ route('deadlines.destroy', $deadline) }}" class="ml-auto" onsubmit="return confirm('{{ __('Delete this deadline?') }}')">@csrf @method('DELETE')<button type="submit" class="text-xs text-red-600 hover:underline">{{ __('Delete') }}</button></form>
                             </li>
                         @endforeach

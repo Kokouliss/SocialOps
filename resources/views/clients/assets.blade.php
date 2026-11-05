@@ -171,7 +171,7 @@
                             </a>
                             <p class="mt-1 truncate font-mono text-gray-900" title="{{ $asset->name }}">{{ $asset->name }}</p>
                             <p class="text-gray-500">
-                                {{ $asset->pillar ? str_replace('_', ' ', $asset->pillar) : __('no pillar') }} · {{ $asset->created_at->translatedFormat('j M') }}
+                                {{ $asset->pillar ? str_replace('_', ' ', $asset->pillar) : __('no pillar') }} · {{ $asset->created_at->format('d-m-Y') }}
                                 @if ($asset->season) · {{ $asset->season }} @endif
                                 @if ($asset->people_consent) · <span class="text-green-700">{{ __('consent') }}</span> @endif
                                 @if ($asset->ugc_permission) · <span class="text-green-700">{{ __('UGC ok') }}</span> @endif

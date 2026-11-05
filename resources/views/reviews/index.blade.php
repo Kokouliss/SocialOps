@@ -24,7 +24,7 @@
                             <input type="checkbox" name="posts[]" value="{{ $post->id }}" class="rounded border-gray-300" />
                             <span class="font-mono">{{ $post->name }}</span>
                             <x-state-badge :state="$post->state" />
-                            <span class="text-gray-500">{{ $post->scheduled_at?->translatedFormat('D j M, H:i') ?? __('not scheduled') }}</span>
+                            <span class="text-gray-500">{{ $post->scheduled_at?->translatedFormat('D d-m-Y H:i') ?? __('not scheduled') }}</span>
                         </label>
                     @empty
                         <x-empty-state :action="__('New post')" :href="route('posts.create', $client)">{{ __('No draft posts waiting. A post shows here once it exists on the calendar; tick it and send it, the approvers get the link by email.') }}</x-empty-state>
@@ -38,10 +38,10 @@
             @foreach ($reviews as $review)
                 <div class="bg-white p-6 shadow-sm sm:rounded-lg text-sm">
                     <div class="flex flex-wrap items-center gap-3">
-                        <span class="font-semibold text-gray-900">{{ __('Sent :at', ['at' => $review->created_at->translatedFormat('D j M, H:i')]) }}</span>
-                        <span class="text-gray-500">{{ __('due :at', ['at' => $review->due_at->translatedFormat('D j M, H:i')]) }}</span>
+                        <span class="font-semibold text-gray-900">{{ __('Sent :at', ['at' => $review->created_at->translatedFormat('D d-m-Y H:i')]) }}</span>
+                        <span class="text-gray-500">{{ __('due :at', ['at' => $review->due_at->translatedFormat('D d-m-Y H:i')]) }}</span>
                         @if ($review->completed_at)
-                            <span class="px-2 py-0.5 rounded text-xs bg-green-100 text-green-800">{{ __('Answered :at', ['at' => $review->completed_at->translatedFormat('D j M, H:i')]) }}</span>
+                            <span class="px-2 py-0.5 rounded text-xs bg-green-100 text-green-800">{{ __('Answered :at', ['at' => $review->completed_at->translatedFormat('D d-m-Y H:i')]) }}</span>
                         @elseif ($review->due_at->isPast())
                             <span class="px-2 py-0.5 rounded text-xs bg-red-100 text-red-800">{{ __('Overdue') }}</span>
                         @else

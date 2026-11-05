@@ -23,7 +23,7 @@ class TokenExpiring extends Mailable
         return new Envelope(subject: __(':client: reconnect :platform by :date', [
             'client' => $this->account->client->name,
             'platform' => str_replace('_', ' ', $this->account->platform),
-            'date' => $this->account->token_expires_at->translatedFormat('j M'),
+            'date' => $this->account->token_expires_at->format('d-m-Y'),
         ]));
     }
 

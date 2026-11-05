@@ -22,7 +22,7 @@ test('the next free slot skips slots a post already takes, and the post form off
         ->and($this->client->nextFreeSlot(now()->parse('2026-11-16 10:00'))->format('Y-m-d H:i'))->toBe('2026-11-18 18:00');
 
     $this->actingAs(User::factory()->create())->get(route('posts.create', $this->client))->assertOk()
-        ->assertSee('Next free slot: Mon 16 Nov 10:00')->assertSee("value = '2026-11-16T10:00'", false);
+        ->assertSee('Next free slot: Mon 16-11-2026 10:00')->assertSee("value = '2026-11-16T10:00'", false);
 });
 
 test('slots:check tells Slack which clients have empty slots next week', function () {

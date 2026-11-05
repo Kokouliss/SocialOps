@@ -39,7 +39,7 @@
             @php($span = [...$filters, 'client' => $clientSlug, ...$when])
             @php($move = fn (int $dir) => $range ? ['from' => $range[0]->copy()->addDays($dir * $len)->toDateString(), 'to' => $range[1]->copy()->addDays($dir * $len)->toDateString()] : ['date' => ($dir > 0 ? $date->copy()->add($step) : $date->copy()->sub($step))->toDateString()])
             <a class="px-2 py-1 border rounded" href="{{ route('calendar', [...$span, 'view' => $view, ...$move(-1)]) }}">&larr;</a>
-            <span class="font-medium">{{ $range ? $range[0]->translatedFormat('j M').' – '.$range[1]->translatedFormat('j M Y') : ($view === 'week' ? $date->copy()->startOfWeek()->translatedFormat('j M').' – '.$date->copy()->endOfWeek()->translatedFormat('j M Y') : $date->translatedFormat('F Y')) }}</span>
+            <span class="font-medium">{{ $range ? $range[0]->format('d-m-Y').' – '.$range[1]->format('d-m-Y') : ($view === 'week' ? $date->copy()->startOfWeek()->format('d-m-Y').' – '.$date->copy()->endOfWeek()->format('d-m-Y') : $date->translatedFormat('F Y')) }}</span>
             <a class="px-2 py-1 border rounded" href="{{ route('calendar', [...$span, 'view' => $view, ...$move(1)]) }}">&rarr;</a>
             <a class="px-2 py-1 border rounded {{ $view === 'month' ? 'bg-gray-800 text-white' : '' }}" href="{{ route('calendar', [...$span, 'view' => 'month']) }}">{{ __('Month') }}</a>
             <a class="px-2 py-1 border rounded {{ $view === 'week' ? 'bg-gray-800 text-white' : '' }}" href="{{ route('calendar', [...$span, 'view' => 'week']) }}">{{ __('Week') }}</a>
@@ -66,13 +66,15 @@
             @endif
 
             @if ($view !== 'list')
+            @foreach ($grids as $grid)
+            @if ($grid['title'])<h3 class="hidden sm:block font-semibold text-gray-800 {{ $loop->first ? '' : 'pt-4' }}">{{ $grid['title'] }}</h3>@endif
             <div class="hidden sm:grid grid-cols-7 gap-px bg-gray-200 border border-gray-200 text-xs">
                 @foreach (['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $dow)
                     <div class="bg-gray-50 px-2 py-1 font-medium text-gray-600">{{ __($dow) }}</div>
                 @endforeach
-                @foreach ($days as $day)
+                @foreach ($grid['days'] as $day)
                     @php($key = $day->toDateString())
-                    <div class="day bg-white min-h-24 p-1 cursor-pointer {{ ($range ? $day->lt($range[0]) || $day->gt($range[1]) : $day->month !== $date->month && $view === 'month') ? 'text-gray-400' : '' }}" data-date="{{ $key }}">
+                    <div class="day bg-white min-h-24 p-1 cursor-pointer {{ ($grid['month'] ? $day->month !== $grid['month'] || $day->lt($range[0]) || $day->gt($range[1]) : $day->month !== $date->month && $view === 'month') ? 'text-gray-400' : '' }}" data-date="{{ $key }}">
                         <div class="flex justify-between">
                             <span class="{{ $day->isToday() ? 'font-bold text-brand-600' : '' }}">{{ $day->day }}</span>
                             @if ($clientSlug)
@@ -90,6 +92,7 @@
                     </div>
                 @endforeach
             </div>
+            @endforeach
 
             <div class="day hidden sm:block bg-white border border-dashed border-gray-300 p-3 text-xs" data-date="">
                 <p class="font-medium text-gray-600 mb-1">{{ __('No date yet (drag onto a day to schedule)') }}</p>

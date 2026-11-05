@@ -8,6 +8,7 @@ use App\Planning\Holidays;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\URL;
 use Illuminate\View\View;
 
@@ -59,6 +60,7 @@ class CalendarController extends Controller
             'date' => $date,
             'range' => $range,
             'days' => collect(Carbon::parse($start)->toPeriod($end, '1 day')),
+            'grids' => $this->grids($range, $start, $end),
             'posts' => $posts,
             'unscheduled' => $unscheduled,
             'clients' => $clients,
@@ -103,6 +105,27 @@ class CalendarController extends Controller
             'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="'.$client->code.'_'.$date->format('Y-m').'_posts.csv"',
         ]);
+    }
+
+    /**
+     * The grids the page draws: one per month of a range, each titled and padded to whole weeks, so a long range reads as months and not as one tall table; else the single month or week.
+     *
+     * @return list<array{title: ?string, month: ?int, days: Collection}>
+     */
+    private function grids(?array $range, Carbon $start, Carbon $end): array
+    {
+        if (! $range) {
+            return [['title' => null, 'month' => null, 'days' => collect($start->toPeriod($end, '1 day'))]];
+        }
+        $grids = [];
+        for ($month = $range[0]->copy()->startOfMonth(); $month <= $range[1]; $month = $month->copy()->addMonth()) {
+            // max() and min() hand back one of the two instances, so copy before moving to the week's edges
+            $first = $month->max($range[0])->copy()->startOfWeek();
+            $last = $month->copy()->endOfMonth()->min($range[1])->copy()->endOfWeek();
+            $grids[] = ['title' => $month->translatedFormat('F Y'), 'month' => $month->month, 'days' => collect($first->toPeriod($last, '1 day'))];
+        }
+
+        return $grids;
     }
 
     /** @return array{string, Carbon, Carbon, Carbon, ?array{Carbon, Carbon}} view, the date shown, first and last day shown, the from–to range when one was asked for */
