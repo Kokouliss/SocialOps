@@ -20,7 +20,8 @@ test('the dashboard lists what needs a human, each with a link, and says so when
     Post::factory()->create(['client_id' => $client->id, 'name' => 'DRAFT_LATER', 'state' => PostState::Draft, 'scheduled_at' => '2026-11-30 09:00']);
     Post::factory()->create(['client_id' => $client->id, 'name' => 'BROKEN', 'state' => PostState::Failed, 'publish_error' => 'Meta: boom']);
     $client->reviews()->create(['due_at' => '2026-11-09 10:00', 'created_by' => $me->id])->posts()->attach(Post::factory()->create(['client_id' => $client->id, 'state' => PostState::InReview]));
-    $client->reviews()->create(['due_at' => '2026-11-12 10:00', 'created_by' => $me->id]);
+    $client->reviews()->create(['due_at' => '2026-11-12 10:00', 'created_by' => $me->id])->posts()->attach(Post::factory()->create(['client_id' => $client->id, 'state' => PostState::InReview]));
+    $client->reviews()->create(['due_at' => '2026-11-13 10:00', 'created_by' => $me->id]); // nothing left to decide (its posts were deleted): not listed
     $account = $client->accounts()->create(['platform' => 'instagram', 'external_id' => '1', 'name' => '@almyra', 'access_token' => 't', 'token_expires_at' => '2026-11-12 10:00']);
     $client->comments()->create(['account_id' => $account->id, 'platform' => 'instagram', 'external_id' => 'c1', 'text' => 'Τιμές;', 'posted_at' => now()]);
     $client->comments()->create(['account_id' => $account->id, 'platform' => 'instagram', 'external_id' => 'c2', 'text' => 'Done', 'posted_at' => now(), 'replied_at' => now()]);
@@ -31,8 +32,8 @@ test('the dashboard lists what needs a human, each with a link, and says so when
         ->assertSeeInOrder(['Today', 'LATE_ONE', 'late: is the queue running?', 'DUE_TODAY', 'Tomorrow', 'TOMORROW'])->assertDontSee('NEXT_WEEK')
         ->assertSeeInOrder(['not sent for approval yet', 'DRAFT_SOON'])->assertDontSee('DRAFT_LATER')
         ->assertSeeInOrder(['BROKEN', 'Failed', 'Meta: boom'])
-        ->assertSeeInOrder(['Waiting for the client', route('clients.reviews', $client), '1 posts waiting', 'bg-red-100', 'due 1 day ago', '0 posts waiting', 'due 2 days from now'])
-        ->assertSeeInOrder(['Per client, the next 7 days', 'Almyra', '>4<', '>1<', '>1<', '>1<', '>1<'], false)
+        ->assertSeeInOrder(['Waiting for the client', route('clients.reviews', $client), '1 posts waiting', 'bg-red-100', 'due 1 day ago', '1 posts waiting', 'due 2 days from now'])->assertDontSee('0 posts waiting')->assertDontSee('due 3 days from now')
+        ->assertSeeInOrder(['Per client, the next 7 days', 'Almyra', '>4<', '>2<', '>1<', '>1<', '>1<'], false)
         ->assertSee(route('clients.comments', $client).'">Almyra</a> · 1', false)
         ->assertSee('expires 2 days from now')
         ->assertSee('1 failed jobs');

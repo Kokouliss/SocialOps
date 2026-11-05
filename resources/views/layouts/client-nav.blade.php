@@ -1,7 +1,7 @@
 @php
     // Same tab row on every page of a client; the switcher (phones: the side navigation lists the clients on wider screens) keeps the page when the route is client-scoped.
     $name = request()->route()->getName();
-    $switch = fn ($c) => in_array($name, ['clients.assets', 'clients.grid', 'clients.reviews', 'clients.deadlines', 'clients.comments', 'clients.accounts', 'clients.reports', 'clients.edit', 'posts.create']) ? route($name, $c) : route('calendar', ['client' => $c->slug]);
+    $switch = fn ($c) => in_array($name, ['clients.assets', 'clients.grid', 'clients.reviews', 'clients.deadlines', 'clients.comments', 'clients.accounts', 'clients.reports', 'clients.edit', 'clients.bin', 'posts.create']) ? route($name, $c) : route('calendar', ['client' => $c->slug]);
     $tabs = [
         [__('Calendar'), route('calendar', ['client' => $client->slug]), request()->routeIs('calendar', 'posts.*'), null],
         [__('Assets'), route('clients.assets', $client), request()->routeIs('clients.assets'), null],
@@ -14,6 +14,7 @@
         ] : []),
         [__('Reports'), route('clients.reports', $client), request()->routeIs('clients.reports', 'reports.show'), null],
         [__('Profile'), route('clients.edit', $client), request()->routeIs('clients.edit'), null],
+        [__('Recycle bin'), route('clients.bin', $client), request()->routeIs('clients.bin'), null],
     ];
 @endphp
 <nav class="mt-4 flex items-center gap-1 overflow-x-auto text-sm" aria-label="{{ $client->name }}">

@@ -54,7 +54,7 @@ class AssetController extends Controller
 
         return view('clients.assets', [
             'client' => $client,
-            'assets' => $client->assets()->with('posts')
+            'assets' => $client->assets()->with(['posts' => fn ($q) => $q->withTrashed()]) // a post in the recycle bin still uses its media
                 ->when($request->input('kind'), fn ($q, $kind) => $q->where('kind', $kind))
                 ->when($request->input('pillar'), fn ($q, $pillar) => $q->where('pillar', $pillar))
                 ->latest()->get(),

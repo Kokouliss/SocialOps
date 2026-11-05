@@ -33,7 +33,7 @@ class ReviewController extends Controller
     {
         $data = $request->validate([
             'posts' => ['required', 'array', 'min:1'],
-            'posts.*' => [Rule::exists('posts', 'id')->where('client_id', $client->id)->whereIn('state', self::SENDABLE)],
+            'posts.*' => [Rule::exists('posts', 'id')->where('client_id', $client->id)->whereIn('state', self::SENDABLE)->withoutTrashed()],
         ]);
 
         try {

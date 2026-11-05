@@ -15,6 +15,7 @@ use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\PortalController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RecycleBinController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SettingsController;
@@ -75,14 +76,19 @@ Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::delete('/jobs/{uuid}', [JobController::class, 'forget'])->name('jobs.forget');
     Route::get('/clients/{client}/posts/create', [PostController::class, 'create'])->name('posts.create');
     Route::post('/clients/{client}/posts', [PostController::class, 'store'])->name('posts.store');
-    Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('posts.edit');
+    Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->withTrashed()->name('posts.edit'); // a binned post's link goes to the bin
     Route::patch('/posts/{post}', [PostController::class, 'update'])->name('posts.update');
     Route::post('/posts/{post}/transition', [PostController::class, 'transition'])->name('posts.transition');
     Route::post('/posts/bulk', [PostController::class, 'bulk'])->name('posts.bulk');
     Route::post('/posts/{post}/duplicate', [PostController::class, 'duplicate'])->name('posts.duplicate');
     Route::patch('/posts/{post}/reschedule', [PostController::class, 'reschedule'])->name('posts.reschedule');
     Route::post('/posts/{post}/notes', [PostController::class, 'note'])->name('posts.note');
-    Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+    Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy'); // into the client's recycle bin
+    Route::get('/clients/{client}/bin', [RecycleBinController::class, 'index'])->name('clients.bin');
+    Route::post('/clients/{client}/bin/restore', [RecycleBinController::class, 'restoreAll'])->name('bin.restore-all');
+    Route::delete('/clients/{client}/bin', [RecycleBinController::class, 'empty'])->name('bin.empty');
+    Route::post('/posts/{post}/restore', [RecycleBinController::class, 'restore'])->withTrashed()->name('posts.restore');
+    Route::delete('/posts/{post}/for-good', [RecycleBinController::class, 'destroy'])->withTrashed()->name('posts.forget');
     Route::get('/posts/{post}/export', [PostController::class, 'export'])->name('posts.export');
     Route::get('/posts/{post}/image/{lang}', [PostController::class, 'image'])->name('posts.image')->where('lang', '[a-z]{2}');
     Route::get('/clients/{client}/posts/export.csv', [CalendarController::class, 'csv'])->name('posts.csv');

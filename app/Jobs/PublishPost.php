@@ -39,9 +39,9 @@ class PublishPost implements ShouldQueue
 
     public function handle(): void
     {
-        $post = $this->post->fresh();
-        if ($post->state !== PostState::Scheduled) {
-            return; // a human moved it, or a twin job already did the work
+        $post = $this->post->fresh(); // fresh() also finds a post in the recycle bin
+        if (! $post || $post->trashed() || $post->state !== PostState::Scheduled) {
+            return; // a human moved or deleted it, or a twin job already did the work
         }
 
         $done = $post->external_ids ?? [];
@@ -96,7 +96,7 @@ class PublishPost implements ShouldQueue
     public function failed(Throwable $e): void
     {
         $post = $this->post->fresh();
-        if ($post->state !== PostState::Scheduled) {
+        if (! $post || $post->trashed() || $post->state !== PostState::Scheduled) {
             return;
         }
         $post->forceFill(['publish_error' => $e->getMessage()])->save();

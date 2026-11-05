@@ -186,7 +186,11 @@
                             @endif
                             <p class="mt-1">
                                 @forelse ($asset->posts as $post)
-                                    <a href="{{ route('posts.edit', $post) }}" class="block truncate font-medium text-gray-900 hover:text-brand-600" title="{{ $post->name }}">{{ __('In') }} {{ $post->name }}</a>
+                                    @if ($post->trashed())
+                                        <a href="{{ route('clients.bin', $client) }}" class="block truncate text-gray-500 hover:text-brand-600" title="{{ $post->name }}">{{ __('In the recycle bin:') }} {{ $post->name }}</a>
+                                    @else
+                                        <a href="{{ route('posts.edit', $post) }}" class="block truncate font-medium text-gray-900 hover:text-brand-600" title="{{ $post->name }}">{{ __('In') }} {{ $post->name }}</a>
+                                    @endif
                                 @empty
                                     <span class="text-gray-400">{{ __('Not used in a post yet') }}</span>
                                 @endforelse

@@ -33,7 +33,7 @@ class DashboardController extends Controller
             'drafts' => $mine->restrict(Post::with('client'))->whereIn('state', [PostState::Idea, PostState::Draft, PostState::ChangesRequested])->whereBetween('scheduled_at', [now()->startOfDay(), now()->addDays(7)->endOfDay()])->orderBy('scheduled_at')->get(),
             'stuck' => $mine->restrict(Post::with('client'))->whereIn('state', [PostState::Failed, PostState::ManualNeeded])->latest('updated_at')->get(),
             'deadlines' => $mine->restrict(Deadline::with('client'))->dueSoon()->orderBy('due_on')->get(),
-            'waiting' => $mine->restrict(Review::with('client'))->whereNull('completed_at')->withCount('pending')->orderBy('due_at')->get(),
+            'waiting' => $mine->restrict(Review::with('client'))->whereNull('completed_at')->has('pending')->withCount('pending')->orderBy('due_at')->get(), // has(): not a review whose waiting posts were all deleted
             'unanswered' => ! config('features.publishing') ? collect() : $mine->restrict(Comment::with('client'))->whereNull('replied_at')->whereNull('hidden_at')->selectRaw('client_id, count(*) as n')->groupBy('client_id')->get(),
             'tokens' => ! config('features.publishing') ? collect() : $mine->restrict(Account::with('client'))->where('token_expires_at', '<=', now()->addDays(CheckTokens::ALERT_DAYS))->orderBy('token_expires_at')->get(),
             'failedJobs' => DB::table('failed_jobs')->count(),

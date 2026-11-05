@@ -16,12 +16,16 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
+/** A deleted post is soft-deleted: it waits in its client's recycle bin (`moveToBin()`, `restoreFromBin()`) and every ordinary query skips it. */
 #[Fillable(['name', 'state', 'platforms', 'format', 'pillar', 'brief', 'settings', 'scheduled_at', 'created_by'])]
 class Post extends Model
 {
     /** @use HasFactory<PostFactory> */
     use HasFactory;
+
+    use SoftDeletes;
 
     public const PLATFORMS = ['instagram', 'facebook', 'tiktok', 'linkedin'];
 
@@ -64,6 +68,37 @@ class Post extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /** Who moved the post to the recycle bin. */
+    public function deleter(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'deleted_by');
+    }
+
+    /** Into the client's recycle bin: the post leaves every list and keeps its captions, media, notes and approvals for a restore. */
+    public function moveToBin(?int $by = null): void
+    {
+        $this->forceFill(['deleted_by' => $by])->save();
+        $this->delete();
+    }
+
+    /**
+     * Back from the recycle bin as it was, with two exceptions that keep the state true: with posting on, a Scheduled post whose time
+     * has passed comes back Approved, so a restore never publishes on its own; and a post that was waiting for the client comes back
+     * a Draft when every approval it waited in has closed meanwhile, so it is sent again instead of waiting for nobody.
+     */
+    public function restoreFromBin(): void
+    {
+        if (config('features.publishing') && $this->state === PostState::Scheduled && $this->scheduled_at?->isPast()) {
+            $this->state = PostState::Approved;
+        }
+        $asked = $this->reviews()->wherePivotNull('decision')->get();
+        if ($this->state === PostState::InReview && $asked->isNotEmpty() && $asked->every(fn (Review $review) => $review->completed_at !== null)) {
+            $this->state = PostState::Draft;
+        }
+        $this->deleted_by = null;
+        $this->restore();
     }
 
     public function notes(): HasMany

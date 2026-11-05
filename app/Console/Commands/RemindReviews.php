@@ -18,6 +18,15 @@ class RemindReviews extends Command
     public function handle(): int
     {
         foreach (Review::whereNull('completed_at')->with('client', 'creator')->get() as $review) {
+            if ($review->pending()->doesntExist()) {
+                // its last waiting posts were deleted: nobody is reminded of an empty link, and past the deadline it is closed
+                // (until then it stays open, so a post restored from the recycle bin goes back into it)
+                if (now()->gte($review->due_at)) {
+                    $review->forceFill(['completed_at' => now()])->save();
+                }
+
+                continue;
+            }
             if (now()->lt($review->due_at)) {
                 if (! $review->reminded_at && now()->gte($review->created_at->copy()->average($review->due_at))) {
                     Mail::to($review->approverEmails())->send(new ReviewMail($review, 'reminder'));
