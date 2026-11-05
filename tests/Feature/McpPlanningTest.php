@@ -19,7 +19,7 @@ test('get-planning-brief hands Claude the profile, the quota, the window and the
 
     SocialOpsServer::tool(GetPlanningBrief::class, ['client' => 'almyra', 'posts' => 10, 'from' => '2027-05-01', 'days' => 31])->assertOk()
         ->assertSee(['"window":{"start":"2027-05-01","end":"2027-05-31"}', '"count":10', '"platforms":["instagram","facebook","tiktok","linkedin"]', '"quota":{"'])
-        ->assertSee(['Almyra', '2027-05-01, label: Season opening', '2027-05-01 Πρωτομαγιά', 'Sunset cocktails (trend: Golden hour reels)', 'Research it yourself', 'in Greek', 'instagram 2200', '#chania', 'save-plan']);
+        ->assertSee(['Almyra', '2027-05-01, label: Season opening', '2027-05-01 Μεγάλο Σάββατο (Ανάσταση) · Πρωτομαγιά', 'Sunset cocktails (trend: Golden hour reels)', 'Research it yourself', 'in Greek', 'instagram 2200', '#chania', 'save-plan']);
 
     SocialOpsServer::tool(GetPlanningBrief::class, ['client' => 'almyra', 'posts' => 3, 'instruction' => 'Only the full moon party'])->assertOk()->assertSee('"quota":[]');
     SocialOpsServer::tool(GetPlanningBrief::class, ['client' => 'almyra', 'posts' => 99])->assertHasErrors(['between 1 and 30']);
