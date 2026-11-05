@@ -1,53 +1,19 @@
 <x-app-layout :client="$client">
+    @php($step = $view === 'week' ? '1 week' : '1 month')
+    @php($len = $range ? (int) $range[0]->diffInDays($range[1]) + 1 : 0)
+    {{-- the dates every link keeps: the from–to range, or the date shown; the arrows move by the range's own length --}}
+    @php($when = $range ? ['from' => $range[0]->toDateString(), 'to' => $range[1]->toDateString()] : ['date' => $date->toDateString()])
+    @php($span = [...$filters, 'client' => $clientSlug, ...$when])
+    @php($move = fn (int $dir) => $range ? ['from' => $range[0]->copy()->addDays($dir * $len)->toDateString(), 'to' => $range[1]->copy()->addDays($dir * $len)->toDateString()] : ['date' => ($dir > 0 ? $date->copy()->add($step) : $date->copy()->sub($step))->toDateString()])
+    @php($btn = 'inline-flex items-center rounded-lg border border-gray-300 bg-white px-2.5 py-1 text-gray-700 hover:bg-gray-50')
+    @php($input = 'rounded-md border-gray-300 py-1.5 text-sm')
     <x-slot name="header">
-        <div class="flex flex-wrap items-center gap-3">
+        <div class="flex items-center justify-between gap-3">
             <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ __('Calendar') }}</h2>
-            <form method="GET" action="{{ route('calendar') }}" class="flex flex-wrap items-center gap-2 text-sm">
-                <input type="hidden" name="view" value="{{ $view }}">
-                <input type="date" name="date" value="{{ $date->toDateString() }}" onchange="this.form.from.value = this.form.to.value = ''; this.form.submit()" title="{{ __('Go to a date') }}" class="border-gray-300 rounded-md shadow-sm text-sm">
-                <label class="text-gray-500">{{ __('From') }} <input type="date" name="from" value="{{ $range ? $range[0]->toDateString() : '' }}" onchange="this.form.to.value && this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm"></label>
-                <label class="text-gray-500">{{ __('To') }} <input type="date" name="to" value="{{ $range ? $range[1]->toDateString() : '' }}" onchange="this.form.from.value && this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm"></label>
-                <select name="client" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm">
-                    <option value="">{{ __('All clients') }}</option>
-                    @foreach ($clients as $client)
-                        <option value="{{ $client->slug }}" @selected($clientSlug === $client->slug)>{{ $client->name }}</option>
-                    @endforeach
-                </select>
-                <select name="state" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm">
-                    <option value="">{{ __('Any state') }}</option>
-                    @foreach (\App\Posts\PostState::cases() as $state)
-                        <option value="{{ $state->value }}" @selected(($filters['state'] ?? '') === $state->value)>{{ __($state->label()) }}</option>
-                    @endforeach
-                </select>
-                <select name="platform" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm">
-                    <option value="">{{ __('Any platform') }}</option>
-                    @foreach (\App\Models\Post::PLATFORMS as $platform)
-                        <option value="{{ $platform }}" @selected(($filters['platform'] ?? '') === $platform)>{{ str_replace('_', ' ', ucfirst($platform)) }}</option>
-                    @endforeach
-                </select>
-                <select name="pillar" onchange="this.form.submit()" class="border-gray-300 rounded-md shadow-sm text-sm">
-                    <option value="">{{ __('Any pillar') }}</option>
-                    @foreach ($pillars as $pillar)
-                        <option value="{{ $pillar }}" @selected(($filters['pillar'] ?? '') === $pillar)>{{ str_replace('_', ' ', $pillar) }}</option>
-                    @endforeach
-                </select>
-            </form>
-            @php($step = $view === 'week' ? '1 week' : '1 month')
-            @php($len = $range ? (int) $range[0]->diffInDays($range[1]) + 1 : 0)
-            {{-- the dates every link keeps: the from–to range, or the date shown; the arrows move by the range's own length --}}
-            @php($when = $range ? ['from' => $range[0]->toDateString(), 'to' => $range[1]->toDateString()] : ['date' => $date->toDateString()])
-            @php($span = [...$filters, 'client' => $clientSlug, ...$when])
-            @php($move = fn (int $dir) => $range ? ['from' => $range[0]->copy()->addDays($dir * $len)->toDateString(), 'to' => $range[1]->copy()->addDays($dir * $len)->toDateString()] : ['date' => ($dir > 0 ? $date->copy()->add($step) : $date->copy()->sub($step))->toDateString()])
-            <a class="px-2 py-1 border rounded" href="{{ route('calendar', [...$span, 'view' => $view, ...$move(-1)]) }}">&larr;</a>
-            <span class="font-medium">{{ $range ? $range[0]->format('d-m-Y').' – '.$range[1]->format('d-m-Y') : ($view === 'week' ? $date->copy()->startOfWeek()->format('d-m-Y').' – '.$date->copy()->endOfWeek()->format('d-m-Y') : $date->translatedFormat('F Y')) }}</span>
-            <a class="px-2 py-1 border rounded" href="{{ route('calendar', [...$span, 'view' => $view, ...$move(1)]) }}">&rarr;</a>
-            <a class="px-2 py-1 border rounded {{ $view === 'month' ? 'bg-gray-800 text-white' : '' }}" href="{{ route('calendar', [...$span, 'view' => 'month']) }}">{{ __('Month') }}</a>
-            <a class="px-2 py-1 border rounded {{ $view === 'week' ? 'bg-gray-800 text-white' : '' }}" href="{{ route('calendar', [...$span, 'view' => 'week']) }}">{{ __('Week') }}</a>
-            <a class="px-2 py-1 border rounded {{ $view === 'list' ? 'bg-gray-800 text-white' : '' }}" href="{{ route('calendar', [...$span, 'view' => 'list']) }}">{{ __('List') }}</a>
             @if ($clientSlug)
-                <a class="px-2 py-1 border rounded" href="{{ route('posts.csv', [$clients->firstWhere('slug', $clientSlug), 'view' => $view, ...$when]) }}" title="{{ __('The posts shown, one row per platform, for Canva Bulk Create or a spreadsheet') }}">{{ __('Export CSV') }}</a>
+                <a class="inline-flex items-center rounded-lg border border-gray-300 bg-white px-3.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50" href="{{ route('posts.csv', [$clients->firstWhere('slug', $clientSlug), 'view' => $view, ...$when]) }}" title="{{ __('The posts shown, one row per platform, for Canva Bulk Create or a spreadsheet') }}">{{ __('Export CSV') }}</a>
             @else
-                <button type="button" data-new-post="" class="ml-auto inline-flex items-center px-4 py-2 bg-brand-500 rounded-lg text-sm font-medium text-white hover:bg-brand-600">{{ __('New post') }}</button>
+                <button type="button" data-new-post="" class="inline-flex items-center rounded-lg bg-brand-500 px-3.5 py-2 text-sm font-medium text-white hover:bg-brand-600">{{ __('New post') }}</button>
             @endif
         </div>
     </x-slot>
@@ -58,8 +24,50 @@
                 <p class="text-sm text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
             @error('state') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+
+            <div class="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm">
+                <a class="{{ $btn }}" href="{{ route('calendar', [...$span, 'view' => $view, ...$move(-1)]) }}" aria-label="{{ __('Previous') }}">&larr;</a>
+                <span class="px-1 font-medium text-gray-900">{{ $range ? $range[0]->format('d-m-Y').' – '.$range[1]->format('d-m-Y') : ($view === 'week' ? $date->copy()->startOfWeek()->format('d-m-Y').' – '.$date->copy()->endOfWeek()->format('d-m-Y') : $date->translatedFormat('F Y')) }}</span>
+                <a class="{{ $btn }}" href="{{ route('calendar', [...$span, 'view' => $view, ...$move(1)]) }}" aria-label="{{ __('Next') }}">&rarr;</a>
+                <span class="ml-1 inline-flex rounded-lg bg-gray-100 p-0.5">
+                    @foreach (['month' => __('Month'), 'week' => __('Week'), 'list' => __('List')] as $one => $label)
+                        <a class="rounded-md px-3 py-1 {{ $view === $one ? 'bg-white font-medium text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900' }}" href="{{ route('calendar', [...$span, 'view' => $one]) }}">{{ $label }}</a>
+                    @endforeach
+                </span>
+                <form method="GET" action="{{ route('calendar') }}" class="flex flex-wrap items-center gap-2 sm:ml-auto">
+                    <input type="hidden" name="view" value="{{ $view }}">
+                    <input type="date" name="date" value="{{ $date->toDateString() }}" onchange="this.form.from.value = this.form.to.value = ''; this.form.submit()" title="{{ __('Go to a date') }}" class="{{ $input }}">
+                    <label class="text-gray-500">{{ __('From') }} <input type="date" name="from" value="{{ $range ? $range[0]->toDateString() : '' }}" onchange="this.form.to.value && this.form.submit()" class="{{ $input }}"></label>
+                    <label class="text-gray-500">{{ __('To') }} <input type="date" name="to" value="{{ $range ? $range[1]->toDateString() : '' }}" onchange="this.form.from.value && this.form.submit()" class="{{ $input }}"></label>
+                    <select name="client" onchange="this.form.submit()" class="{{ $input }}">
+                        <option value="">{{ __('All clients') }}</option>
+                        @foreach ($clients as $client)
+                            <option value="{{ $client->slug }}" @selected($clientSlug === $client->slug)>{{ $client->name }}</option>
+                        @endforeach
+                    </select>
+                    <select name="state" onchange="this.form.submit()" class="{{ $input }}">
+                        <option value="">{{ __('Any state') }}</option>
+                        @foreach (\App\Posts\PostState::cases() as $state)
+                            <option value="{{ $state->value }}" @selected(($filters['state'] ?? '') === $state->value)>{{ __($state->label()) }}</option>
+                        @endforeach
+                    </select>
+                    <select name="platform" onchange="this.form.submit()" class="{{ $input }}">
+                        <option value="">{{ __('Any platform') }}</option>
+                        @foreach (\App\Models\Post::PLATFORMS as $platform)
+                            <option value="{{ $platform }}" @selected(($filters['platform'] ?? '') === $platform)>{{ str_replace('_', ' ', ucfirst($platform)) }}</option>
+                        @endforeach
+                    </select>
+                    <select name="pillar" onchange="this.form.submit()" class="{{ $input }}">
+                        <option value="">{{ __('Any pillar') }}</option>
+                        @foreach ($pillars as $pillar)
+                            <option value="{{ $pillar }}" @selected(($filters['pillar'] ?? '') === $pillar)>{{ str_replace('_', ' ', $pillar) }}</option>
+                        @endforeach
+                    </select>
+                </form>
+            </div>
+
             @if ($clientUrl)
-                <div class="bg-white p-4 rounded-xl border border-gray-200">
+                <div class="rounded-xl border border-gray-200 bg-white px-4 py-3">
                     <x-input-label for="client-url" :value="__('View-only link for the client (no login, valid :days days, this month and the next)', ['days' => \App\Http\Controllers\CalendarController::LINK_DAYS])" />
                     <x-text-input id="client-url" type="text" class="mt-1 block w-full font-mono text-xs" :value="$clientUrl" readonly onclick="this.select()" />
                 </div>
@@ -68,15 +76,15 @@
             @if ($view !== 'list')
             @foreach ($grids as $grid)
             @if ($grid['title'])<h3 class="hidden sm:block font-semibold text-gray-800 {{ $loop->first ? '' : 'pt-4' }}">{{ $grid['title'] }}</h3>@endif
-            <div class="hidden sm:grid grid-cols-7 gap-px bg-gray-200 border border-gray-200 text-xs">
+            <div class="hidden sm:grid grid-cols-7 gap-px overflow-hidden rounded-xl border border-gray-200 bg-gray-200 text-xs">
                 @foreach (['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] as $dow)
-                    <div class="bg-gray-50 px-2 py-1 font-medium text-gray-600">{{ __($dow) }}</div>
+                    <div class="bg-gray-50 px-2 py-1.5 font-medium text-gray-500">{{ __($dow) }}</div>
                 @endforeach
                 @foreach ($grid['days'] as $day)
                     @php($key = $day->toDateString())
-                    <div class="day bg-white min-h-24 p-1 cursor-pointer {{ ($grid['month'] ? $day->month !== $grid['month'] || $day->lt($range[0]) || $day->gt($range[1]) : $day->month !== $date->month && $view === 'month') ? 'text-gray-400' : '' }}" data-date="{{ $key }}">
+                    <div class="day bg-white min-h-24 p-1.5 cursor-pointer {{ ($grid['month'] ? $day->month !== $grid['month'] || $day->lt($range[0]) || $day->gt($range[1]) : $day->month !== $date->month && $view === 'month') ? 'text-gray-400' : '' }}" data-date="{{ $key }}">
                         <div class="flex justify-between">
-                            <span class="{{ $day->isToday() ? 'font-bold text-brand-600' : '' }}">{{ $day->day }}</span>
+                            <span class="{{ $day->isToday() ? 'rounded-full bg-brand-500 px-1.5 font-semibold text-white' : '' }}">{{ $day->day }}</span>
                             @if ($clientSlug)
                                 <a href="{{ route('posts.create', [$clients->firstWhere('slug', $clientSlug), 'date' => $key]) }}" class="text-gray-400 hover:text-gray-700" title="{{ __('New post') }}">+</a>
                             @else
@@ -94,7 +102,7 @@
             </div>
             @endforeach
 
-            <div class="day hidden sm:block bg-white border border-dashed border-gray-300 p-3 text-xs" data-date="">
+            <div class="day hidden sm:block rounded-xl border border-dashed border-gray-300 bg-white p-3 text-xs" data-date="">
                 <p class="font-medium text-gray-600 mb-1">{{ __('No date yet (drag onto a day to schedule)') }}</p>
                 @forelse ($unscheduled as $post)
                     @include('calendar._chip', ['post' => $post])
@@ -105,7 +113,7 @@
             @endif
             @include('calendar._list', ['class' => $view === 'list' ? '' : 'sm:hidden', 'days' => $range ? collect($range[0]->toPeriod($range[1], '1 day')) : $days])
 
-            <p class="flex flex-wrap items-center gap-1.5 bg-white p-3 rounded-xl border border-gray-200 text-xs text-gray-500" title="{{ __('Click a state to show only those posts; click it again to show all.') }}">
+            <p class="flex flex-wrap items-center gap-1.5 text-xs text-gray-500" title="{{ __('Click a state to show only those posts; click it again to show all.') }}">
                 {{ __('States') }}:
                 @foreach (\App\Posts\PostState::cases() as $state)
                     @php($on = ($filters['state'] ?? '') === $state->value)
@@ -116,11 +124,11 @@
     </div>
 
     @unless ($clientSlug)
-        <dialog id="pick-client" class="rounded-lg p-4 text-sm shadow-xl backdrop:bg-black/30">
+        <dialog id="pick-client" class="rounded-xl p-4 text-sm shadow-xl backdrop:bg-black/30">
             <p class="mb-2 font-medium">{{ __('New post for which client?') }}</p>
             <div class="flex flex-col gap-1">
                 @foreach ($clients as $other)
-                    <a href="{{ route('posts.create', $other) }}" data-href="{{ route('posts.create', $other) }}" class="rounded px-3 py-1.5 hover:bg-gray-100">{{ $other->name }}</a>
+                    <a href="{{ route('posts.create', $other) }}" data-href="{{ route('posts.create', $other) }}" class="rounded-md px-3 py-1.5 hover:bg-gray-100">{{ $other->name }}</a>
                 @endforeach
             </div>
             <form method="dialog" class="mt-3 text-right"><button class="text-gray-500">{{ __('Cancel') }}</button></form>
