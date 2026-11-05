@@ -42,7 +42,7 @@ class ClientController extends Controller
 
     public function edit(Client $client): View
     {
-        return view('clients.edit', ['client' => $client, 'accounts' => PlanRequest::accounts($client->toProfileArray()), 'wordpress' => $client->accounts()->where('platform', 'wordpress')->first()]);
+        return view('clients.edit', ['client' => $client, 'accounts' => PlanRequest::accounts($client->toProfileArray())]);
     }
 
     /** The Instagram grid as it will look: feed, carousel and Reel posts with a date, newest first, three across, with the first asset. */

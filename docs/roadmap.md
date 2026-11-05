@@ -44,7 +44,7 @@ Exit: Reels assembly and best-time suggestions in use by every client.
 
 - [x] Auto-assembled Reels from venue clips (human final cut): ffmpeg on the server, "Make a Reel" on the assets page
 - [x] Best-time-to-post suggestions from our own performance data
-- [x] Link-in-bio pages generated on WordPress per client
+- [x] ~~Link-in-bio pages generated on WordPress per client~~ (removed 2026-11-05, D19)
 
 ## Phase 4: Organizer (from 2026-11-04, D16)
 Exit: the team plans, briefs, approves and tracks every client's month in Social Ops and posts in the apps by hand.

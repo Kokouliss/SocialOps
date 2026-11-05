@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AssetController;
-use App\Http\Controllers\BioController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CanvaController;
 use App\Http\Controllers\ClientController;
@@ -20,7 +19,6 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffController;
-use App\Http\Controllers\WordPressController;
 use App\Http\Middleware\LimitClients;
 use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
@@ -59,9 +57,6 @@ Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::post('/clients/{client}/dropbox', [FolderController::class, 'watchDropbox'])->name('dropbox.watch');
     Route::get('/dropbox/callback', [FolderController::class, 'dropboxCallback'])->name('dropbox.callback');
     Route::post('/clients/{client}/folders/{platform}/pull', [FolderController::class, 'pull'])->name('folders.pull');
-    Route::post('/clients/{client}/wordpress', [WordPressController::class, 'connect'])->name('wordpress.connect');
-    Route::post('/clients/{client}/wordpress/publish', [WordPressController::class, 'publish'])->name('wordpress.publish');
-    Route::delete('/clients/{client}/wordpress', [WordPressController::class, 'disconnect'])->name('wordpress.disconnect');
     Route::get('/clients/{client}/deadlines', [DeadlineController::class, 'index'])->name('clients.deadlines');
     Route::post('/clients/{client}/deadlines', [DeadlineController::class, 'store'])->name('deadlines.store');
     Route::patch('/deadlines/{deadline}', [DeadlineController::class, 'toggle'])->name('deadlines.toggle');
@@ -73,7 +68,7 @@ Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::get('/reports/{report}/download', [ReportController::class, 'download'])->name('reports.download');
     Route::get('/reports/{report}/word', [ReportController::class, 'word'])->name('reports.word');
     Route::post('/reports/{report}/send', [ReportController::class, 'send'])->name('reports.send');
-    Route::delete('/accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy'); // also Canva, Drive, Dropbox and WordPress
+    Route::delete('/accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy'); // also Canva, Drive and Dropbox
     Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar');
     Route::get('/jobs', [JobController::class, 'index'])->name('jobs.index');
     Route::post('/jobs/{uuid}/retry', [JobController::class, 'retry'])->name('jobs.retry');
@@ -134,9 +129,6 @@ Route::middleware('feature:publishing')->group(function () {
     Route::get('/oauth/{provider}/callback', [AccountController::class, 'callback'])->name('oauth.callback');
     Route::post('/clients/{client}/accounts', [AccountController::class, 'attach'])->name('accounts.attach');
 });
-
-// The link-in-bio page is public on purpose: its address sits in the client's Instagram and TikTok profile
-Route::get('/bio/{client:slug}', BioController::class)->name('bio');
 
 // Client-facing pages: no login, the signed link is the credential (GET and POST share the URL)
 Route::middleware('signed')->group(function () {
