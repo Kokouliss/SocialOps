@@ -809,5 +809,6 @@
     "Who gets the approval links: name, email, phone for reminders.": "Ποιοι παίρνουν τους συνδέσμους έγκρισης: όνομα, email, τηλέφωνο για υπενθυμίσεις.",
     "Who the client is, the accounts and the caption languages.": "Ποιος είναι ο πελάτης, οι λογαριασμοί και οι γλώσσες των λεζαντών.",
     "Written in captions as :tag and filled at publish time. Phone numbers, links and e-mails here also become the Link in bio buttons.": "Γράφονται στις λεζάντες ως :tag και συμπληρώνονται τη στιγμή της δημοσίευσης. Τηλέφωνα, σύνδεσμοι και e-mail εδώ γίνονται και τα κουμπιά του Link in bio.",
-    "Made from the name when left empty. Changing the link name later breaks links already sent.": "Βγαίνουν από το όνομα όταν μείνουν κενά. Αν αλλάξεις αργότερα το όνομα στους συνδέσμους, οι σύνδεσμοι που έχουν ήδη σταλεί παύουν να δουλεύουν."
+    "Made from the name when left empty. Changing the link name later breaks links already sent.": "Βγαίνουν από το όνομα όταν μείνουν κενά. Αν αλλάξεις αργότερα το όνομα στους συνδέσμους, οι σύνδεσμοι που έχουν ήδη σταλεί παύουν να δουλεύουν.",
+    "Delete this client": "Διαγραφή αυτού του πελάτη"
 }
