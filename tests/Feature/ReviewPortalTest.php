@@ -7,6 +7,7 @@ use App\Models\Post;
 use App\Models\Review;
 use App\Models\User;
 use App\Posts\PostState;
+use Illuminate\Mail\MailManager;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 
@@ -26,6 +27,18 @@ beforeEach(function () {
     $this->client = Client::factory()->create(['name' => 'Almyra Beach Lounge']); // example.yaml: required, 48 h, owner@example.com
     $this->dated = Post::factory()->create(['client_id' => $this->client->id, 'scheduled_at' => '2026-11-10 10:00']);
     $this->undated = Post::factory()->create(['client_id' => $this->client->id, 'state' => PostState::ChangesRequested]);
+});
+
+test('a mail server that is down does not lose the review: the posts go in review, the link exists and the page says the e-mail failed', function () {
+    Mail::swap(new MailManager(app())); // the real mailer (Mail::fake() above also replaced the container's) against a closed port
+    config(['mail.default' => 'smtp', 'mail.mailers.smtp.host' => '127.0.0.1', 'mail.mailers.smtp.port' => 1, 'mail.mailers.smtp.timeout' => 1]);
+
+    $this->actingAs($this->user)->post(route('reviews.store', $this->client), ['posts' => [$this->dated->id]])
+        ->assertSessionHasNoErrors()->assertRedirect(route('clients.reviews', $this->client))
+        ->assertSessionHas('status', 'review-sent')->assertSessionHas('warning', fn ($w) => str_starts_with((string) $w, 'The e-mail to the approvers could not be sent ('));
+    $review = Review::latest('id')->first();
+    expect($this->dated->fresh()->state)->toBe(PostState::InReview)->and($review->posts)->toHaveCount(1);
+    $this->actingAs($this->user)->get(route('clients.reviews', $this->client))->assertOk()->assertSee('could not be sent')->assertSee($review->url());
 });
 
 test('staff send posts for approval: they go in review and the approvers get a signed link', function () {

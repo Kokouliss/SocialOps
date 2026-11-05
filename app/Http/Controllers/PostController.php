@@ -282,11 +282,12 @@ class PostController extends Controller
         if ($data['action'] === 'review') {
             [$sendable, $skipped] = $posts->partition(fn (Post $p) => in_array($p->state, ReviewController::SENDABLE, true));
             try {
-                $sendable->groupBy('client_id')->each(fn ($group) => ReviewController::send($group->first()->client, $group->pluck('id')->all(), $request->user()->id));
+                $reviews = $sendable->groupBy('client_id')->map(fn ($group) => ReviewController::send($group->first()->client, $group->pluck('id')->all(), $request->user()->id));
             } catch (ValidationException $e) {
                 return back()->withErrors($e->errors());
             }
             $done = __(':n sent for approval', ['n' => $sendable->count()]);
+            session()->flash('warning', ReviewController::mailWarning($reviews));
         } else {
             [$skipped, $todo] = $posts->partition(fn (Post $p) => $p->state === PostState::Published);
             $todo->each(fn (Post $p) => $data['action'] === 'move' ? $this->move($p, $data['date']) : $p->delete());

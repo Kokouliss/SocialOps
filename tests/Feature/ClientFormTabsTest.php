@@ -11,6 +11,7 @@ test('the profile form is nine sections plus the three tool boxes, with every fi
     foreach (['basics', 'about', 'agency', 'voice', 'content', 'approval', 'timing', 'research', 'more', 'plan', 'import', 'bio'] as $tab) {
         expect($html)->toContain("x-show=\"tab === '{$tab}'\"");
     }
-    expect($html)->toContain('name="name"')->toContain('name="p[about][description]"')->toContain('name="p[voice][words]"')->toContain('name="plan_due"')->toContain('name="p[signatures][instagram]"')->toContain('name="p[slots][0][day]"')
+    expect($html)->toContain('x-show="![\'plan\', \'import\', \'bio\'].includes(tab)"') // the Save bar: every profile section, not the tool boxes
+        ->toContain('name="name"')->toContain('name="p[about][description]"')->toContain('name="p[voice][words]"')->toContain('name="plan_due"')->toContain('name="p[signatures][instagram]"')->toContain('name="p[slots][0][day]"')
         ->toContain('name="p[research][sources]"')->toContain('name="p[saved_replies][0][label]"')->toContain('name="p[webhooks][0][url]"');
 });

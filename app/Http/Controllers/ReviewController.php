@@ -37,12 +37,24 @@ class ReviewController extends Controller
         ]);
 
         try {
-            self::send($client, $data['posts'], $request->user()->id);
+            $review = self::send($client, $data['posts'], $request->user()->id);
         } catch (ValidationException $e) {
             return back()->withErrors($e->errors());
         }
 
-        return redirect()->route('clients.reviews', $client)->with('status', 'review-sent');
+        return redirect()->route('clients.reviews', $client)->with('status', 'review-sent')->with('warning', self::mailWarning([$review]));
+    }
+
+    /** The line the page shows when the request e-mail of one of these reviews failed, else null. */
+    public static function mailWarning(iterable $reviews): ?string
+    {
+        foreach ($reviews as $review) {
+            if ($review->mailError) {
+                return __('The e-mail to the approvers could not be sent (:error). Copy the link to the client yourself and check the mail settings on the Settings page.', ['error' => $review->mailError]);
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -67,7 +79,12 @@ class ReviewController extends Controller
 
             return $review;
         });
-        Mail::to($review->approverEmails())->send(new ReviewMail($review, 'request'));
+        try {
+            Mail::to($review->approverEmails())->send(new ReviewMail($review, 'request'));
+        } catch (\Throwable $e) { // a mail server problem must not lose the review: the link on the page still works
+            report($e);
+            $review->mailError = $e->getMessage();
+        }
 
         return $review;
     }
