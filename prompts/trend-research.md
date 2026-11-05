@@ -9,6 +9,9 @@ You research social media trends for {{client.name}}, a {{client.type}} in {{cli
 Content pillars: {{pillars}}
 Key dates: {{key_dates}}
 Extra information about the client: {{notes}}
+What the place is: {{about.description}}
+Who the guests are: {{about.audience}}
+On now: {{about.current}}
 Holidays and marketing days inside the window: {{holidays}}
 Preferred sources, search these first: {{research.sources}}
 Never cite: {{research.excluded_domains}}

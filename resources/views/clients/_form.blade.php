@@ -60,6 +60,27 @@
     </x-field>
 </x-section>
 
+<x-section x-show="tab === 'about'" x-cloak :title="__('About the client')" :description="__('What Claude plans and writes from. Every price, dish, service and event in a post comes from here or from the facts under Voice, so the more there is, the more accurate the posts.')">
+    <x-field :label="__('What it is')" for="p-about-description" :help="__('The place in a few sentences: what it is, where, since when, who runs it.')">
+        <textarea id="p-about-description" name="p[about][description]" rows="4" class="{{ $input }}">{{ $p('about.description') }}</textarea>
+    </x-field>
+    <x-field :label="__('Who the guests are')" for="p-about-audience" :help="__('Countries, ages, couples or families, budget, locals or visitors.')">
+        <textarea id="p-about-audience" name="p[about][audience]" rows="3" class="{{ $input }}">{{ $p('about.audience') }}</textarea>
+    </x-field>
+    <x-field :label="__('What it offers')" for="p-about-offerings" :help="__('Rooms, menu highlights, services, prices worth naming.')">
+        <textarea id="p-about-offerings" name="p[about][offerings]" rows="4" class="{{ $input }}">{{ $p('about.offerings') }}</textarea>
+    </x-field>
+    <x-field :label="__('What makes it different')" for="p-about-differentiators" :help="__('What a guest gets here and nowhere else.')">
+        <textarea id="p-about-differentiators" name="p[about][differentiators]" rows="3" class="{{ $input }}">{{ $p('about.differentiators') }}</textarea>
+    </x-field>
+    <x-field :label="__('What the client wants now')" for="p-about-goals" :help="__('Bookings, a new menu, awareness, a season to fill.')">
+        <textarea id="p-about-goals" name="p[about][goals]" rows="3" class="{{ $input }}">{{ $p('about.goals') }}</textarea>
+    </x-field>
+    <x-field :label="__('On now')" for="p-about-current" :help="__('Offers, events and seasonal things with their dates. Update it as the season moves.')">
+        <textarea id="p-about-current" name="p[about][current]" rows="4" class="{{ $input }}">{{ $p('about.current') }}</textarea>
+    </x-field>
+</x-section>
+
 <x-section x-show="tab === 'agency'" x-cloak :title="__('Agency')" :description="__('How the team tracks this client on the Clients board. The client never sees these.')">
     <x-field :label="__('Status and person')" for="status">
         <div class="grid gap-3 sm:grid-cols-2">
@@ -117,6 +138,9 @@
     </x-field>
     <x-field :label="__('Phrases never to use')" for="p-banned" :help="__('One per line.')">
         <textarea id="p-banned" name="p[voice][banned_phrases]" rows="3" class="{{ $input }}">{{ $text('voice.banned_phrases', "\n") }}</textarea>
+    </x-field>
+    <x-field :label="__('Words and phrases to use')" for="p-words" :help="__('One per line: how the client names the place, the dishes, the rooms.')">
+        <textarea id="p-words" name="p[voice][words]" rows="3" class="{{ $input }}">{{ $text('voice.words', "\n") }}</textarea>
     </x-field>
     <x-field :label="__('Extra information')" for="p-notes" :help="__('Anything else the team and Claude should know: the story of the place, what the owner cares about, what to avoid.')">
         <textarea id="p-notes" name="p[notes]" rows="5" class="{{ $input }}">{{ $p('notes') }}</textarea>

@@ -2,6 +2,7 @@
 
 namespace App\Planning;
 
+use App\Clients\ClientProfile;
 use InvalidArgumentException;
 
 class Prompt
@@ -28,14 +29,15 @@ class Prompt
         return trim($text);
     }
 
-    /** Variables for the client.*, voice.*, hashtags.*, research.*, languages, pillars, notes, key_dates, slots and fields placeholders, from a profile shaped like config/clients/example.yaml. */
+    /** Variables for the client.*, about.*, voice.*, hashtags.*, research.*, languages, pillars, notes, key_dates, slots and fields placeholders, from a profile shaped like config/clients/example.yaml. */
     public static function profileVars(array $profile): array
     {
         $pillars = $profile['pillars'] ?? [];
 
         return [
             'client' => ['name' => $profile['name'], 'type' => $profile['type'], 'location' => $profile['location']],
-            'voice' => $profile['voice'] ?? [],
+            'about' => array_replace(array_fill_keys(ClientProfile::ABOUT, ''), $profile['about'] ?? []),
+            'voice' => ($profile['voice'] ?? []) + ['words' => []],
             'hashtags' => $profile['hashtags'] ?? [],
             'languages' => array_merge($profile['languages'] ?? ['el', 'en'], $profile['extra_languages'] ?? []),
             'pillars' => implode(', ', array_map(fn ($name, $share) => "{$name} {$share}%", array_keys($pillars), $pillars)),

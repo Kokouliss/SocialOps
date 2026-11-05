@@ -3,14 +3,14 @@
 use App\Models\Client;
 use App\Models\User;
 
-test('the profile form is eight sections plus the three tool boxes, with every field still in the page', function () {
+test('the profile form is nine sections plus the three tool boxes, with every field still in the page', function () {
     $client = Client::factory()->create();
     $html = $this->actingAs(User::factory()->create())->get(route('clients.edit', $client))->assertOk()->getContent();
 
-    expect(substr_count($html, 'role="tab"'))->toBe(11);
-    foreach (['basics', 'agency', 'voice', 'content', 'approval', 'timing', 'research', 'more', 'plan', 'import', 'bio'] as $tab) {
+    expect(substr_count($html, 'role="tab"'))->toBe(12);
+    foreach (['basics', 'about', 'agency', 'voice', 'content', 'approval', 'timing', 'research', 'more', 'plan', 'import', 'bio'] as $tab) {
         expect($html)->toContain("x-show=\"tab === '{$tab}'\"");
     }
-    expect($html)->toContain('name="name"')->toContain('name="plan_due"')->toContain('name="p[signatures][instagram]"')->toContain('name="p[slots][0][day]"')
+    expect($html)->toContain('name="name"')->toContain('name="p[about][description]"')->toContain('name="p[voice][words]"')->toContain('name="plan_due"')->toContain('name="p[signatures][instagram]"')->toContain('name="p[slots][0][day]"')
         ->toContain('name="p[research][sources]"')->toContain('name="p[saved_replies][0][label]"')->toContain('name="p[webhooks][0][url]"');
 });

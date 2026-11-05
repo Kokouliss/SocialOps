@@ -15,12 +15,21 @@ accounts:               # connected via OAuth in the app; never store passwords
 languages: [el, en]     # first = primary
 extra_languages: []     # e.g. [de] for a villa with German guests
 
+about:                  # what Claude plans and writes from; every fact in a post comes from here or from voice.facts
+  description: Beach lounge on the sand west of Chania, sunbeds by day, cocktails and a short Cretan menu by night; run by the family since 2009
+  audience: Couples and families from the UK, Germany and the Nordics in summer, locals from Chania at weekends; 30 to 55, mid to high budget
+  offerings: Sunbeds and umbrellas, the cocktail list, a 12-dish Cretan menu, sunset table bookings, private events up to 40 people
+  differentiators: The only lounge on this beach, a sunset view with no road in front, produce from the family's own land
+  goals: Fill the sunset tables on weekdays in June and September; more bookings from Instagram
+  current: "June 2027: the new cocktail list; live DJ every Friday from 20:00"
+
 voice:
   tone: relaxed, warm, confident; premium without sounding formal
   person: we            # we | the venue name
   emoji: max 1 per caption, never in the first line
   cta_style: soft (book a sunbed, link in bio); never "Don't miss out!"
   banned_phrases: []    # client-specific, added on top of agency defaults in prompts/caption-draft.md
+  words: []             # words and phrases the client likes, e.g. ["our beach", "το μαγαζί"]
   facts:                # repeated factual info must stay consistent
     - Open daily 10:00 to midnight, May to October
     - Sunbed booking by phone or Instagram DM

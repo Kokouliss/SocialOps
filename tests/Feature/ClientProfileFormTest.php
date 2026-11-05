@@ -9,7 +9,8 @@ function profileForm(array $over = []): array
     return array_replace_recursive([
         'accounts' => ['instagram' => '@almyra.chania', 'facebook' => '', 'tiktok' => '', 'linkedin' => 'almyra-beach'],
         'languages' => 'el, en, de', 'extra_languages' => '',
-        'voice' => ['tone' => 'warm', 'person' => 'we', 'emoji' => 'none', 'cta_style' => 'soft', 'banned_phrases' => "Don't miss out\n\n", 'facts' => "Open daily\r\nBooking by phone"],
+        'about' => ['description' => ' Beach lounge on the sand ', 'goals' => 'More bookings', 'bogus' => 'dropped'],
+        'voice' => ['tone' => 'warm', 'person' => 'we', 'emoji' => 'none', 'cta_style' => 'soft', 'banned_phrases' => "Don't miss out\n\n", 'words' => "our beach\n", 'facts' => "Open daily\r\nBooking by phone"],
         'notes' => ' Family business since 1987. ',
         'pillars' => [['name' => 'Food & drink', 'share' => '60'], ['name' => 'place', 'share' => '40'], ['name' => '', 'share' => '']],
         'hashtags' => ['always' => 'chania #crete', 'pool' => "#sunset\n#villa", 'max_per_post' => '7'],
@@ -45,7 +46,8 @@ test('every profile section is edited as a form field, without a YAML box', func
     $profile = $client->fresh()->profile;
     expect($profile['accounts'])->toEqual(['instagram' => '@almyra.chania', 'facebook' => '', 'tiktok' => '', 'linkedin' => 'almyra-beach'])
         ->and($profile['languages'])->toBe(['el', 'en', 'de'])->and($profile['extra_languages'])->toBe([])
-        ->and($profile['voice'])->toEqual(['tone' => 'warm', 'person' => 'we', 'emoji' => 'none', 'cta_style' => 'soft', 'banned_phrases' => ["Don't miss out"], 'facts' => ['Open daily', 'Booking by phone']])
+        ->and($profile['about'])->toBe(['description' => 'Beach lounge on the sand', 'audience' => '', 'offerings' => '', 'differentiators' => '', 'goals' => 'More bookings', 'current' => ''])
+        ->and($profile['voice'])->toEqual(['tone' => 'warm', 'person' => 'we', 'emoji' => 'none', 'cta_style' => 'soft', 'banned_phrases' => ["Don't miss out"], 'words' => ['our beach'], 'facts' => ['Open daily', 'Booking by phone']])
         ->and($profile['notes'])->toBe('Family business since 1987.')
         ->and($profile['pillars'])->toBe(['food_drink' => 60, 'place' => 40])
         ->and($profile['hashtags'])->toEqual(['always' => ['#chania', '#crete'], 'pool' => ['#sunset', '#villa'], 'max_per_post' => 7])
