@@ -32,7 +32,7 @@ class SavePlan extends Tool
             'posts.*.platforms' => ['required', 'array', 'min:1'],
             'posts.*.platforms.*' => [Rule::in(Post::PLATFORMS)],
             'posts.*.format' => ['required', Rule::in(Post::FORMATS)],
-            'posts.*.pillar' => ['required', Rule::in(array_keys($profile['pillars']))],
+            'posts.*.pillar' => ['nullable', Rule::in(array_keys($profile['pillars']))], // a profile may have no pillars (the brief then says so)
             'posts.*.title' => ['required', 'string', 'max:200'],
             'posts.*.angle' => ['required', 'string', 'max:5000'],
             'posts.*.trend_signal' => ['nullable', 'string', 'max:200'],
@@ -47,7 +47,7 @@ class SavePlan extends Tool
             ...collect($languages)->mapWithKeys(fn ($lang) => ["posts.*.captions.{$lang}" => ['nullable', 'array'], "posts.*.captions.{$lang}.*" => ['nullable', 'string']])->all(),
         ])->validate();
 
-        $posts = array_map(fn (array $post) => $post + ['trend_signal' => null, 'why_now' => '', 'asset_brief' => '', 'caption_brief' => ''], $input['posts']);
+        $posts = array_map(fn (array $post) => $post + ['pillar' => null, 'trend_signal' => null, 'why_now' => '', 'asset_brief' => '', 'caption_brief' => ''], $input['posts']);
         $dates = array_column($posts, 'date');
         $result = [
             'client' => $client->slug,
