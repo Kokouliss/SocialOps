@@ -8,7 +8,7 @@
         <x-input-label :value="__('Platforms')" />
         <div class="mt-2 flex flex-wrap gap-4 text-sm">
             @foreach (\App\Models\Post::PLATFORMS as $platform)
-                <label class="flex items-center gap-1 {{ empty($client->profile['accounts'][$platform]) ? 'text-gray-400' : '' }}">
+                <label class="flex items-center gap-1 {{ empty($client->profile['accounts'][$platform]) ? 'text-gray-500' : '' }}">
                     <input type="checkbox" name="platforms[]" value="{{ $platform }}" class="rounded border-gray-300" @checked(in_array($platform, $selected)) />
                     {{ str_replace('_', ' ', $platform) }}
                 </label>
@@ -51,7 +51,7 @@
     </div>
 </div>
 <div class="py-5">
-    <x-input-label for="brief" :value="__('Brief (what the post is about, for the drafter and the reviewer)')" />
+    <x-input-label for="brief" :value="__('What the post is about')" />
     <textarea id="brief" name="brief" rows="3" class="{{ $control }}">{{ old('brief', $post->brief) }}</textarea>
     <x-input-error class="mt-2" :messages="$errors->get('brief')" />
 </div>
@@ -118,7 +118,7 @@
 @endif
 
 
-<x-section data-for="instagram facebook" :title="__('First comment')" :description="__('Instagram and Facebook: posted under the post right after it goes out, for hashtags or a link; also in the ZIP and the CSV')">
+<x-section data-for="instagram facebook" :title="__('First comment')" :description="__('Hashtags or a link that go under the post as its first comment.')">
 <div class="py-5">
 <textarea name="settings[first_comment]" rows="2" class="{{ $control }} text-sm">{{ old('settings.first_comment', $post->settings['first_comment'] ?? '') }}</textarea>
 <x-input-error class="mt-1" :messages="$errors->get('settings.first_comment')" />
@@ -126,7 +126,7 @@
 </x-section>
 
 @php($design = old('settings.design', $post->settings['design'] ?? []))
-<x-section :title="__('Design text')" :description="__('What goes on the graphic or in the video: headline, slide texts or Reel script; it travels with the ZIP and the Canva CSV')">
+<x-section :title="__('Design text')" :description="__('The words on the graphic or in the video: the headline, the slide texts or the Reel script.')">
 <div class="grid gap-4 py-5 md:grid-cols-{{ count($languages) }}">
     @foreach ($languages as $lang)
         <div>
@@ -137,13 +137,13 @@
 </div>
 </x-section>
 
-<x-section :title="__('Captions')" :description="__('Only the ticked platforms are saved; Greek is reviewed by a human before approval')">
+<x-section :title="__('Captions')" :description="__('Only the ticked platforms are kept. A person checks the Greek before the client sees it.')">
 <div class="space-y-2 py-4">
-<label class="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" id="sync-captions" class="rounded border-gray-300"> {{ __('Same text on every platform: type it once, it copies to the other ticked platforms; untick to customise per platform') }}</label>
+<label class="flex items-center gap-2 text-sm text-gray-700"><input type="checkbox" id="sync-captions" class="rounded border-gray-300"> {{ __('Same text on every platform (untick to write each one separately)') }}</label>
 @if (! config('features.claude_api'))
-    <label class="flex items-center gap-2 text-sm text-gray-700"><input type="hidden" name="settings[ask_claude]" value="0"><input type="checkbox" name="settings[ask_claude]" value="1" class="rounded border-gray-300" @checked(old('settings.ask_claude', $post->settings['ask_claude'] ?? false))> {{ __('Ask Claude for the captions: the scheduled task writes them and files them here for review') }}</label>
+    <label class="flex items-center gap-2 text-sm text-gray-700"><input type="hidden" name="settings[ask_claude]" value="0"><input type="checkbox" name="settings[ask_claude]" value="1" class="rounded border-gray-300" @checked(old('settings.ask_claude', $post->settings['ask_claude'] ?? false))> {{ __('Ask Claude to write the captions') }}</label>
     @if ($post->exists)
-        <p class="pl-6 text-xs text-gray-500">{{ __('Or ask in a chat with the Social Ops connector: "write the captions for post :id".', ['id' => $post->id]) }}</p>
+        <p class="pl-6 text-xs text-gray-600">{{ __('Or ask in a chat with the Social Ops connector: "write the captions for post :id".', ['id' => $post->id]) }}</p>
     @endif
 @endif
 @if ($post->exists && config('features.claude_api'))
@@ -151,12 +151,12 @@
         <x-text-input id="instruction" type="text" class="block w-full text-sm" placeholder="{{ __('e.g. make it shorter and more playful, add the opening hours, mention the full moon party on Saturday') }}" onkeydown="if (event.key === 'Enter') { event.preventDefault(); document.getElementById('rewrite').click(); }" />
         <x-secondary-button type="button" id="rewrite" class="whitespace-nowrap" data-url="{{ route('posts.rewrite', $post) }}">{{ __('Change with Claude') }}</x-secondary-button>
     </div>
-    <p class="mt-1 text-xs text-gray-500">{{ __('Rewrites the captions of every ticked platform as you say; nothing is saved until you press Save.') }}</p>
+    <p class="mt-1 text-xs text-gray-600">{{ __('Rewrites the captions of every ticked platform as you say; nothing is saved until you press Save.') }}</p>
 @endif
 </div>
 @foreach (\App\Models\Post::PLATFORMS as $platform)
     <fieldset class="py-5" data-for="{{ $platform }}" data-platform="{{ $platform }}" data-max="{{ \App\Http\Requests\PostRequest::CAPTION_MAX[$platform] }}" data-signature="{{ trim($client->profile['signatures'][$platform] ?? '') }}" data-fields="{{ json_encode((object) ($client->profile['fields'] ?? [])) }}">
-        <legend class="float-left w-full pb-2 text-sm font-medium text-gray-900">{{ str_replace('_', ' ', $platform) }} <span class="count font-normal text-gray-400" title="{{ __('Characters of the published text: every language, then the hashtags') }}"></span>
+        <legend class="float-left w-full pb-2 text-sm font-medium text-gray-900">{{ str_replace('_', ' ', $platform) }} <span class="count font-normal text-gray-500" title="{{ __('Characters of the published text: every language, then the hashtags') }}"></span>
             @if ($post->exists && config('features.claude_api'))
                 <button type="button" class="shorten ml-2 text-xs font-medium text-gray-900 hover:text-brand-600" data-url="{{ route('posts.shorten', $post) }}">{{ __('Shorten with Claude') }}</button>
             @endif
@@ -256,7 +256,7 @@
     sync.checked = texts.every(t => t === texts[0]);
 </script>
 
-<div class="sticky bottom-0 flex items-center gap-4 rounded-xl border border-gray-200 bg-white/95 px-6 py-3 backdrop-blur">
+<div class="sticky bottom-0 flex items-center gap-4 rounded-xl border border-gray-300 bg-white/95 px-6 py-3 backdrop-blur">
     <x-primary-button>{{ __('Save') }}</x-primary-button>
     <a href="{{ route('calendar', ['client' => $client->slug]) }}" class="text-sm text-gray-600 hover:underline">{{ __('Back to calendar') }}</a>
 </div>

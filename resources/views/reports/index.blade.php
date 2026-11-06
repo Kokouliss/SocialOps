@@ -26,19 +26,19 @@
                         <form method="POST" action="{{ route('reports.listening', $client) }}">
                             @csrf
                             <x-secondary-button type="submit">{{ __('Listening report now') }}</x-secondary-button>
-                            <span class="ml-2 text-gray-500">{{ __('Runs every Monday for the hashtags and competitors in the profile.') }}</span>
+                            <span class="ml-2 text-gray-600">{{ __('Runs every Monday for the hashtags and competitors in the profile.') }}</span>
                         </form>
                     @else
-                        <p class="text-gray-500">{{ __('Add hashtags_to_watch or competitors under research in the profile to get a weekly listening report.') }}</p>
+                        <p class="text-gray-600">{{ __('Add hashtags_to_watch or competitors under research in the profile to get a weekly listening report.') }}</p>
                     @endif
                 </div>
                 @endif
                 <table class="w-full">
-                    <thead class="text-left text-xs uppercase tracking-wide text-gray-500"><tr><th class="px-6 py-2 font-medium">{{ __('Date') }}</th><th class="px-6 py-2 font-medium">{{ __('Kind') }}</th><th class="px-6 py-2 font-medium">{{ __('Title') }}</th></tr></thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <thead class="text-left text-xs uppercase tracking-wide text-gray-600"><tr><th class="px-6 py-2 font-medium">{{ __('Date') }}</th><th class="px-6 py-2 font-medium">{{ __('Kind') }}</th><th class="px-6 py-2 font-medium">{{ __('Title') }}</th></tr></thead>
+                    <tbody class="divide-y divide-gray-200">
                         @forelse ($reports as $report)
                             <tr>
-                                <td class="whitespace-nowrap px-6 py-2.5 text-gray-500">{{ $report->created_at->format('d-m-Y H:i') }}</td>
+                                <td class="whitespace-nowrap px-6 py-2.5 text-gray-600">{{ $report->created_at->format('d-m-Y H:i') }}</td>
                                 <td class="px-6 py-2.5">{{ __(\App\Models\Report::KINDS[$report->kind] ?? $report->kind) }}</td>
                                 <td class="px-6 py-2.5"><a href="{{ route('reports.show', $report) }}" class="font-medium text-gray-900 hover:text-brand-600">{{ $report->title }}</a></td>
                             </tr>

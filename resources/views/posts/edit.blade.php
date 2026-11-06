@@ -1,22 +1,23 @@
 <x-app-layout :client="$client">
-    @php($btn = 'inline-flex items-center rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50')
+    @php($btn = 'inline-flex items-center rounded-lg border border-gray-400 bg-white px-3 py-1.5 text-sm font-medium text-gray-900 hover:bg-gray-50')
+    @php($main = 'inline-flex items-center rounded-lg bg-brand-500 px-3.5 py-1.5 text-sm font-semibold text-white hover:bg-brand-600')
     <x-slot name="header">
-        <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ $client->name }} <span class="font-mono text-sm text-gray-500">{{ $post->name }}</span></h2>
+        <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ $client->name }} <span class="font-mono text-sm text-gray-600">{{ $post->name }}</span></h2>
     </x-slot>
     <x-slot name="actions">
         <x-state-badge :state="$post->state" />
-        @foreach ($post->state->next() as $next)
+        @foreach (collect($post->state->next())->sortBy(fn ($s) => $s === $post->state->forward() ? 0 : 1) as $next)
             @continue($next->needsPublishing() && ! config('features.publishing'))
             <form method="POST" action="{{ route('posts.transition', $post) }}" @if ($next === \App\Posts\PostState::Withdrawn) onsubmit="return confirm('{{ __('Take this post down on every platform? Instagram and TikTok have no API for it, so those stay until deleted by hand.') }}')" @endif>
                 @csrf
                 <input type="hidden" name="state" value="{{ $next->value }}">
-                <button type="submit" class="{{ $btn }}">{{ __($next->action()) }}</button>
+                <button type="submit" class="{{ $next === $post->state->forward() ? $main : $btn }}">{{ __($next->action()) }}</button>
             </form>
         @endforeach
         <a class="{{ $btn }}" href="{{ route('posts.export', $post) }}" title="{{ __('Media files plus a captions.txt, to post by hand or design in Canva') }}">{{ __('Export ZIP') }}</a>
         <details class="relative">
             <summary class="{{ $btn }} cursor-pointer list-none">{{ __('Duplicate') }}</summary>
-            <form method="POST" action="{{ route('posts.duplicate', $post) }}" class="absolute left-0 z-10 mt-1 w-72 space-y-2 rounded-xl border border-gray-200 bg-white p-3 text-sm shadow-lg">
+            <form method="POST" action="{{ route('posts.duplicate', $post) }}" class="absolute left-0 z-10 mt-1 w-72 space-y-2 rounded-xl border border-gray-300 bg-white p-3 text-sm shadow-lg">
                 @csrf
                 <select name="client_id" class="block w-full border-gray-300 rounded-md shadow-sm text-sm">
                     @foreach (auth()->user()->clients()->get() as $other)
@@ -24,7 +25,7 @@
                     @endforeach
                 </select>
                 <input type="date" name="date" class="block w-full border-gray-300 rounded-md shadow-sm text-sm">
-                <p class="text-xs text-gray-500">{{ __('A Draft with the captions and settings; the media comes along only within the same client.') }}</p>
+                <p class="text-xs text-gray-600">{{ __('A Draft with the captions and settings; the media comes along only within the same client.') }}</p>
                 <x-primary-button>{{ __('Duplicate') }}</x-primary-button>
             </form>
         </details>
@@ -84,7 +85,7 @@
             @php($notesHelp = __('internal, the client never sees them; @FirstName pings a colleague on Slack'))
             <x-section id="notes" :title="__('Team notes')" :description="$notesHelp" class="text-sm">
                 @foreach ($post->notes as $note)
-                    <p class="py-3 whitespace-pre-line"><span class="font-semibold">{{ $note->user?->name ?? __('removed login') }}</span> <span class="text-xs text-gray-500">{{ $note->created_at->format('d-m-Y H:i') }}</span><br>{{ $note->body }}</p>
+                    <p class="py-3 whitespace-pre-line"><span class="font-semibold">{{ $note->user?->name ?? __('removed login') }}</span> <span class="text-xs text-gray-600">{{ $note->created_at->format('d-m-Y H:i') }}</span><br>{{ $note->body }}</p>
                 @endforeach
                 <form method="POST" action="{{ route('posts.note', $post) }}" class="py-4">
                     @csrf

@@ -39,7 +39,7 @@
     <div class="mt-4 space-y-8">
         @foreach ($posts as $post)
             <section id="post-{{ $post->id }}" class="space-y-3 {{ $post->pivot->decision ? 'opacity-70' : '' }}">
-                <p class="text-xs text-gray-500">
+                <p class="text-xs text-gray-600">
                     {{ $post->scheduled_at ? __('Planned for :date', ['date' => $post->scheduled_at->translatedFormat('D d-m-Y H:i')]) : __('Date to be set') }}
                     · {{ str_replace('_', ' ', $post->format) }}
                 </p>

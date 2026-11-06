@@ -16,3 +16,13 @@ test('the state machine follows the brief', function () {
         ->and(PostState::Draft->isLocked())->toBeFalse()
         ->and(PostState::Approved->isLocked())->toBeTrue();
 });
+
+test('the main button of a post is always one of its allowed next steps', function () {
+    foreach (PostState::cases() as $state) {
+        $forward = $state->forward();
+        expect($forward === null || in_array($forward, $state->next(), true))->toBeTrue($state->value);
+    }
+    expect(PostState::Draft->forward())->toBe(PostState::InReview)
+        ->and(PostState::InReview->forward())->toBe(PostState::Approved)
+        ->and(PostState::Published->forward())->toBeNull();
+});

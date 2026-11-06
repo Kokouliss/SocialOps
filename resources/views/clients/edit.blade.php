@@ -1,6 +1,6 @@
 <x-app-layout :client="$client">
     <x-slot name="header">
-        <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ $client->name }} <span class="font-mono text-base text-gray-500">{{ $client->code }}</span></h2>
+        <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ $client->name }} <span class="font-mono text-base text-gray-600">{{ $client->code }}</span></h2>
     </x-slot>
     <div class="py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -102,13 +102,13 @@
                             </div>
                         </x-section>
                     @else
-                        @php($mcpDescription = __('Claude plans through the Social Ops connector: it reads this profile, researches the current trends, plans the posts with captions and files them on the calendar as Drafts with a review sheet in Reports. Press "Queue for Claude" and the scheduled task does it at its next run (hourly), or copy the request and paste it to Claude in a chat.'))
+                        @php($mcpDescription = __('Claude plans the posts with their captions and puts them on the calendar as Drafts, with a review sheet in Reports. Press the button and Claude does it at its next run, once an hour.'))
                         <x-section :title="__('Plan with Claude')" :description="$mcpDescription">
                             <div class="py-5" x-data="{ posts: 12, from: '{{ now()->addMonthNoOverflow()->startOfMonth()->toDateString() }}', days: 30, instruction: '', copied: false,
                                 text() { return `{{ __('Plan :posts posts for :client (client ":slug") from :from for :days days.', ['posts' => '${this.posts}', 'client' => $client->name, 'slug' => $client->slug, 'from' => '${this.from}', 'days' => '${this.days}']) }}` + (this.instruction.trim() ? ' {{ __('About:') }} ' + this.instruction.trim() + '.' : '') + ` {{ __('Use the Social Ops tools: get-planning-brief first, research the current trends for this client (the last30days skill or web search), plan the posts and write the captions in :languages, then save-plan. Publish nothing.', ['languages' => strtoupper(implode(' + ', array_merge($client->profile['languages'], $client->profile['extra_languages'] ?? [])))]) }}`; },
                                 copy() { navigator.clipboard.writeText(this.text()).then(() => { this.copied = true; setTimeout(() => this.copied = false, 2000) }) } }">
                                 @if (session('status') === 'job-queued')
-                                    <p class="mb-3 text-sm text-green-600">{{ __('Queued. Claude picks it up at its next run; the Drafts and the review sheet land in Reports.') }}</p>
+                                    <p class="mb-4 rounded-lg bg-green-50 px-4 py-3 text-sm font-semibold text-green-800" role="status">{{ __('Queued. Claude picks it up at its next run; the Drafts and the review sheet land in Reports.') }}</p>
                                 @endif
                                 <form method="POST" action="{{ route('clients.queue', $client) }}" class="grid gap-4 sm:grid-cols-4">
                                     @csrf
@@ -116,7 +116,6 @@
                                     <div><x-input-label for="mcp-from" :value="__('From')" /><x-text-input id="mcp-from" name="from" type="date" class="mt-1 block w-full" x-model="from" required /></div>
                                     <div><x-input-label for="mcp-days" :value="__('Days')" /><x-text-input id="mcp-days" name="days" type="number" min="1" max="92" class="mt-1 block w-full" x-model="days" required /></div>
                                     <div class="sm:col-span-4"><x-input-label for="mcp-instruction" :value="__('What the posts are about (optional)')" /><textarea id="mcp-instruction" name="instruction" rows="2" class="mt-1 block w-full border-gray-300 focus:border-brand-500 focus:ring-brand-500 rounded-md shadow-sm" x-model="instruction" placeholder="{{ __('e.g. December: gifts, Christmas opening hours, the New Year party') }}"></textarea></div>
-                                    <div class="sm:col-span-4 rounded-md bg-gray-50 p-3 text-sm text-gray-700" x-text="text()"></div>
                                     <div class="sm:col-span-4 flex gap-2"><x-primary-button>{{ __('Queue for Claude') }}</x-primary-button><x-secondary-button type="button" x-on:click="copy()"><span x-text="copied ? '{{ __('Copied') }}' : '{{ __('Copy the request') }}'"></span></x-secondary-button></div>
                                     <x-input-error class="sm:col-span-4" :messages="$errors->job->all()" />
                                 </form>

@@ -21,7 +21,7 @@
                                 <input type="checkbox" name="posts[]" value="{{ $post->id }}" class="rounded border-gray-300" />
                                 <span class="font-mono">{{ $post->name }}</span>
                                 <x-state-badge :state="$post->state" />
-                                <span class="text-gray-500">{{ $post->scheduled_at?->translatedFormat('D d-m-Y H:i') ?? __('not scheduled') }}</span>
+                                <span class="text-gray-600">{{ $post->scheduled_at?->translatedFormat('D d-m-Y H:i') ?? __('not scheduled') }}</span>
                             </label>
                         @empty
                             <x-empty-state :action="__('New post')" :href="route('posts.create', $client)">{{ __('No draft posts waiting. A post shows here once it exists on the calendar; tick it and send it, the approvers get the link by email.') }}</x-empty-state>
@@ -52,7 +52,7 @@
                                 <span class="{{ $post->pivot->decision === 'approved' ? 'text-green-700' : 'text-orange-700' }}">{{ __($post->pivot->decision === 'approved' ? 'Approved' : 'Changes requested') }} · {{ $post->pivot->decided_by }}</span>
                                 @if ($post->pivot->comment) <span class="text-gray-700">“{{ $post->pivot->comment }}”</span> @endif
                             @else
-                                <span class="text-gray-400">{{ __('no answer yet') }}</span>
+                                <span class="text-gray-500">{{ __('no answer yet') }}</span>
                             @endif
                         </div>
                     @endforeach

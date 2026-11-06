@@ -10,7 +10,7 @@
                 <p class="text-sm text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
 
-            <div class="bg-white p-6 rounded-xl border border-gray-200">
+            <div class="bg-white p-6 rounded-xl border border-gray-300">
                 <x-input-label for="inbox-url" :value="__('Upload link for the client (no login, valid :days days, anyone with it can upload)', ['days' => \App\Http\Controllers\AssetController::LINK_DAYS])" />
                 <x-text-input id="inbox-url" type="text" class="mt-1 block w-full font-mono text-xs" :value="$inboxUrl" readonly onclick="this.select()" />
             </div>
@@ -39,10 +39,10 @@
                                         <input type="hidden" name="vertical[{{ $design['id'] }}]" value="{{ ($design['thumbnail']['height'] ?? 0) > ($design['thumbnail']['width'] ?? 0) ? 1 : 0 }}">
                                         @if (! empty($design['thumbnail']['url']))<img src="{{ $design['thumbnail']['url'] }}" alt="" class="mt-1 w-full aspect-square object-cover rounded">@endif
                                         <span class="block mt-1 truncate text-gray-900">{{ $design['title'] ?? __('Untitled') }}</span>
-                                        @if (($design['page_count'] ?? 1) > 1)<span class="text-gray-500">{{ $design['page_count'] }} {{ __('pages') }}</span>@endif
+                                        @if (($design['page_count'] ?? 1) > 1)<span class="text-gray-600">{{ $design['page_count'] }} {{ __('pages') }}</span>@endif
                                     </label>
                                 @empty
-                                    <p class="col-span-full text-sm text-gray-500">{{ __('No designs found.') }}</p>
+                                    <p class="col-span-full text-sm text-gray-600">{{ __('No designs found.') }}</p>
                                 @endforelse
                             </div>
                             @if ($designs)
@@ -56,7 +56,7 @@
                                         <select id="canva-pillar" name="pillar" class="mt-1 block border-gray-300 rounded-md shadow-sm text-sm"><option value="">—</option>@foreach (array_keys($client->profile['pillars']) as $pillar)<option value="{{ $pillar }}">{{ ucfirst(str_replace('_', ' ', $pillar)) }}</option>@endforeach</select>
                                     </div>
                                     <x-primary-button>{{ __('Import ticked designs') }}</x-primary-button>
-                                    <span class="text-gray-500">{{ __('They appear in the list below within a minute or two; a failed import shows on the Jobs page and in Slack.') }}</span>
+                                    <span class="text-gray-600">{{ __('They appear in the list below within a minute or two; a failed import shows on the Jobs page and in Slack.') }}</span>
                                 </div>
                             @endif
                         </form>
@@ -64,7 +64,7 @@
                 @elseif ($canvaReady)
                     <p class="text-sm text-gray-600">{{ __('Bring finished designs straight into this inbox.') }} <a href="{{ route('canva.connect', $client) }}" class="{{ $btn }} ml-2">{{ __('Connect Canva') }}</a></p>
                 @else
-                    <p class="text-sm text-gray-500">{{ __('Add CANVA_CLIENT_ID and CANVA_CLIENT_SECRET to .env to import designs (docs/pilot-setup.md).') }}</p>
+                    <p class="text-sm text-gray-600">{{ __('Add CANVA_CLIENT_ID and CANVA_CLIENT_SECRET to .env to import designs (docs/pilot-setup.md).') }}</p>
                 @endif
                 </div>
             </x-section>
@@ -86,7 +86,7 @@
                         <x-primary-button>{{ __('Watch folder') }}</x-primary-button>
                     </form>
                 @else
-                    <p class="text-sm text-gray-500">{{ __('Add GOOGLE_SERVICE_ACCOUNT_JSON to .env to pull files from a shared Drive folder (docs/pilot-setup.md).') }}</p>
+                    <p class="text-sm text-gray-600">{{ __('Add GOOGLE_SERVICE_ACCOUNT_JSON to .env to pull files from a shared Drive folder (docs/pilot-setup.md).') }}</p>
                 @endif
                 </div>
             </x-section>
@@ -113,7 +113,7 @@
                 @elseif ($dropboxReady)
                     <p class="text-sm text-gray-600">{{ __('Bring the photos and videos a client drops in a shared Dropbox folder into this inbox.') }} <a href="{{ route('dropbox.connect', $client) }}" class="{{ $btn }} ml-2">{{ __('Connect Dropbox') }}</a></p>
                 @else
-                    <p class="text-sm text-gray-500">{{ __('Add DROPBOX_APP_KEY to .env to pull files from a Dropbox folder (docs/pilot-setup.md).') }}</p>
+                    <p class="text-sm text-gray-600">{{ __('Add DROPBOX_APP_KEY to .env to pull files from a Dropbox folder (docs/pilot-setup.md).') }}</p>
                 @endif
                 </div>
             </x-section>
@@ -143,7 +143,7 @@
                             <x-primary-button>{{ __('Make the Reel') }}</x-primary-button>
                         </form>
                     @else
-                        <p class="text-sm text-gray-500">{{ __('Install ffmpeg on the server to assemble Reels from clips (docs/pilot-setup.md).') }}</p>
+                        <p class="text-sm text-gray-600">{{ __('Install ffmpeg on the server to assemble Reels from clips (docs/pilot-setup.md).') }}</p>
                     @endif
                     </div>
                 </x-section>
@@ -174,25 +174,25 @@
                                 @endif
                             </a>
                             <p class="mt-1 truncate font-mono text-gray-900" title="{{ $asset->name }}">{{ $asset->name }}</p>
-                            <p class="text-gray-500">
+                            <p class="text-gray-600">
                                 {{ $asset->pillar ? str_replace('_', ' ', $asset->pillar) : __('no pillar') }} · {{ $asset->created_at->format('d-m-Y') }}
                                 @if ($asset->season) · {{ $asset->season }} @endif
                                 @if ($asset->people_consent) · <span class="text-green-700">{{ __('consent') }}</span> @endif
                                 @if ($asset->ugc_permission) · <span class="text-green-700">{{ __('UGC ok') }}</span> @endif
                             </p>
-                            @if ($asset->note) <p class="text-gray-500">{{ $asset->note }}</p> @endif
+                            @if ($asset->note) <p class="text-gray-600">{{ $asset->note }}</p> @endif
                             @if ($asset->kind === 'video' && $reelReady)
                                 <label class="mt-1 block text-gray-700"><input type="checkbox" name="clips[]" value="{{ $asset->id }}" form="reel-form" class="rounded border-gray-300 text-brand-600" @checked(in_array($asset->id, old('clips', [])))> {{ __('In the Reel') }}</label>
                             @endif
                             <p class="mt-1">
                                 @forelse ($asset->posts as $post)
                                     @if ($post->trashed())
-                                        <a href="{{ route('clients.bin', $client) }}" class="block truncate text-gray-500 hover:text-brand-600" title="{{ $post->name }}">{{ __('In the recycle bin:') }} {{ $post->name }}</a>
+                                        <a href="{{ route('clients.bin', $client) }}" class="block truncate text-gray-600 hover:text-brand-600" title="{{ $post->name }}">{{ __('In the recycle bin:') }} {{ $post->name }}</a>
                                     @else
                                         <a href="{{ route('posts.edit', $post) }}" class="block truncate font-medium text-gray-900 hover:text-brand-600" title="{{ $post->name }}">{{ __('In') }} {{ $post->name }}</a>
                                     @endif
                                 @empty
-                                    <span class="text-gray-400">{{ __('Not used in a post yet') }}</span>
+                                    <span class="text-gray-500">{{ __('Not used in a post yet') }}</span>
                                 @endforelse
                             </p>
                             <form method="POST" action="{{ route('assets.destroy', $asset) }}" class="mt-1" onsubmit="return confirm('{{ __('Delete this file?') }}')">

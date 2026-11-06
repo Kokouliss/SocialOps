@@ -7,7 +7,7 @@
     </x-slot>
 
     @php($colors = ['active' => 'bg-green-100 text-green-800', 'waiting_dates' => 'bg-gray-100 text-gray-700', 'waiting' => 'bg-yellow-100 text-yellow-800', 'seasonal' => 'bg-blue-100 text-blue-800', 'stopped' => 'bg-red-100 text-red-800'])
-    @php($priorities = ['high' => 'text-red-600 font-medium', 'medium' => 'text-orange-800', 'low' => 'text-gray-500'])
+    @php($priorities = ['high' => 'text-red-600 font-medium', 'medium' => 'text-orange-800', 'low' => 'text-gray-600'])
     @php($pill = 'whitespace-nowrap rounded-full px-2 py-0.5')
     <div class="py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -17,9 +17,9 @@
             @if ($clients->isEmpty())
                 <x-empty-state class="bg-white" :action="__('Add the first client')" :href="route('clients.create')">{{ __('No clients yet. A client profile holds the accounts, the voice, the pillars and the approvers; everything else hangs off it.') }}</x-empty-state>
             @else
-            <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white">
+            <div class="overflow-x-auto rounded-xl border border-gray-300 bg-white">
                 <table class="min-w-full text-sm">
-                    <thead class="text-left text-xs uppercase tracking-wide text-gray-500">
+                    <thead class="text-left text-xs uppercase tracking-wide text-gray-600">
                         <tr>
                             <th class="whitespace-nowrap px-4 py-3 font-medium">{{ __('Client') }}</th>
                             <th class="whitespace-nowrap px-4 py-3 font-medium">{{ __('Status') }}</th>
@@ -30,13 +30,13 @@
                             <th class="whitespace-nowrap px-4 py-3 font-medium">{{ __('Links') }}</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody class="divide-y divide-gray-200">
                         @foreach ($clients as $client)
                             <tr class="align-top">
                                 <td class="px-4 py-3">
                                     <a href="{{ route('calendar', ['client' => $client->slug]) }}" class="font-medium text-gray-900 hover:text-brand-600">{{ $client->name }}</a>
-                                    <span class="ml-1 font-mono text-xs text-gray-400">{{ $client->code }}</span>
-                                    <p class="text-xs text-gray-500">{{ __(str_replace('_', ' ', $client->type)) }} · {{ collect($client->profile['accounts'])->filter()->keys()->map(fn ($p) => str_replace('_', ' ', $p))->join(', ') ?: '—' }}</p>
+                                    <span class="ml-1 font-mono text-xs text-gray-500">{{ $client->code }}</span>
+                                    <p class="text-xs text-gray-600">{{ __(str_replace('_', ' ', $client->type)) }} · {{ collect($client->profile['accounts'])->filter()->keys()->map(fn ($p) => str_replace('_', ' ', $p))->join(', ') ?: '—' }}</p>
                                     <div class="mt-2 flex flex-wrap gap-1.5 text-xs">
                                         <a href="{{ route('calendar', ['client' => $client->slug]) }}" class="{{ $pill }} bg-gray-100 text-gray-600">{{ trans_choice('{0} nothing scheduled this week|{1} :count post this week|[2,*] :count posts this week', $client->week_count) }}</a>
                                         <a href="{{ route('clients.reviews', $client) }}" class="{{ $pill }} {{ $client->in_review_count ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-600' }}">{{ trans_choice('{0} nothing waiting for the client|{1} :count waiting for the client|[2,*] :count waiting for the client', $client->in_review_count) }}</a>
@@ -53,16 +53,16 @@
                                 </td>
                                 <td class="px-4 py-3">
                                     <span class="inline-block whitespace-nowrap rounded-full px-2 py-0.5 text-xs {{ $colors[$client->status] ?? 'bg-gray-100 text-gray-700' }}">{{ __(\App\Models\Client::STATUSES[$client->status] ?? $client->status) }}</span>
-                                    <p class="mt-1 text-xs text-gray-500">@if ($client->priority)<span class="{{ $priorities[$client->priority] ?? '' }}">{{ __(\App\Models\Client::PRIORITIES[$client->priority]) }}</span>@endif @if ($client->priority && $client->owner) · @endif{{ $client->owner }}</p>
+                                    <p class="mt-1 text-xs text-gray-600">@if ($client->priority)<span class="{{ $priorities[$client->priority] ?? '' }}">{{ __(\App\Models\Client::PRIORITIES[$client->priority]) }}</span>@endif @if ($client->priority && $client->owner) · @endif{{ $client->owner }}</p>
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-3">
-                                    @if ($client->plan_due)<span class="{{ $client->plan_due->isPast() ? 'text-red-600 font-medium' : '' }}">{{ $client->plan_due->format('d-m-Y') }}</span>@else <span class="text-gray-400">—</span> @endif
+                                    @if ($client->plan_due)<span class="{{ $client->plan_due->isPast() ? 'text-red-600 font-medium' : '' }}">{{ $client->plan_due->format('d-m-Y') }}</span>@else <span class="text-gray-500">—</span> @endif
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-3 text-xs text-gray-700">
                                     @if ($client->posts_per_week !== null || $client->stories_per_week !== null)<p>{{ __(':posts posts, :stories stories a week', ['posts' => $client->posts_per_week ?? 0, 'stories' => $client->stories_per_week ?? 0]) }}</p>@endif
                                     @if ($client->tiktoks_per_month !== null)<p>{{ __(':n TikToks a month', ['n' => $client->tiktoks_per_month]) }}</p>@endif
                                 </td>
-                                <td class="whitespace-nowrap px-4 py-3">@if ($client->scheduled_until){{ \Carbon\Carbon::parse($client->scheduled_until)->format('d-m-Y') }}@else <span class="text-gray-400">—</span> @endif</td>
+                                <td class="whitespace-nowrap px-4 py-3">@if ($client->scheduled_until){{ \Carbon\Carbon::parse($client->scheduled_until)->format('d-m-Y') }}@else <span class="text-gray-500">—</span> @endif</td>
                                 <td class="max-w-sm whitespace-pre-line px-4 py-3 text-xs text-gray-700">{{ $client->pending }}</td>
                                 <td class="px-4 py-3 text-xs">
                                     @foreach ($client->links ?? [] as $link)

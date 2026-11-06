@@ -6,16 +6,16 @@
     <div class="{{ auth()->check() ? 'py-6' : '' }}">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             @guest <p class="mb-3 text-sm text-gray-600">{{ __('Tick the page, profile or location that belongs to :client.', ['client' => $client->name]) }}</p> @endguest
-            <form method="POST" action="{{ route('accounts.attach', $client) }}" class="bg-white p-6 rounded-xl border border-gray-200 text-sm space-y-3">
+            <form method="POST" action="{{ route('accounts.attach', $client) }}" class="bg-white p-6 rounded-xl border border-gray-300 text-sm space-y-3">
                 @csrf
                 @forelse ($candidates as $i => $candidate)
                     <label class="flex items-center gap-3">
                         <input type="checkbox" name="picked[]" value="{{ $i }}" class="rounded border-gray-300" />
-                        <span class="w-32 text-gray-500">{{ str_replace('_', ' ', $candidate['platform']) }}</span>
+                        <span class="w-32 text-gray-600">{{ str_replace('_', ' ', $candidate['platform']) }}</span>
                         <span class="font-medium">{{ $candidate['name'] }}</span>
                     </label>
                 @empty
-                    <p class="text-gray-500">{{ __('The login worked but this user manages no page, creator profile or business location we can publish to.') }}</p>
+                    <p class="text-gray-600">{{ __('The login worked but this user manages no page, creator profile or business location we can publish to.') }}</p>
                 @endforelse
                 <x-input-error class="mt-2" :messages="$errors->get('picked')" />
                 @if ($candidates)

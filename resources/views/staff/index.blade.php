@@ -8,9 +8,9 @@
             @if (session('status'))
                 <p class="text-sm text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
-            <div class="bg-white overflow-hidden rounded-xl border border-gray-200">
+            <div class="bg-white overflow-hidden rounded-xl border border-gray-300">
                 <table class="min-w-full text-sm">
-                    <thead class="text-left text-xs uppercase tracking-wide text-gray-500">
+                    <thead class="text-left text-xs uppercase tracking-wide text-gray-600">
                         <tr>
                             <th class="px-6 py-3 font-medium">{{ __('Name') }}</th>
                             <th class="px-6 py-3 font-medium">{{ __('Email') }}</th>
@@ -18,10 +18,10 @@
                             <th class="px-6 py-3"></th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <tbody class="divide-y divide-gray-200">
                         @foreach ($users as $user)
                             <tr>
-                                <td class="px-6 py-3 font-medium text-gray-900">{{ $user->name }}@if ($user->is_admin) <span class="ml-1 text-xs font-normal text-gray-500">{{ __('admin') }}</span>@endif</td>
+                                <td class="px-6 py-3 font-medium text-gray-900">{{ $user->name }}@if ($user->is_admin) <span class="ml-1 text-xs font-normal text-gray-600">{{ __('admin') }}</span>@endif</td>
                                 <td class="px-6 py-3">{{ $user->email }}</td>
                                 <td class="px-6 py-3">
                                     {{ $user->client_ids === null ? __('all') : $clients->whereIn('id', $user->client_ids)->pluck('name')->join(', ') }}
@@ -44,7 +44,7 @@
                                 </td>
                                 <td class="px-6 py-3 text-right">
                                     @if ($user->is(auth()->user()))
-                                        <span class="text-gray-500">{{ __('you') }}</span>
+                                        <span class="text-gray-600">{{ __('you') }}</span>
                                     @else
                                         <form method="POST" action="{{ route('staff.destroy', $user) }}" class="inline" onsubmit="return confirm('{{ __('Remove this login?') }}')">
                                             @csrf
@@ -63,17 +63,17 @@
             @endif
             <x-section :title="__('API tokens')" :description="__('for scripts and other tools, see docs/api.md')">
                 <table class="min-w-full text-sm">
-                    <thead class="text-left text-xs uppercase tracking-wide text-gray-500"><tr><th class="py-2 pr-6 font-medium">{{ __('Name') }}</th><th class="py-2 pr-6 font-medium">{{ __('Client') }}</th><th class="py-2 pr-6 font-medium">{{ __('Last used') }}</th><th></th></tr></thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <thead class="text-left text-xs uppercase tracking-wide text-gray-600"><tr><th class="py-2 pr-6 font-medium">{{ __('Name') }}</th><th class="py-2 pr-6 font-medium">{{ __('Client') }}</th><th class="py-2 pr-6 font-medium">{{ __('Last used') }}</th><th></th></tr></thead>
+                    <tbody class="divide-y divide-gray-200">
                         @forelse ($tokens as $token)
                             <tr>
                                 <td class="py-2 pr-6 font-medium text-gray-900">{{ $token->name }}</td>
                                 <td class="py-2 pr-6">{{ $token->client?->name ?? __('all') }}</td>
-                                <td class="py-2 pr-6 text-gray-500">{{ $token->last_used_at?->diffForHumans() ?? __('never') }}</td>
+                                <td class="py-2 pr-6 text-gray-600">{{ $token->last_used_at?->diffForHumans() ?? __('never') }}</td>
                                 <td class="py-2 text-right"><form method="POST" action="{{ route('staff.tokens.destroy', $token) }}" onsubmit="return confirm('{{ __('Revoke this token? Scripts using it stop working at once.') }}')">@csrf @method('DELETE')<button class="text-red-600 hover:underline">{{ __('Revoke') }}</button></form></td>
                             </tr>
                         @empty
-                            <tr><td colspan="4" class="py-2 text-gray-500">{{ __('None yet.') }}</td></tr>
+                            <tr><td colspan="4" class="py-2 text-gray-600">{{ __('None yet.') }}</td></tr>
                         @endforelse
                     </tbody>
                 </table>

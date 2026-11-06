@@ -15,6 +15,6 @@
                 <p class="text-sm text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
             @error('send') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-            <div class="bg-white p-6 rounded-xl border border-gray-200 text-sm text-gray-800 report">{!! $html !!}</div>
+            <div class="bg-white p-6 rounded-xl border border-gray-300 text-sm text-gray-800 report">{!! $html !!}</div>
         </div>
     </div>

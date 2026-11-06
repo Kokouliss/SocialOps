@@ -32,7 +32,7 @@
                 <x-empty-state class="bg-white">{{ __('The recycle bin is empty. A deleted post of this client waits here until someone restores it or deletes it for good.') }}</x-empty-state>
             @else
                 <x-section :title="__('Deleted posts')" :description="__('A deleted post waits here with its captions, media and notes. Restore puts it back on the calendar as it was. Nothing is emptied on its own.')" flush>
-                    <ul class="divide-y divide-gray-100 text-sm">
+                    <ul class="divide-y divide-gray-200 text-sm">
                         @foreach ($posts as $post)
                             {{-- what the post is and when it was deleted, then the two buttons: side by side, stacked on a phone --}}
                             <li class="grid gap-3 px-6 py-3 sm:grid-cols-6 sm:items-center">
@@ -40,11 +40,11 @@
                                     @if ($thumb = $post->assets->firstWhere('kind', 'image'))
                                         <img src="{{ route('assets.thumb', $thumb) }}" alt="" loading="lazy" class="h-12 w-12 flex-none rounded object-cover">
                                     @else
-                                        <span class="flex h-12 w-12 flex-none items-center justify-center rounded bg-gray-100 text-center text-[10px] uppercase leading-tight text-gray-400">{{ $post->assets->isEmpty() ? __('no media') : __('video') }}</span>
+                                        <span class="flex h-12 w-12 flex-none items-center justify-center rounded bg-gray-100 text-center text-[10px] uppercase leading-tight text-gray-500">{{ $post->assets->isEmpty() ? __('no media') : __('video') }}</span>
                                     @endif
                                     <div class="min-w-0 flex-1">
                                         <p class="truncate font-mono text-xs text-gray-700">{{ $post->name }}</p>
-                                        <p class="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                                        <p class="mt-1 flex flex-wrap items-center gap-2 text-xs text-gray-600">
                                             <x-state-badge :state="$post->state" />
                                             <span>{{ $post->scheduled_at?->translatedFormat('D d-m-Y H:i') ?? __('No date yet') }}</span>
                                             <span>{{ collect($post->platforms)->map(fn ($p) => $platforms[$p] ?? ucfirst($p))->join(', ') }}</span>
@@ -52,7 +52,7 @@
                                         @if ($post->brief)
                                             <p class="mt-1 truncate text-gray-600">{{ $post->brief }}</p>
                                         @endif
-                                        <p class="mt-1 text-xs text-gray-500">{{ __('Deleted :date', ['date' => $post->deleted_at->format('d-m-Y H:i')]) }}@if ($post->deleter) · {{ $post->deleter->name }}@endif</p>
+                                        <p class="mt-1 text-xs text-gray-600">{{ __('Deleted :date', ['date' => $post->deleted_at->format('d-m-Y H:i')]) }}@if ($post->deleter) · {{ $post->deleter->name }}@endif</p>
                                     </div>
                                 </div>
                                 <div class="flex flex-wrap items-center gap-3 sm:col-span-2">

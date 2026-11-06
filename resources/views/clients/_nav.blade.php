@@ -3,7 +3,7 @@
 <nav class="mb-4 flex gap-1 overflow-x-auto text-sm md:sticky md:top-6 md:mb-0 md:w-52 md:shrink-0 md:flex-col md:self-start" role="tablist">
     @foreach ($sections + ($tools ?? []) as $key => $label)
         @if (isset($tools) && $key === array_key_first($tools))
-            <p class="mb-1 mt-4 hidden px-3 text-xs font-semibold uppercase tracking-wide text-gray-400 md:block">{{ __('Tools') }}</p>
+            <p class="mb-1 mt-4 hidden px-3 text-xs font-semibold uppercase tracking-wide text-gray-500 md:block">{{ __('Tools') }}</p>
         @endif
         <button type="button" role="tab" data-tab="{{ $key }}" class="whitespace-nowrap rounded-md px-3 py-2 text-left" :class="tab === '{{ $key }}' ? 'bg-white font-medium text-gray-900 shadow-sm ring-1 ring-gray-200' : 'text-gray-600 hover:text-gray-900'" :aria-selected="tab === '{{ $key }}'" x-on:click="tab = '{{ $key }}'">{{ $label }}</button>
     @endforeach

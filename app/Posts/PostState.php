@@ -43,6 +43,19 @@ enum PostState: string
         return array_map(self::from(...), self::TRANSITIONS[$this->value]);
     }
 
+    /** The usual next step, the one the post page shows as its main (orange) button; the other next() states are side steps. */
+    public function forward(): ?self
+    {
+        return match ($this) {
+            self::Idea => self::Draft,
+            self::Draft, self::ChangesRequested, self::Withdrawn => self::InReview,
+            self::InReview => self::Approved,
+            self::Approved, self::Failed => self::Scheduled,
+            self::Scheduled, self::ManualNeeded => self::Published,
+            self::Published => null,
+        };
+    }
+
     /** Locked content: changing it must go back through review. */
     public function isLocked(): bool
     {
@@ -69,7 +82,7 @@ enum PostState: string
     public function color(): string
     {
         return match ($this) {
-            self::Idea, self::Draft => 'bg-gray-100 text-gray-700',
+            self::Idea, self::Draft => 'bg-gray-200 text-gray-800',
             self::InReview => 'bg-yellow-100 text-yellow-800',
             self::ChangesRequested => 'bg-orange-100 text-orange-800',
             self::Approved => 'bg-green-100 text-green-800',
@@ -77,7 +90,7 @@ enum PostState: string
             self::Published => 'bg-green-200 text-green-900',
             self::Failed => 'bg-red-100 text-red-800',
             self::ManualNeeded => 'bg-purple-100 text-purple-800',
-            self::Withdrawn => 'bg-gray-200 text-gray-500 line-through',
+            self::Withdrawn => 'bg-gray-200 text-gray-600 line-through',
         };
     }
 

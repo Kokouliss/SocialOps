@@ -856,5 +856,13 @@
     "Post moved to the recycle bin": "Η ανάρτηση μπήκε στον κάδο ανακύκλωσης",
     "Post restored": "Η ανάρτηση επαναφέρθηκε",
     "Post deleted for good": "Η ανάρτηση διαγράφηκε οριστικά",
-    "In the recycle bin:": "Στον κάδο ανακύκλωσης:"
+    "In the recycle bin:": "Στον κάδο ανακύκλωσης:",
+    "Hashtags or a link that go under the post as its first comment.": "Hashtags ή σύνδεσμος που μπαίνουν κάτω από την ανάρτηση ως πρώτο σχόλιο.",
+    "The words on the graphic or in the video: the headline, the slide texts or the Reel script.": "Οι λέξεις πάνω στο γραφικό ή στο βίντεο: ο τίτλος, τα κείμενα των slide ή το σενάριο του Reel.",
+    "Only the ticked platforms are kept. A person checks the Greek before the client sees it.": "Κρατιούνται μόνο οι τσεκαρισμένες πλατφόρμες. Τα ελληνικά τα ελέγχει άνθρωπος πριν τα δει ο πελάτης.",
+    "Same text on every platform (untick to write each one separately)": "Ίδιο κείμενο σε κάθε πλατφόρμα (ξετσέκαρε για να γράψεις την καθεμία χωριστά)",
+    "Ask Claude to write the captions": "Ζητήστε από τον Claude να γράψει τις λεζάντες",
+    "Claude plans the posts with their captions and puts them on the calendar as Drafts, with a review sheet in Reports. Press the button and Claude does it at its next run, once an hour.": "Ο Claude σχεδιάζει τις αναρτήσεις με τις λεζάντες τους και τις βάζει στο ημερολόγιο ως Πρόχειρα, με ένα φύλλο ελέγχου στις Αναφορές. Πατήστε το κουμπί και ο Claude το κάνει στην επόμενη εκτέλεσή του, μία φορά την ώρα.",
+    "More filters": "Περισσότερα φίλτρα",
+    "Copy link for the client": "Αντιγραφή συνδέσμου για τον πελάτη"
 }

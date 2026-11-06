@@ -13,7 +13,7 @@
         @if ($report->kind === 'monthly')
             <form method="POST" action="{{ route('reports.send', $report) }}" onsubmit="return confirm('{{ __('Mail this report to the client\'s approvers, with the numbers as a CSV?') }}')">@csrf<button class="{{ $btn }} border-brand-300 text-brand-700 hover:bg-brand-50">{{ __('Email to client') }}</button></form>
         @endif
-        <a class="text-sm text-gray-500 hover:underline" href="{{ route('clients.reports', $report->client) }}">{{ __('All reports') }}</a>
+        <a class="text-sm text-gray-600 hover:underline" href="{{ route('clients.reports', $report->client) }}">{{ __('All reports') }}</a>
     </x-slot>
 
     @include('reports._body')

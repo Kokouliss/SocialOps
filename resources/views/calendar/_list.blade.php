@@ -1,7 +1,7 @@
 {{-- The posts of the period in date order, one row each with a thumbnail: what phones get instead of the grid, and the "List" button on a desktop. --}}
 @php($groups = $days->filter(fn ($d) => $posts->has($d->toDateString()) || isset($marks[$d->toDateString()]))->mapWithKeys(fn ($d) => [$d->toDateString() => $posts->get($d->toDateString(), collect())]))
 @php($unscheduled->isEmpty() || $groups->put('', $unscheduled))
-<form method="POST" action="{{ route('posts.bulk') }}" class="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100 text-sm {{ $class }}" data-view="list" data-bulk>
+<form method="POST" action="{{ route('posts.bulk') }}" class="bg-white rounded-xl border border-gray-300 divide-y divide-gray-200 text-sm {{ $class }}" data-view="list" data-bulk>
     @csrf
     @foreach ($groups as $key => $dayPosts)
         @php($day = $key ? \Illuminate\Support\Carbon::parse($key) : null)
@@ -12,7 +12,7 @@
                     <span class="font-normal text-amber-700">· {{ $mark }}</span>
                 @endforeach
                 @if ($day && $clientSlug)
-                    <a href="{{ route('posts.create', [$clients->firstWhere('slug', $clientSlug), 'date' => $key]) }}" class="ml-auto text-gray-400 hover:text-gray-700" title="{{ __('New post') }}">+</a>
+                    <a href="{{ route('posts.create', [$clients->firstWhere('slug', $clientSlug), 'date' => $key]) }}" class="ml-auto text-gray-500 hover:text-gray-700" title="{{ __('New post') }}">+</a>
                 @endif
             </div>
             @foreach ($dayPosts as $post)
@@ -25,7 +25,7 @@
                     @if ($thumb = $post->assets->firstWhere('kind', 'image'))
                         <img src="{{ route('assets.thumb', $thumb) }}" alt="" loading="lazy" class="h-12 w-12 flex-none rounded object-cover">
                     @else
-                        <span class="flex h-12 w-12 flex-none items-center justify-center rounded bg-gray-100 text-center text-[10px] uppercase leading-tight text-gray-400">{{ $post->assets->isEmpty() ? __('no media') : __('video') }}</span>
+                        <span class="flex h-12 w-12 flex-none items-center justify-center rounded bg-gray-100 text-center text-[10px] uppercase leading-tight text-gray-500">{{ $post->assets->isEmpty() ? __('no media') : __('video') }}</span>
                     @endif
                     <div class="min-w-0 flex-1">
                         <a href="{{ route('posts.edit', $post) }}" class="block truncate font-mono text-xs text-gray-700 hover:underline">{{ $post->name }}</a>
@@ -47,7 +47,7 @@
             </x-slot:action>
         </x-empty-state>
     @else
-        <div class="sticky bottom-0 flex flex-wrap items-center gap-2 rounded-b-xl border-t border-gray-100 bg-white/95 p-3 backdrop-blur">
+        <div class="sticky bottom-0 flex flex-wrap items-center gap-2 rounded-b-xl border-t border-gray-200 bg-white/95 p-3 backdrop-blur">
             <label class="flex items-center gap-2 text-gray-600"><input type="checkbox" data-bulk-all class="rounded border-gray-300"> <span data-bulk-count>0</span> {{ __('ticked') }}</label>
             <button name="action" value="review" class="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-40">{{ __('Send for approval') }}</button>
             <span class="flex items-center gap-1">
