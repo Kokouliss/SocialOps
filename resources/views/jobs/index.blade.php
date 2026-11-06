@@ -13,12 +13,12 @@
 
             <x-section :title="__('Waiting')" :description="__('Publishing and planning run on the queue, which the per-minute scheduled task works through.')" flush>
                 <table class="w-full">
-                    <thead class="text-left text-xs uppercase tracking-wide text-gray-500"><tr><th class="{{ $th }}">{{ __('Job') }}</th><th class="{{ $th }}">{{ __('Attempts') }}</th><th class="{{ $th }}">{{ __('Due') }}</th></tr></thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <thead class="text-left text-xs uppercase tracking-wide text-gray-600"><tr><th class="{{ $th }}">{{ __('Job') }}</th><th class="{{ $th }}">{{ __('Attempts') }}</th><th class="{{ $th }}">{{ __('Due') }}</th></tr></thead>
+                    <tbody class="divide-y divide-gray-200">
                         @forelse ($waiting as $job)
                             <tr><td class="{{ $td }} font-mono">{{ $job->name }}@if ($job->running) <span class="rounded-full bg-gray-100 px-2 py-0.5 text-xs">{{ __('running') }}</span>@endif</td><td class="{{ $td }}">{{ $job->attempts }}</td><td class="{{ $td }}">{{ $job->at }}</td></tr>
                         @empty
-                            <tr><td colspan="3" class="{{ $td }} text-gray-500">{{ __('Nothing waiting.') }}</td></tr>
+                            <tr><td colspan="3" class="{{ $td }} text-gray-600">{{ __('Nothing waiting.') }}</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -26,8 +26,8 @@
 
             <x-section :title="__('Failed')" flush>
                 <table class="w-full">
-                    <thead class="text-left text-xs uppercase tracking-wide text-gray-500"><tr><th class="{{ $th }}">{{ __('Job') }}</th><th class="{{ $th }}">{{ __('Error') }}</th><th class="{{ $th }}">{{ __('Failed at') }}</th><th></th></tr></thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <thead class="text-left text-xs uppercase tracking-wide text-gray-600"><tr><th class="{{ $th }}">{{ __('Job') }}</th><th class="{{ $th }}">{{ __('Error') }}</th><th class="{{ $th }}">{{ __('Failed at') }}</th><th></th></tr></thead>
+                    <tbody class="divide-y divide-gray-200">
                         @forelse ($failed as $job)
                             <tr class="align-top">
                                 <td class="{{ $td }} font-mono whitespace-nowrap">{{ $job->name }}</td>
@@ -35,11 +35,11 @@
                                 <td class="{{ $td }} whitespace-nowrap">{{ $job->at }}</td>
                                 <td class="{{ $td }} whitespace-nowrap">
                                     <form method="POST" action="{{ route('jobs.retry', $job->uuid) }}" class="inline">@csrf<button class="font-medium text-gray-900 hover:text-brand-600">{{ __('Retry') }}</button></form>
-                                    <form method="POST" action="{{ route('jobs.forget', $job->uuid) }}" class="inline ml-2">@csrf @method('DELETE')<button class="text-gray-500 hover:underline">{{ __('Remove') }}</button></form>
+                                    <form method="POST" action="{{ route('jobs.forget', $job->uuid) }}" class="inline ml-2">@csrf @method('DELETE')<button class="text-gray-600 hover:underline">{{ __('Remove') }}</button></form>
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="4" class="{{ $td }} text-gray-500">{{ __('No failed jobs.') }}</td></tr>
+                            <tr><td colspan="4" class="{{ $td }} text-gray-600">{{ __('No failed jobs.') }}</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -48,8 +48,8 @@
             @php($priced = \App\Models\ClaudeCall::cost(1, 1) !== null)
             <x-section :title="__('Claude, last 30 days')" :description="$priced ? null : __('Set ANTHROPIC_PRICE_INPUT and ANTHROPIC_PRICE_OUTPUT (USD per million tokens) in .env to see the cost column.')" flush>
                 <table class="w-full">
-                    <thead class="text-left text-xs uppercase tracking-wide text-gray-500"><tr><th class="{{ $th }}">{{ __('Client') }}</th><th class="{{ $th }}">{{ __('Purpose') }}</th><th class="{{ $th }} text-right">{{ __('Calls') }}</th><th class="{{ $th }} text-right">{{ __('Tokens in') }}</th><th class="{{ $th }} text-right">{{ __('Tokens out') }}</th>@if ($priced)<th class="{{ $th }} text-right">{{ __('USD') }}</th>@endif</tr></thead>
-                    <tbody class="divide-y divide-gray-100">
+                    <thead class="text-left text-xs uppercase tracking-wide text-gray-600"><tr><th class="{{ $th }}">{{ __('Client') }}</th><th class="{{ $th }}">{{ __('Purpose') }}</th><th class="{{ $th }} text-right">{{ __('Calls') }}</th><th class="{{ $th }} text-right">{{ __('Tokens in') }}</th><th class="{{ $th }} text-right">{{ __('Tokens out') }}</th>@if ($priced)<th class="{{ $th }} text-right">{{ __('USD') }}</th>@endif</tr></thead>
+                    <tbody class="divide-y divide-gray-200">
                         @forelse ($usage as $row)
                             <tr>
                                 <td class="{{ $td }}">{{ $row->client?->name ?? '—' }}</td>
@@ -60,7 +60,7 @@
                                 @if ($priced)<td class="{{ $td }} text-right">{{ number_format(\App\Models\ClaudeCall::cost($row->input_tokens, $row->output_tokens), 2) }}</td>@endif
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="{{ $td }} text-gray-500">{{ __('No Claude calls yet.') }}</td></tr>
+                            <tr><td colspan="6" class="{{ $td }} text-gray-600">{{ __('No Claude calls yet.') }}</td></tr>
                         @endforelse
                         @if ($usage->isNotEmpty())
                             <tr class="font-semibold">

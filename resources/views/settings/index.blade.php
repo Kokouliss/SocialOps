@@ -10,7 +10,7 @@
             @endif
             <x-input-error class="text-sm" :messages="$errors->all()" />
             <x-section :title="__('Server configuration')" :description="__('Every value of the server configuration (.env). FEATURE_ switches take true or false. A wrong database or APP_URL value locks the app; the previous file is kept on the server as .env.backup. APP_KEY cannot be changed here.')">
-                <form method="POST" action="{{ route('settings.update') }}" class="divide-y divide-gray-100">
+                <form method="POST" action="{{ route('settings.update') }}" class="divide-y divide-gray-200">
                     @csrf
                     @foreach ($values as $name => $value)
                         <div class="grid gap-1 py-2 sm:grid-cols-3 sm:items-center">

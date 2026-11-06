@@ -3,6 +3,6 @@
     @if ($thumb = $post->assets->firstWhere('kind', 'image'))<img src="{{ route('assets.thumb', $thumb) }}" alt="" loading="lazy" class="inline h-4 w-4 rounded object-cover align-text-bottom">@endif
     <span class="font-mono">{{ $post->client->code }}</span>
     {{ str_replace('_', ' ', $post->format) }}
-    @if ($post->scheduled_at) <span class="text-gray-500">{{ $post->scheduled_at->format('H:i') }}</span> @endif
+    @if ($post->scheduled_at) <span class="text-gray-600">{{ $post->scheduled_at->format('H:i') }}</span> @endif
     · {{ __($post->state->label()) }}@if ($post->settings['repeat'] ?? null) ↻@endif
 </a>

@@ -15,7 +15,7 @@
                 <form method="GET" class="flex flex-wrap items-center gap-2 py-4">
                     <nav class="flex gap-1 overflow-x-auto text-sm" aria-label="{{ __('Kinds') }}">
                         @foreach (['attention' => __('Needs attention'), 'questions' => __('Questions'), 'complaints' => __('Complaints'), 'all' => __('All')] as $key => $label)
-                            <a href="{{ route('clients.comments', [$client, ...request()->only('platform', 'order'), 'tab' => $key]) }}" class="whitespace-nowrap rounded-full px-3 py-1 {{ $tab === $key ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">{{ $label }} <span class="{{ $tab === $key ? 'text-gray-300' : 'text-gray-400' }}">{{ $tabs[$key] }}</span></a>
+                            <a href="{{ route('clients.comments', [$client, ...request()->only('platform', 'order'), 'tab' => $key]) }}" class="whitespace-nowrap rounded-full px-3 py-1 {{ $tab === $key ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200' }}">{{ $label }} <span class="{{ $tab === $key ? 'text-gray-300' : 'text-gray-500' }}">{{ $tabs[$key] }}</span></a>
                         @endforeach
                     </nav>
                     <input type="hidden" name="tab" value="{{ $tab }}">
@@ -33,21 +33,21 @@
                 @forelse ($open as $comment)
                     <div id="comment-{{ $comment->id }}" class="grid gap-3 py-4 md:grid-cols-2">
                         <div>
-                            <p class="text-gray-500">{{ $comment->label() }} · <span class="font-medium text-gray-800">{{ $comment->author ?? '?' }}</span> · {{ $comment->posted_at->translatedFormat('D d-m-Y H:i') }}
+                            <p class="text-gray-600">{{ $comment->label() }} · <span class="font-medium text-gray-800">{{ $comment->author ?? '?' }}</span> · {{ $comment->posted_at->translatedFormat('D d-m-Y H:i') }}
                                 @if ($comment->post) · <a href="{{ route('posts.edit', $comment->post) }}" class="font-mono text-xs font-medium text-gray-900 hover:text-brand-600">{{ $comment->post->name }}</a> @endif
                             </p>
                             @if ($comment->intent)
                                 <p class="mt-1 text-xs">
                                     @if ($comment->needsAttention()) <span class="px-2 py-0.5 rounded bg-red-100 text-red-800">{{ __('needs attention') }}</span> @endif
                                     @if ($comment->intent === 'spam') <span class="px-2 py-0.5 rounded bg-gray-100 text-gray-600">{{ __('looks like spam') }}</span> @endif
-                                    <span class="text-gray-500">{{ __($comment->sentiment) }} · {{ __($comment->intent) }}</span>
+                                    <span class="text-gray-600">{{ __($comment->sentiment) }} · {{ __($comment->intent) }}</span>
                                 </p>
                             @endif
                             <p class="mt-1 whitespace-pre-line">{{ $comment->text }}</p>
                             <div class="mt-2 flex gap-3">
                                 <form method="POST" action="{{ route('comments.draft', $comment) }}" onsubmit="this.querySelector('button').disabled = true">@csrf<button class="font-medium text-gray-900 hover:text-brand-600">{{ __('Draft reply with Claude') }}</button></form>
                                 @if (! $comment->thread_id)
-                                    <form method="POST" action="{{ route('comments.hide', $comment) }}" onsubmit="return confirm('{{ __('Hide this comment on the platform?') }}')">@csrf<button class="text-gray-500 hover:underline">{{ __('Hide') }}</button></form>
+                                    <form method="POST" action="{{ route('comments.hide', $comment) }}" onsubmit="return confirm('{{ __('Hide this comment on the platform?') }}')">@csrf<button class="text-gray-600 hover:underline">{{ __('Hide') }}</button></form>
                                 @endif
                             </div>
                         </div>
@@ -80,7 +80,7 @@
                 <x-section :title="__('Answered or hidden, last 30 days')">
                     @foreach ($done as $comment)
                         <div id="comment-{{ $comment->id }}" class="py-3">
-                            <p class="text-gray-500">{{ $comment->label() }} · <span class="font-medium text-gray-800">{{ $comment->author ?? '?' }}</span> · {{ $comment->posted_at->translatedFormat('D d-m-Y H:i') }} · {{ $comment->hidden_at ? __('hidden') : __('replied :when', ['when' => $comment->replied_at->translatedFormat('D d-m-Y H:i')]) }}</p>
+                            <p class="text-gray-600">{{ $comment->label() }} · <span class="font-medium text-gray-800">{{ $comment->author ?? '?' }}</span> · {{ $comment->posted_at->translatedFormat('D d-m-Y H:i') }} · {{ $comment->hidden_at ? __('hidden') : __('replied :when', ['when' => $comment->replied_at->translatedFormat('D d-m-Y H:i')]) }}</p>
                             <p class="mt-1 whitespace-pre-line">{{ $comment->text }}</p>
                             @if ($comment->replied_at)<p class="mt-1 pl-4 border-l-2 whitespace-pre-line text-gray-700">{{ $comment->reply }}</p>@endif
                         </div>

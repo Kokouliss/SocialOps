@@ -3,7 +3,7 @@
 @php($rows = fn ($items) => array_merge(array_values($items), [[]]))
 @php($input = 'block w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-brand-500 focus:ring-brand-500')
 @php($check = 'rounded border-gray-300 text-brand-600 focus:ring-brand-500')
-@php($sub = 'mb-1 block text-xs font-medium text-gray-500')
+@php($sub = 'mb-1 block text-xs font-medium text-gray-600')
 @php($p = fn ($key, $default = '') => old('p.'.$key, data_get($profile, $key, $default)))
 @php($text = fn ($key, $glue = ', ') => is_array($v = $p($key)) ? implode($glue, $v) : (string) $v)
 @php($flag = fn ($key) => $errors->any() ? (bool) old('p.'.$key) : (bool) data_get($profile, $key))
@@ -165,7 +165,7 @@
         </div>
         @if ($client->exists && $client->profile['pillars'])
             @php($mix = \App\Planning\PillarMix::for($client))
-            <p class="mt-2 text-xs text-gray-500">{{ __('Posts per pillar, :days days back and ahead (:n posts):', ['days' => \App\Planning\PillarMix::DAYS, 'n' => $mix['posts']]) }}
+            <p class="mt-2 text-xs text-gray-600">{{ __('Posts per pillar, :days days back and ahead (:n posts):', ['days' => \App\Planning\PillarMix::DAYS, 'n' => $mix['posts']]) }}
                 @foreach ($mix['rows'] as $pillar => $row)<span class="{{ in_array($pillar, $mix['drifted']) ? 'font-medium text-red-600' : '' }}">{{ str_replace('_', ' ', $pillar) }} {{ $row['actual'] }}%</span>@if (! $loop->last) · @endif @endforeach
             </p>
         @endif
@@ -247,7 +247,7 @@
             </div>
         @endforeach
         @if ($client->exists && ($best = \App\Planning\BestTimes::for($client)))
-            <p class="mt-2 text-xs text-gray-500">{{ __('Best hours from our numbers of the last :days days: :list', ['days' => \App\Planning\BestTimes::DAYS, 'list' => collect($best)->map(fn ($s) => $days[$s['day']].' '.sprintf('%02d:00', $s['hour']).' ('.__(':n posts, :avg interactions each', ['n' => $s['posts'], 'avg' => $s['avg']]).')')->join(', ')]) }}</p>
+            <p class="mt-2 text-xs text-gray-600">{{ __('Best hours from our numbers of the last :days days: :list', ['days' => \App\Planning\BestTimes::DAYS, 'list' => collect($best)->map(fn ($s) => $days[$s['day']].' '.sprintf('%02d:00', $s['hour']).' ('.__(':n posts, :avg interactions each', ['n' => $s['posts'], 'avg' => $s['avg']]).')')->join(', ')]) }}</p>
         @endif
     </x-field>
     <x-field :label="__('Key dates')" :help="__('Openings, events, anniversaries: marked on the calendar and given to the planner.')">

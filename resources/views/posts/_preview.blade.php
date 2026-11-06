@@ -1,8 +1,8 @@
 {{-- The post as the client will see it on the approval link, one card per ticked platform, following the form as you type. --}}
 @php($post->exists || $post->setRelation('client', $client))
 <div class="space-y-4">
-    <h3 class="text-sm font-medium text-gray-700">{{ __('Preview') }} <span class="font-normal text-gray-400">{{ __('(as on the approval link; placeholders filled from the profile)') }}</span></h3>
-    <p data-preview-empty class="text-sm text-gray-400 {{ old('platforms', $post->platforms ?? []) ? 'hidden' : '' }}">{{ __('Tick a platform above to see the post as the client will.') }}</p>
+    <h3 class="text-sm font-medium text-gray-700">{{ __('Preview') }} <span class="font-normal text-gray-500">{{ __('(as on the approval link; placeholders filled from the profile)') }}</span></h3>
+    <p data-preview-empty class="text-sm text-gray-500 {{ old('platforms', $post->platforms ?? []) ? 'hidden' : '' }}">{{ __('Tick a platform above to see the post as the client will.') }}</p>
     @foreach (\App\Models\Post::PLATFORMS as $platform)
         <div data-preview-platform="{{ $platform }}" class="{{ in_array($platform, old('platforms', $post->platforms ?? [])) ? '' : 'hidden' }}">
             @include('portal._preview', ['post' => $post, 'platform' => $platform, 'client' => $client, 'assetUrl' => fn ($a) => $a->kind === 'video' ? route('assets.download', $a) : route('assets.thumb', $a), 'live' => true])
@@ -33,7 +33,7 @@
             document.querySelectorAll('[data-preview-media]').forEach(box => {
                 if (box.dataset.current === current) return;
                 box.dataset.current = current;
-                box.innerHTML = ! id ? '<span class="text-xs text-gray-500">{{ __('Photo or video to follow') }}</span>'
+                box.innerHTML = ! id ? '<span class="text-xs text-gray-600">{{ __('Photo or video to follow') }}</span>'
                     : kinds[id] === 'video' ? `<video src="${urls.video.replace('/0/', `/${id}/`)}" controls playsinline class="h-full w-full object-cover"></video>`
                     : `<img src="${urls.image.replace('/0/', `/${id}/`)}" alt="" class="h-full w-full object-cover">`;
             });

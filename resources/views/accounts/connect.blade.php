@@ -7,12 +7,12 @@
     @endif
     @error('connect') <p class="mt-4 text-sm text-red-600">{{ $message }}</p> @enderror
 
-    <ul class="mt-4 divide-y divide-gray-100 text-sm">
+    <ul class="mt-4 divide-y divide-gray-200 text-sm">
         @foreach ($providers as $provider => $platforms)
             <li class="py-3 flex flex-wrap items-center gap-3">
                 <span class="w-40 font-medium">{{ ['meta' => 'Facebook / Instagram', 'tiktok' => 'TikTok'][$provider] }}</span>
                 @php($connected = collect($platforms)->map(fn ($p) => $accounts->get($p)?->name)->filter())
-                <span class="text-gray-500">{{ $connected->isNotEmpty() ? $connected->join(', ') : __('not connected') }}</span>
+                <span class="text-gray-600">{{ $connected->isNotEmpty() ? $connected->join(', ') : __('not connected') }}</span>
                 <a href="{{ $links[$provider] }}" class="ml-auto inline-flex items-center px-3 py-1 border rounded text-xs hover:bg-gray-100">{{ $connected->isNotEmpty() ? __('Reconnect') : __('Connect') }}</a>
             </li>
         @endforeach

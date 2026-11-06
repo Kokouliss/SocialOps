@@ -6,7 +6,7 @@
 @php($langs = ($live ?? false) ? array_merge($client->profile['languages'], $client->profile['extra_languages'] ?? []) : $variants->keys()->all())
 @php($textFirst = $platform === 'facebook' || $platform === 'linkedin')
 @php($hashtags = fn ($v) => collect($v?->hashtags ?? [])->map(fn ($h) => '#'.ltrim($h, '#'))->join(' '))
-<div class="rounded-lg border border-gray-200 overflow-hidden text-sm {{ $vertical ? 'bg-black text-white' : 'bg-white' }}">
+<div class="rounded-lg border border-gray-300 overflow-hidden text-sm {{ $vertical ? 'bg-black text-white' : 'bg-white' }}">
     <div class="flex items-center gap-2 px-3 py-2">
         <span class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold text-gray-700">{{ mb_substr($client->name, 0, 1) }}</span>
         <span class="font-semibold">{{ $client->name }}</span>
@@ -25,7 +25,7 @@
     @endif
     <div class="bg-gray-100 {{ $vertical ? 'aspect-[9/16]' : 'aspect-square' }} flex items-center justify-center overflow-hidden" data-preview-media data-current="{{ $asset ? $asset->kind.':'.$asset->id : '' }}">
         @if (! $asset)
-            <span class="text-xs text-gray-500">{{ __('Photo or video to follow') }}</span>
+            <span class="text-xs text-gray-600">{{ __('Photo or video to follow') }}</span>
         @elseif ($asset->kind === 'video')
             <video src="{{ $assetUrl($asset) }}" controls playsinline class="h-full w-full object-cover"></video>
         @else

@@ -33,14 +33,14 @@
 
             @forelse ($months as $month => $deadlines)
                 <x-section :title="$month ? \Carbon\Carbon::parse($month.'-01')->translatedFormat('F Y') : __('No date')" flush>
-                    <ul class="divide-y divide-gray-100 text-sm">
+                    <ul class="divide-y divide-gray-200 text-sm">
                         @foreach ($deadlines as $deadline)
                             <li class="flex flex-wrap items-center gap-3 px-6 py-2.5">
                                 <form method="POST" action="{{ route('deadlines.toggle', $deadline) }}">@csrf @method('PATCH')<button type="submit" class="flex h-5 w-5 items-center justify-center rounded-full border text-xs {{ $deadline->done_at ? 'border-green-600 bg-green-600 text-white' : 'border-gray-300 text-transparent hover:border-gray-500' }}" title="{{ $deadline->done_at ? __('Reopen') : __('Mark done') }}">✓</button></form>
-                                <span class="{{ $deadline->done_at ? 'text-gray-400 line-through' : 'text-gray-900' }}">{{ $deadline->title }}</span>
+                                <span class="{{ $deadline->done_at ? 'text-gray-500 line-through' : 'text-gray-900' }}">{{ $deadline->title }}</span>
                                 <span class="rounded-full px-2 py-0.5 text-xs {{ $deadline->side === 'client' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800' }}">{{ __(\App\Models\Deadline::SIDES[$deadline->side]) }}</span>
-                                @if ($deadline->due_on)<span class="text-xs {{ ! $deadline->done_at && $deadline->due_on->lt(today()) ? 'text-red-600 font-medium' : 'text-gray-500' }}">{{ $deadline->due_on->translatedFormat('D d-m-Y') }}</span>@endif
-                                @if ($deadline->done_at)<span class="text-xs text-gray-400">{{ __('done') }} {{ $deadline->done_at->format('d-m-Y') }}</span>@endif
+                                @if ($deadline->due_on)<span class="text-xs {{ ! $deadline->done_at && $deadline->due_on->lt(today()) ? 'text-red-600 font-medium' : 'text-gray-600' }}">{{ $deadline->due_on->translatedFormat('D d-m-Y') }}</span>@endif
+                                @if ($deadline->done_at)<span class="text-xs text-gray-500">{{ __('done') }} {{ $deadline->done_at->format('d-m-Y') }}</span>@endif
                                 <form method="POST" action="{{ route('deadlines.destroy', $deadline) }}" class="ml-auto" onsubmit="return confirm('{{ __('Delete this deadline?') }}')">@csrf @method('DELETE')<button type="submit" class="text-xs text-red-600 hover:underline">{{ __('Delete') }}</button></form>
                             </li>
                         @endforeach

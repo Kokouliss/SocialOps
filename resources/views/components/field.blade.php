@@ -7,7 +7,7 @@
         @else
             <p class="text-sm font-medium text-gray-900">{{ $label }}</p>
         @endif
-        @if ($help)<p class="mt-1 text-xs leading-5 text-gray-500">{{ $help }}</p>@endif
+        @if ($help)<p class="mt-1 text-sm leading-5 text-gray-600">{{ $help }}</p>@endif
     </div>
     <div class="min-w-0 md:col-span-2">{{ $slot }}</div>
 </div>
