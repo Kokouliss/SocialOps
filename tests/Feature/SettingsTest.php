@@ -40,7 +40,7 @@ test('the migration made the oldest login admin and admins hand the flag on from
     $admin = User::factory()->create(['is_admin' => true]);
     $other = User::factory()->create();
 
-    $this->actingAs($other)->patch("/staff/{$admin->id}", ['is_admin' => 0])->assertRedirect('/staff');
+    $this->actingAs($other)->patch("/staff/{$admin->id}", ['is_admin' => 0])->assertForbidden(); // only an admin changes an admin login
     expect($admin->fresh()->is_admin)->toBeTrue();
 
     $this->actingAs($admin)->patch("/staff/{$other->id}", ['is_admin' => 1])->assertRedirect('/staff');

@@ -9,7 +9,7 @@
             <div class="flex items-center gap-2 font-medium {{ $day?->isToday() ? 'text-brand-600' : 'text-gray-800' }}">
                 {{ $day ? $day->translatedFormat('l d-m-Y') : __('No date yet') }}
                 @foreach ($marks[$key] ?? [] as $mark)
-                    <span class="font-normal text-amber-700">· {{ $mark }}</span>
+                    <span class="font-normal text-amber-700 opacity-40">· {{ $mark }}</span>
                 @endforeach
                 @if ($day && $clientSlug)
                     <a href="{{ route('posts.create', [$clients->firstWhere('slug', $clientSlug), 'date' => $key]) }}" class="ml-auto text-gray-500 hover:text-gray-700" title="{{ __('New post') }}">+</a>

@@ -177,22 +177,27 @@ class PostController extends Controller
 
         DB::transaction(function () use ($request, $post, $data) {
             $rows = $request->variantRows();
-            $before = $post->variants->map(fn ($v) => $v->only(['platform', 'lang', 'caption', 'alt_text', 'hashtags']))->values()->all();
+            // captions saved earlier from a browser may carry CRLF: compared in one form, so an untouched caption is no change
+            $before = $post->variants->map(fn ($v) => ['caption' => PostRequest::lines($v->caption), 'alt_text' => PostRequest::lines($v->alt_text)] + $v->only(['platform', 'lang', 'hashtags']))->values()->all();
 
             $post->fill([
                 'platforms' => $data['platforms'],
                 'format' => $data['format'],
                 'pillar' => $data['pillar'] ?? null,
                 'brief' => $data['brief'] ?? null,
-                'settings' => $data['settings'] ?? null,
+                'settings' => Post::mergeSettings($post->settings, $data['settings'] ?? []),
                 'scheduled_at' => $data['scheduled_at'] ?? null,
             ])->save();
 
+            $assetsBefore = $post->assets->pluck('id')->all(); // in carousel order
+            $assets = $this->assetPositions($data['assets'] ?? []);
+
             $post->variants()->delete();
             $post->variants()->createMany($rows);
-            $post->assets()->sync($this->assetPositions($data['assets'] ?? []));
+            $post->assets()->sync($assets);
 
-            if ($before != $rows) {
+            // the client approved these words and these pictures in this order: a change to either goes back to them
+            if ($before != $rows || $assetsBefore !== array_keys($assets)) {
                 $post->reopenForReview();
             }
         });

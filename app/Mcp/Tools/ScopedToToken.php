@@ -22,7 +22,10 @@ trait ScopedToToken
     /** A client by id or slug, or a validation error the caller can read. */
     protected function client(mixed $idOrSlug): Client
     {
-        return $this->clients()->where(fn ($q) => $q->whereKey((int) $idOrSlug)->orWhere('slug', (string) $idOrSlug))->first()
+        // an id only when it is all digits: (int) "2-lounge" is 2, which picked client 2 for the slug "2-lounge"
+        $byId = ctype_digit((string) $idOrSlug) ? $this->clients()->whereKey((int) $idOrSlug)->first() : null;
+
+        return $byId ?? $this->clients()->where('slug', (string) $idOrSlug)->first()
             ?? throw ValidationException::withMessages(['client' => "No client \"$idOrSlug\" within this token's reach; see list-clients."]);
     }
 

@@ -48,6 +48,52 @@ test('staff create a post with variants for the chosen platforms and languages',
         ->and(Post::latest('id')->first()->settings)->toMatchArray(['design' => ['en' => 'Headline'], 'first_comment' => '#chania']);
 });
 
+test('a too long caption shows its message on the form, and one left under an unticked platform does not block the save', function () {
+    $this->actingAs($this->staff)->from("/clients/{$this->client->id}/posts/create")->followingRedirects()
+        ->post("/clients/{$this->client->id}/posts", postInput(['variants' => ['instagram' => ['el' => ['caption' => str_repeat('α', 2201)], 'en' => ['caption' => 'ok']]]]))
+        ->assertOk()->assertSee('Instagram captions are limited to 2200 characters.')->assertDontSee('<x-input-error', false);
+
+    $this->actingAs($this->staff)->post("/clients/{$this->client->id}/posts", postInput([
+        'platforms' => ['facebook'],
+        'variants' => ['instagram' => ['el' => ['caption' => str_repeat('α', 2201)]], 'facebook' => ['el' => ['caption' => 'FB EL'], 'en' => ['caption' => 'FB EN']]],
+    ]))->assertSessionHasNoErrors();
+    expect(Post::count())->toBe(1);
+});
+
+test('saving an approved post without changes keeps it approved, and settings the form does not show survive the save', function () {
+    $post = Post::factory()->create(['client_id' => $this->client->id, 'state' => PostState::Scheduled, 'platforms' => ['instagram'], 'format' => 'feed', 'pillar' => 'food_drink',
+        'brief' => 'Sunset', 'scheduled_at' => '2027-05-12 18:30', 'settings' => ['repeat' => 'weekly', 'instagram' => ['collaborators' => '@chef']]]);
+    $post->variants()->create(['platform' => 'instagram', 'lang' => 'el', 'caption' => "Γραμμή ένα\nΓραμμή δύο", 'hashtags' => []]); // written by Claude: LF
+    $post->variants()->create(['platform' => 'instagram', 'lang' => 'en', 'caption' => "Line one\nLine two", 'hashtags' => []]);
+
+    // the browser sends the same captions with CRLF, and only the settings the form shows
+    $this->actingAs($this->staff)->patch(route('posts.update', $post), [
+        'platforms' => ['instagram'], 'format' => 'feed', 'pillar' => 'food_drink', 'brief' => 'Sunset', 'scheduled_at' => '2027-05-12 18:30',
+        'settings' => ['first_comment' => '', 'ask_claude' => '0', 'design' => ['el' => '', 'en' => '']],
+        'variants' => ['instagram' => ['el' => ['caption' => "Γραμμή ένα\r\nΓραμμή δύο", 'hashtags' => '', 'alt_text' => ''], 'en' => ['caption' => "Line one\r\nLine two", 'hashtags' => '', 'alt_text' => '']]],
+    ])->assertSessionHasNoErrors();
+
+    $post->refresh();
+    expect($post->state)->toBe(PostState::Scheduled)
+        ->and($post->settings['repeat'])->toBe('weekly')
+        ->and($post->settings['instagram']['collaborators'])->toBe('@chef');
+});
+
+test('swapping the picture of an approved post sends it back to review', function () {
+    [$first, $second] = Asset::factory()->count(2)->create(['client_id' => $this->client->id]);
+    $post = Post::factory()->create(['client_id' => $this->client->id, 'state' => PostState::Approved, 'platforms' => ['instagram'], 'format' => 'feed', 'pillar' => 'food_drink', 'brief' => 'Sunset']);
+    $post->assets()->attach($first->id, ['position' => 0]);
+    $post->variants()->create(['platform' => 'instagram', 'lang' => 'el', 'caption' => 'Καλημέρα', 'hashtags' => []]);
+    $post->variants()->create(['platform' => 'instagram', 'lang' => 'en', 'caption' => 'Good morning', 'hashtags' => []]);
+
+    $this->actingAs($this->staff)->patch(route('posts.update', $post), [
+        'platforms' => ['instagram'], 'format' => 'feed', 'pillar' => 'food_drink', 'brief' => 'Sunset', 'assets' => [$second->id],
+        'variants' => ['instagram' => ['el' => ['caption' => 'Καλημέρα'], 'en' => ['caption' => 'Good morning']]],
+    ])->assertSessionHasNoErrors();
+
+    expect($post->fresh()->state)->toBe(PostState::InReview);
+});
+
 test('captions over the platform limit and other clients assets are rejected', function () {
     $foreign = Asset::factory()->create();
 

@@ -6,9 +6,8 @@ use App\Models\Asset;
 use App\Models\Review;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
-use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 /** The client's approval page, reachable only through the review's signed link. */
 class PortalController extends Controller
@@ -41,10 +40,10 @@ class PortalController extends Controller
         return redirect($request->fullUrl())->with('status', $data['decision']);
     }
 
-    public function asset(Review $review, Asset $asset): StreamedResponse
+    public function asset(Review $review, Asset $asset): Response
     {
         abort_unless($review->posts()->whereHas('assets', fn ($q) => $q->whereKey($asset->id))->exists(), 404);
 
-        return Storage::disk($asset->disk)->response($asset->path);
+        return $asset->inline();
     }
 }

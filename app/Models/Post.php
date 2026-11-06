@@ -247,6 +247,33 @@ class Post extends Model
         return $copy;
     }
 
+    /**
+     * The form's (or update-post's) settings over the stored ones. Keys the sender does not show stay (repeat, collaborators,
+     * TikTok while posting is off), and when nothing really changed the stored value comes back as it was, so saving an
+     * approved post untouched keeps it approved (empty, null and false count as "not set").
+     */
+    public static function mergeSettings(?array $stored, array $incoming): ?array
+    {
+        $merged = array_replace_recursive($stored ?? [], $incoming);
+
+        return self::setValues($merged) == self::setValues($stored ?? []) ? $stored : $merged;
+    }
+
+    /** The settings without the empty values, for comparing what a post really has set. */
+    private static function setValues(array $settings): array
+    {
+        foreach ($settings as $key => $value) {
+            $value = is_array($value) ? self::setValues($value) : $value;
+            if ($value === null || $value === '' || $value === false || $value === []) {
+                unset($settings[$key]);
+            } else {
+                $settings[$key] = $value;
+            }
+        }
+
+        return $settings;
+    }
+
     public function reopenForReview(): void
     {
         if ($this->state->isLocked() && $this->state !== PostState::Published) {

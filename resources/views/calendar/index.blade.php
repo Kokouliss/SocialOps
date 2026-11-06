@@ -95,7 +95,7 @@
                             @endif
                         </div>
                         @foreach ($marks[$key] ?? [] as $mark)
-                            <div class="truncate text-amber-700" title="{{ $mark }}">{{ $mark }}</div>
+                            <div class="truncate text-amber-700 opacity-40" title="{{ $mark }}">{{ $mark }}</div>
                         @endforeach
                         @foreach ($posts->get($key, []) as $post)
                             @include('calendar._chip', ['post' => $post])

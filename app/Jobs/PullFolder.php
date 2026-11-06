@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Alerts\Slack;
+use App\Http\Requests\InboxUploadRequest;
 use App\Media\Dropbox;
 use App\Media\GoogleDrive;
 use App\Models\Account;
@@ -46,7 +47,14 @@ class PullFolder implements ShouldQueue
                 fwrite($out, $body->read(1 << 20));
             }
             fclose($out);
-            $client->storeAsset(new UploadedFile($tmp, $file['name'], $file['mime'] ?? null, null, true), ['note' => self::SOURCES[$this->account->platform].': '.$file['name'], 'uploaded_via' => $this->account->platform, 'source_id' => $prefix.$file['id']]);
+            $upload = new UploadedFile($tmp, $file['name'], $file['mime'] ?? null, null, true);
+            // the folder's owner decides what lands in it: only what really is a photo or a video (by its content, not its name) is filed
+            if (! in_array($upload->getMimeType(), explode(',', InboxUploadRequest::MIMES), true)) {
+                @unlink($tmp);
+
+                continue;
+            }
+            $client->storeAsset($upload, ['note' => self::SOURCES[$this->account->platform].': '.$file['name'], 'uploaded_via' => $this->account->platform, 'source_id' => $prefix.$file['id']]);
             @unlink($tmp);
             $new++;
         }

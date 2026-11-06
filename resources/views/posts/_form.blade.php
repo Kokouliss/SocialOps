@@ -167,7 +167,7 @@
                 <div>
                     <x-input-label :value="strtoupper($lang)" />
                     <textarea name="variants[{{ $platform }}][{{ $lang }}][caption]" data-lang="{{ $lang }}" rows="5" class="{{ $control }} text-sm">{{ old("variants.$platform.$lang.caption", $v?->caption) }}</textarea>
-                    <x-input-error class="mt-1" :messages="$errors->get(\"variants.$platform.$lang.caption\")" />
+                    <x-input-error class="mt-1" :messages="$errors->get('variants.'.$platform.'.'.$lang.'.caption')" />
                     <x-text-input name="variants[{{ $platform }}][{{ $lang }}][hashtags]" type="text" class="mt-2 block w-full text-sm" placeholder="#chania #crete" :value="old('variants.'.$platform.'.'.$lang.'.hashtags', implode(' ', $v?->hashtags ?? []))" />
                     @if ($platform !== 'tiktok')
                         <x-text-input name="variants[{{ $platform }}][{{ $lang }}][alt_text]" type="text" class="mt-2 block w-full text-sm" placeholder="{{ __('Alt text') }}" :value="old('variants.'.$platform.'.'.$lang.'.alt_text', $v?->alt_text)" />
@@ -225,10 +225,12 @@
             if (target && target.value !== field.value) { target.value = field.value; target.dispatchEvent(new Event('input', { bubbles: true })); }
         });
     };
-    const copyAll = () => sets()[0]?.querySelectorAll('textarea, input[type=text]').forEach(copyFrom);
-    boxes.forEach(b => b.addEventListener('change', () => { showSections(); if (sync.checked) copyAll(); }));
+    // the text is copied from a platform that already had captions, never from the one just ticked (its boxes are empty and would wipe the others)
+    const withText = list => list.find(s => [...s.querySelectorAll('textarea')].some(t => t.value.trim()));
+    const copyAll = source => source?.querySelectorAll('textarea, input[type=text]').forEach(copyFrom);
+    boxes.forEach(b => b.addEventListener('change', () => { const shown = sets(); showSections(); if (sync.checked) copyAll(withText(shown) ?? withText(sets())); }));
     document.querySelectorAll('fieldset[data-max]').forEach(s => s.addEventListener('input', e => { if (sync.checked && e.isTrusted) copyFrom(e.target); }));
-    sync.addEventListener('change', () => sync.checked && copyAll());
+    sync.addEventListener('change', () => sync.checked && copyAll(withText(sets())));
     showSections();
 
     // The rewrite box: the instruction and the captions of the ticked platforms go to the server, the rewritten captions come back into the textareas, unsaved.
