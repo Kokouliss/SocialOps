@@ -45,7 +45,8 @@ class Client extends Model
     public function storeAsset(UploadedFile $file, array $attrs = []): Asset
     {
         $disk = config('filesystems.default');
-        $name = AssetNamer::name($this, $file, $attrs['pillar'] ?? null);
+        // never over another file: a name whose file is already on the disk is skipped
+        $name = AssetNamer::name($this, $file, $attrs['pillar'] ?? null, taken: fn (string $name) => Storage::disk($disk)->exists("clients/{$this->slug}/inbox/$name"));
 
         return $this->assets()->create($attrs + [
             'name' => $name,

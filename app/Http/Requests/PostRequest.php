@@ -79,11 +79,16 @@ class PostRequest extends FormRequest
             if ($collaborators && $this->input('format') === 'story') {
                 $validator->errors()->add('settings.instagram.collaborators', 'Instagram Stories cannot have collaborators.');
             }
+            // only the ticked platforms are saved, so only they are checked: a long caption left under an unticked one must not block Save
+            $ticked = (array) $this->input('platforms');
             foreach ((array) $this->input('variants') as $platform => $langs) {
+                if (! in_array($platform, $ticked, true)) {
+                    continue;
+                }
                 foreach ((array) $langs as $lang => $fields) {
                     $max = self::CAPTION_MAX[$platform] ?? 5000;
-                    if (mb_strlen((string) ($fields['caption'] ?? '')) > $max) {
-                        $validator->errors()->add("variants.$platform.$lang.caption", ucfirst($platform)." captions are limited to $max characters.");
+                    if (mb_strlen(self::lines((string) ($fields['caption'] ?? ''))) > $max) {
+                        $validator->errors()->add("variants.$platform.$lang.caption", __(':platform captions are limited to :max characters.', ['platform' => ucfirst($platform), 'max' => $max]));
                     }
                 }
             }
@@ -106,13 +111,19 @@ class PostRequest extends FormRequest
                 $rows[] = [
                     'platform' => $platform,
                     'lang' => $lang,
-                    'caption' => $fields['caption'] ?? null,
-                    'alt_text' => $fields['alt_text'] ?? null,
+                    'caption' => self::lines($fields['caption'] ?? null),
+                    'alt_text' => self::lines($fields['alt_text'] ?? null),
                     'hashtags' => array_values(array_filter(is_array($fields['hashtags'] ?? null) ? $fields['hashtags'] : preg_split('/[\s,]+/', (string) ($fields['hashtags'] ?? '')))),
                 ];
             }
         }
 
         return $rows;
+    }
+
+    /** Browsers send textarea text with CRLF line breaks, Claude and the API with LF: one form, so an unchanged caption compares equal. */
+    public static function lines(?string $text): ?string
+    {
+        return $text === null ? null : str_replace("\r\n", "\n", $text);
     }
 }

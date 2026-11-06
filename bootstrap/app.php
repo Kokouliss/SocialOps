@@ -17,6 +17,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->web(append: [SetLocale::class]);
         $middleware->alias(['feature' => Feature::class]);
+        // the client's signed links: the signature is the credential, so a review or upload page left open past the
+        // session still posts (no "Page Expired"), and the tracking Facebook, Messenger or a newsletter adds does not break it
+        $middleware->validateCsrfTokens(except: ['review/*', 'inbox/*']);
+        $middleware->validateSignatures(except: ['fbclid', 'gclid', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

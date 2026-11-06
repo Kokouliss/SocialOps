@@ -43,6 +43,7 @@ class StaffController extends Controller
     public function update(Request $request, User $user)
     {
         abort_if($user->is($request->user()), 422, 'You cannot limit your own login.');
+        abort_if($user->is_admin && ! $request->user()->is_admin, 403, 'Only an admin can change an admin login.');
         $user->update(['client_ids' => $this->clientIds($request)]);
         if ($request->user()->is_admin) {
             $user->forceFill(['is_admin' => $request->boolean('is_admin')])->save();
@@ -54,6 +55,7 @@ class StaffController extends Controller
     public function destroy(Request $request, User $user)
     {
         abort_if($user->is($request->user()), 422, 'You cannot remove your own login.');
+        abort_if($user->is_admin && ! $request->user()->is_admin, 403, 'Only an admin can remove an admin login.');
         $user->delete();
 
         return redirect()->route('staff.index')->with('status', 'login-removed');

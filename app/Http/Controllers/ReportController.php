@@ -51,7 +51,13 @@ class ReportController extends Controller
     public function send(Report $report, MonthlyReport $reports): RedirectResponse
     {
         abort_unless($report->kind === 'monthly', 404);
-        $n = $reports->mail($report);
+        try {
+            $n = $reports->mail($report);
+        } catch (\Throwable $e) { // a mail server problem: said on the page, not an error page
+            report($e);
+
+            return redirect()->route('reports.show', $report)->withErrors(['send' => __('The e-mail could not be sent (:error). Check the mail settings on the Settings page.', ['error' => $e->getMessage()])]);
+        }
 
         return $n
             ? redirect()->route('reports.show', $report)->with('status', __('Report mailed to :n approvers', ['n' => $n]))

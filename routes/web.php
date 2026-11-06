@@ -39,8 +39,8 @@ Route::post('/refresh', function () {
     Artisan::call('optimize');
 
     return redirect()->route('dashboard')->with('status', 'app-refreshed');
-})->middleware('auth')->name('refresh');
-Route::get('/refresh', fn () => view('refresh'))->middleware('auth'); // reachable even while the dashboard fails before a migration
+})->middleware(['auth', 'can:admin'])->name('refresh'); // it runs migrations: admins only, like the link in the side navigation
+Route::get('/refresh', fn () => view('refresh'))->middleware(['auth', 'can:admin']); // reachable even while the dashboard fails before a migration
 
 Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::resource('clients', ClientController::class)->except('show');
