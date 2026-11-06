@@ -3,7 +3,7 @@
         <h2 class="text-2xl font-semibold tracking-tight text-gray-900">{{ __('Needs attention') }}</h2>
     </x-slot>
 
-    @php($quiet = $week->isEmpty() && $drafts->isEmpty() && $stuck->isEmpty() && $waiting->isEmpty() && $deadlines->isEmpty() && $unanswered->isEmpty() && $tokens->isEmpty() && $drift->isEmpty() && ! $failedJobs)
+    @php($quiet = $week->isEmpty() && $drafts->isEmpty() && $stuck->isEmpty() && $waiting->isEmpty() && $deadlines->isEmpty() && $unanswered->isEmpty() && $tokens->isEmpty() && $drift->isEmpty() && ! $failedJobs && ! $lateClaude)
     @php($line = fn ($post) => '<a class="font-medium text-gray-900 hover:text-brand-600" href="'.route('posts.edit', $post).'">'.e($post->name).'</a> <span class="text-gray-600">'.e($post->client->code.' · '.collect($post->platforms)->map(fn ($p) => str_replace('_', ' ', ucfirst($p)))->join(', ')).'</span>')
     @php($item = 'flex flex-wrap items-baseline gap-x-3 gap-y-1 px-6 py-2.5')
     @php($when = 'w-40 shrink-0 tabular-nums text-gray-600')
@@ -17,6 +17,10 @@
                 <x-empty-state class="bg-white" :action="__('Add the first client')" :href="route('clients.create')">{{ __('No clients yet. A client profile holds the accounts, the voice, the pillars and the approvers; everything else hangs off it.') }}</x-empty-state>
             @elseif ($quiet)
                 <x-empty-state class="bg-white" :action="__('Open the calendar')" :href="route('calendar')">{{ __('Nothing needs you right now.') }}</x-empty-state>
+            @endif
+
+            @if ($lateClaude)
+                <p class="rounded-xl bg-red-100 px-6 py-4 font-medium text-red-800" role="alert">{{ __('Claude has not picked up :n requests for over 2 hours. Check that the scheduled task is on.', ['n' => $lateClaude]) }} <a class="underline" href="{{ route('jobs.index') }}">{{ __('See what is waiting') }}</a></p>
             @endif
 
             <div class="grid gap-4 lg:grid-cols-2 lg:items-start">

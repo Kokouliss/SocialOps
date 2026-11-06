@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Arr;
 
 /** A deleted post is soft-deleted: it waits in its client's recycle bin (`moveToBin()`, `restoreFromBin()`) and every ordinary query skips it. */
 #[Fillable(['name', 'state', 'platforms', 'format', 'pillar', 'brief', 'settings', 'scheduled_at', 'created_by'])]
@@ -53,6 +54,16 @@ class Post extends Model
 
     protected static function booted(): void
     {
+        // the Claude queue (App\Planning\ClaudeQueue) keeps when the "Ask Claude" tick went on; when it goes off, its bookkeeping goes too
+        static::saving(function (Post $post) {
+            $settings = $post->settings ?? [];
+            $asked = ($settings['ask_claude'] ?? false) === true;
+            if ($asked && ! ($post->exists && ($post->getOriginal('settings')['ask_claude'] ?? false) === true)) {
+                $post->settings = ['ask_claude_at' => now()->toIso8601String()] + Arr::except($settings, 'ask_claude_alerted_at');
+            } elseif (! $asked && Arr::hasAny($settings, ['ask_claude_at', 'ask_claude_alerted_at'])) {
+                $post->settings = Arr::except($settings, ['ask_claude_at', 'ask_claude_alerted_at']);
+            }
+        });
         static::updating(function (Post $post) {
             if ($post->state->isLocked() && $post->state !== PostState::Published && $post->isDirty(self::CONTENT_FIELDS)) {
                 $post->state = PostState::InReview;

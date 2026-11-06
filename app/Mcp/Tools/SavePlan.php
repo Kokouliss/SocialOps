@@ -3,6 +3,7 @@
 namespace App\Mcp\Tools;
 
 use App\Models\Post;
+use App\Planning\ClaudeQueue;
 use App\Planning\PlanRequest;
 use App\Planning\PlanWriter;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -59,7 +60,9 @@ class SavePlan extends Tool
             'posts' => $posts,
         ];
         $sheet = $writer->write($client, $result, fileBrief: ($input['trend_brief'] ?? '') !== '');
-        $client->reports()->where('kind', 'claude_job')->whereKey($input['job'] ?? 0)->delete();
+        if ($job = $client->reports()->where('kind', 'claude_job')->find($input['job'] ?? 0)) {
+            ClaudeQueue::clear($job); // with identical requests that slipped in next to it
+        }
 
         return Response::json([
             'drafts' => count($result['posts']),

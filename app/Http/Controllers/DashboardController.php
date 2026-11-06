@@ -8,6 +8,7 @@ use App\Models\Comment;
 use App\Models\Deadline;
 use App\Models\Post;
 use App\Models\Review;
+use App\Planning\ClaudeQueue;
 use App\Planning\PillarMix;
 use App\Posts\PostState;
 use Illuminate\Http\Request;
@@ -37,6 +38,7 @@ class DashboardController extends Controller
             'unanswered' => ! config('features.publishing') ? collect() : $mine->restrict(Comment::with('client'))->whereNull('replied_at')->whereNull('hidden_at')->selectRaw('client_id, count(*) as n')->groupBy('client_id')->get(),
             'tokens' => ! config('features.publishing') ? collect() : $mine->restrict(Account::with('client'))->where('token_expires_at', '<=', now()->addDays(CheckTokens::ALERT_DAYS))->orderBy('token_expires_at')->get(),
             'failedJobs' => DB::table('failed_jobs')->count(),
+            'lateClaude' => ClaudeQueue::late($mine)->count(), // requests the hourly Claude worker has not picked up
         ]);
     }
 }

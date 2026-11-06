@@ -4,7 +4,7 @@ namespace App\Mcp\Tools;
 
 use App\Models\Post;
 use App\Models\Report;
-use App\Posts\PostState;
+use App\Planning\ClaudeQueue;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -21,10 +21,10 @@ class ListClaudeJobs extends Tool
         $clients = $this->clients()->select('id');
 
         return Response::json([
-            'captions' => Post::with('client')->whereIn('client_id', $clients)->where('settings->ask_claude', true)->whereNot('state', PostState::Published)->orderBy('id')->get()
+            'captions' => ClaudeQueue::captions()->with('client')->whereIn('client_id', $clients)->orderBy('id')->get()
                 ->map(fn (Post $p) => ['post' => $p->id, 'client' => $p->client->slug, 'name' => $p->name, 'url' => route('posts.edit', $p), 'how' => 'get-caption-brief, write, then update-post with the variants, settings.design and settings {ask_claude: false}'])->values(),
-            'plans' => Report::with('client')->whereIn('client_id', $clients)->where('kind', 'claude_job')->orderBy('id')->get()
-                ->map(fn (Report $r) => ['job' => $r->id, 'client' => $r->client->slug] + $r->meta + ['how' => "get-planning-brief with these fields, research the trends, plan, then save-plan with job {$r->id}"])->values(),
+            'plans' => ClaudeQueue::plans()->with('client')->whereIn('client_id', $clients)->orderBy('id')->get()
+                ->map(fn (Report $r) => ['job' => $r->id, 'client' => $r->client->slug] + ClaudeQueue::request($r) + ['how' => "get-planning-brief with these fields, research the trends, plan, then save-plan with job {$r->id}"])->values(),
         ]);
     }
 

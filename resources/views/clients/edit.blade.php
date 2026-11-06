@@ -109,6 +109,10 @@
                                 copy() { navigator.clipboard.writeText(this.text()).then(() => { this.copied = true; setTimeout(() => this.copied = false, 2000) }) } }">
                                 @if (session('status') === 'job-queued')
                                     <p class="mb-4 rounded-lg bg-green-50 px-4 py-3 text-sm font-semibold text-green-800" role="status">{{ __('Queued. Claude picks it up at its next run; the Drafts and the review sheet land in Reports.') }}</p>
+                                @elseif (session('status') === 'job-already-waiting')
+                                    <p class="mb-4 rounded-lg bg-yellow-100 px-4 py-3 text-sm font-semibold text-yellow-800" role="status">{{ __('Already waiting for Claude (queued :time)', ['time' => session('queued_at')]) }}</p>
+                                @elseif (session('status') === 'plan-request-cancelled')
+                                    <p class="mb-4 rounded-lg bg-green-50 px-4 py-3 text-sm font-semibold text-green-800" role="status">{{ __('Plan request cancelled') }}.</p>
                                 @endif
                                 <form method="POST" action="{{ route('clients.queue', $client) }}" class="grid gap-4 sm:grid-cols-4">
                                     @csrf
@@ -119,6 +123,21 @@
                                     <div class="sm:col-span-4 flex gap-2"><x-primary-button>{{ __('Queue for Claude') }}</x-primary-button><x-secondary-button type="button" x-on:click="copy()"><span x-text="copied ? '{{ __('Copied') }}' : '{{ __('Copy the request') }}'"></span></x-secondary-button></div>
                                     <x-input-error class="sm:col-span-4" :messages="$errors->job->all()" />
                                 </form>
+                                @if ($claudeJobs->isNotEmpty())
+                                    <h4 class="mt-6 text-sm font-semibold text-gray-900">{{ __('Waiting for Claude') }}</h4>
+                                    <ul class="mt-2 divide-y divide-gray-200 rounded-lg border border-gray-300 text-sm">
+                                        @foreach ($claudeJobs as $job)
+                                            <li class="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-2.5">
+                                                <span class="min-w-0 flex-1"><span class="font-medium text-gray-900">{{ \App\Planning\ClaudeQueue::describe($job) }}</span>
+                                                    @if (filled($job->meta['instruction'] ?? null))<span class="block text-gray-600">{{ __('About:') }} {{ $job->meta['instruction'] }}</span>@endif
+                                                </span>
+                                                <span class="tabular-nums text-gray-600">{{ __('queued :time', ['time' => $job->created_at->format('d-m-Y H:i')]) }} · {{ $job->created_at->diffForHumans() }}</span>
+                                                @if (\App\Planning\ClaudeQueue::isLate($job))<span class="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800">{{ __('over 2 hours') }}</span>@endif
+                                                <form method="POST" action="{{ route('claude.cancel', $job) }}">@csrf @method('DELETE')<button class="font-medium text-gray-900 hover:text-brand-600">{{ __('Cancel') }}</button></form>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                @endif
                             </div>
                         </x-section>
                     @endif
