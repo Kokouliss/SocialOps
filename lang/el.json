@@ -865,6 +865,6 @@
     "Claude plans the posts with their captions and puts them on the calendar as Drafts, with a review sheet in Reports. Press the button and Claude does it at its next run, once an hour.": "Ο Claude σχεδιάζει τις αναρτήσεις με τις λεζάντες τους και τις βάζει στο ημερολόγιο ως Πρόχειρα, με ένα φύλλο ελέγχου στις Αναφορές. Πατήστε το κουμπί και ο Claude το κάνει στην επόμενη εκτέλεσή του, μία φορά την ώρα.",
     "More filters": "Περισσότερα φίλτρα",
     "Copy link for the client": "Αντιγραφή συνδέσμου για τον πελάτη",
-    ":client has no approver in the profile, so no e-mail went out. Copy the link below and send it to the client yourself.": "Ο πελάτης :client δεν έχει εγκρίνοντα στο προφίλ, οπότε δεν στάλθηκε e-mail. Αντίγραψε τον σύνδεσμο παρακάτω και στείλε τον στον πελάτη εσύ.",
+    ":client has no approver in the profile, so no e-mail went out. Copy the link on the Approvals page and send it to the client yourself.": "Ο πελάτης :client δεν έχει εγκρίνοντα στο προφίλ, οπότε δεν στάλθηκε e-mail. Αντίγραψε τον σύνδεσμο από τη σελίδα Εγκρίσεις και στείλε τον στον πελάτη εσύ.",
     "none yet, so you send the link yourself": "κανένας ακόμη, οπότε στέλνεις εσύ τον σύνδεσμο"
 }
