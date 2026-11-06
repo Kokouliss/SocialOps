@@ -133,13 +133,35 @@ class Post extends Model
         return trim($this->client->substitute((string) ($this->client->profile['signatures'][$platform] ?? '')));
     }
 
-    /** The text that goes to the platform: every language of the profile in order, the platform's signature, then the hashtags once. */
-    public function captionFor(string $platform): string
+    /** The caption languages of the profile in order: the main ones, then the extra ones. */
+    public function languages(): array
     {
-        $languages = array_merge($this->client->profile['languages'], $this->client->profile['extra_languages'] ?? []);
+        return array_merge($this->client->profile['languages'], $this->client->profile['extra_languages'] ?? []);
+    }
+
+    /**
+     * The caption as it goes out, and as the team pastes it when posting by hand (the Post today page, the ZIP): the languages
+     * given, else every language of the profile in order, the platform's signature, then the hashtags once; placeholders
+     * filled, links tagged when the profile has utm. Unchecked: captionFor() refuses an unknown placeholder or a caption over the limit.
+     */
+    public function pasteText(string $platform, ?array $languages = null): string
+    {
         $variants = $this->variants->where('platform', $platform)->keyBy('lang');
         $hashtags = $variants->flatMap(fn (PostVariant $v) => $v->hashtags ?? [])->map(fn ($t) => '#'.ltrim($t, '#'))->unique()->join(' ');
-        $caption = $this->client->tagLinks($this->client->substitute(collect($languages)->map(fn ($lang) => trim((string) $variants->get($lang)?->caption))->push($this->signatureFor($platform))->push($hashtags)->filter()->join("\n\n")), $platform, $this->name);
+
+        return $this->client->tagLinks($this->client->substitute(collect($languages ?? $this->languages())->map(fn ($lang) => trim((string) $variants->get($lang)?->caption))->push($this->signatureFor($platform))->push($hashtags)->filter()->join("\n\n")), $platform, $this->name);
+    }
+
+    /** The first comment under an Instagram or Facebook post, placeholders filled and links tagged for that platform; empty when there is none. */
+    public function firstCommentFor(string $platform): string
+    {
+        return trim($this->client->tagLinks($this->client->substitute((string) ($this->settings['first_comment'] ?? '')), $platform, $this->name));
+    }
+
+    /** The text that goes to the platform (pasteText()), refused when a placeholder is not in the profile or the caption is over the platform's limit. */
+    public function captionFor(string $platform): string
+    {
+        $caption = $this->pasteText($platform);
         if (preg_match('/\{\{\s*[\p{L}\p{N}_]+\s*\}\}/u', $caption, $m)) {
             throw new PublishFailed(ucfirst($platform)." caption has the placeholder {$m[0]}, which is not in the profile's fields");
         }

@@ -211,12 +211,20 @@ class PostController extends Controller
         abort_if($to->needsPublishing() && ! config('features.publishing'), 404);
 
         try {
+            if ($to === PostState::Published && $post->state === PostState::Approved && $post->scheduled_at) {
+                $post->transitionTo(PostState::Scheduled); // posted by hand (the Post today page) before anyone pressed Schedule: the approval stands
+            }
             $to === PostState::Withdrawn ? $this->withdraw($post) : $post->transitionTo($to);
         } catch (InvalidTransition|PublishFailed $e) {
             return back()->withErrors(['state' => $e->getMessage()]);
         }
+        $status = 'post-'.str_replace('_', '-', $post->state->value);
+        $return = (string) $request->input('return');
 
-        return redirect()->route('posts.edit', $post)->with('status', 'post-'.str_replace('_', '-', $post->state->value));
+        // the Post today page sends its own address along, to stay on the list; nothing else is followed
+        return $return === route('today') || str_starts_with($return, route('today').'?')
+            ? redirect()->to($return)->with(['status' => $status, 'done' => $post->id])
+            : redirect()->route('posts.edit', $post)->with('status', $status);
     }
 
     /**
@@ -339,13 +347,14 @@ class PostController extends Controller
         foreach (array_filter($post->settings['design'] ?? []) as $lang => $design) {
             $text .= "\n== Design text ".strtoupper($lang)." ==\n{$design}\n";
         }
-        if ($first = $post->settings['first_comment'] ?? null) {
-            $text .= "\n== First comment ==\n{$post->client->substitute($first)}\n";
-        }
-        foreach ($post->variants->groupBy('platform') as $platform => $variants) {
-            $text .= "\n== ".ucfirst(str_replace('_', ' ', $platform))." ==\n";
-            foreach ($variants as $v) {
-                $text .= '['.strtoupper($v->lang)."]\n{$post->client->substitute($v->caption)}\n".collect($v->hashtags)->map(fn ($t) => '#'.ltrim($t, '#'))->join(' ')."\n".($v->alt_text ? "Alt text: {$v->alt_text}\n" : '');
+        // per platform the text to paste as the Post today page copies it: every language, the signature, the hashtags, links tagged
+        foreach ($post->platforms as $platform) {
+            $text .= "\n== ".ucfirst(str_replace('_', ' ', $platform))." ==\n{$post->pasteText($platform)}\n";
+            if ($alt = $post->altTextFor($platform)) {
+                $text .= "\nAlt text: {$alt}\n";
+            }
+            if (in_array($platform, ['instagram', 'facebook'], true) && ($first = $post->firstCommentFor($platform)) !== '') {
+                $text .= "\nFirst comment:\n{$first}\n";
             }
         }
         $zip->addFromString('captions.txt', $text);

@@ -186,7 +186,8 @@ test('a post exports as a ZIP of media and captions, and a client month as a CSV
     expect($zip->getFromName('ALMYRA_photo.jpg'))->toBe($photo)
         ->and(getimagesizefromstring($zip->getFromName("{$post->name}_EL.jpg")))->toMatchArray([0 => 640, 1 => 480, 'mime' => 'image/jpeg'])
         ->and($zip->getFromName("{$post->name}_EN.jpg"))->not->toBe($zip->getFromName("{$post->name}_EL.jpg"))
-        ->and($zip->getFromName('captions.txt'))->toContain('== Instagram ==', "[EL]\nΓεια", '#chania', 'Alt text: A deck', "== Design text EN ==\nHeadline", "== First comment ==\n#chania #crete #sunset");
+        // per platform the text to paste, as the Post today page copies it: every language, the hashtags once, the alt text, the first comment
+        ->and($zip->getFromName('captions.txt'))->toContain("== Instagram ==\nΓεια, \"Χανιά\"\n\nHello\n\n#chania #crete\n\nAlt text: A deck\n\nFirst comment:\n#chania #crete #sunset\n", "== Design text EN ==\nHeadline");
 
     $csv = $this->actingAs($this->staff)->get("/clients/{$this->client->id}/posts/export.csv?date=2026-11-01")->assertOk()->assertHeader('Content-Type', 'text/csv; charset=UTF-8')->getContent();
     expect($csv)->toStartWith("\xEF\xBB\xBFdate,time,post,state,platform,format,pillar,caption_el,caption_en,hashtags,alt_text,design_el,design_en,first_comment,media\n")
