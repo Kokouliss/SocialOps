@@ -3,10 +3,10 @@
 namespace App\Console\Commands;
 
 use App\Alerts\Slack;
+use App\Mail\Outbox;
 use App\Mail\ReviewMail;
 use App\Models\Review;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Mail;
 
 /** Runs hourly: reminder to the approvers at half the SLA, escalation to the agency when overdue, auto-approval where the client allows it. */
 class RemindReviews extends Command
@@ -29,7 +29,7 @@ class RemindReviews extends Command
             }
             if (now()->lt($review->due_at)) {
                 if (! $review->reminded_at && now()->gte($review->created_at->copy()->average($review->due_at))) {
-                    Mail::to($review->approverEmails())->send(new ReviewMail($review, 'reminder'));
+                    Outbox::send($review->approverEmails(), new ReviewMail($review, 'reminder')); // nobody to remind, or a mail problem: logged, the other reviews still run
                     $review->forceFill(['reminded_at' => now()])->save();
                 }
             } elseif ($review->client->profile['approval']['auto_approve_on_timeout']) { // ClientProfile only allows this for the optional policy
@@ -37,9 +37,7 @@ class RemindReviews extends Command
                 $this->info("Auto-approved review {$review->id} for {$review->client->name}.");
             } elseif (! $review->escalated_at) {
                 $mail = new ReviewMail($review, 'overdue');
-                if ($review->creator) {
-                    Mail::to($review->creator->email)->send($mail);
-                }
+                Outbox::send($review->creator?->email, $mail);
                 Slack::mailed($mail, route('clients.reviews', $review->client_id));
                 $review->forceFill(['escalated_at' => now()])->save();
             }

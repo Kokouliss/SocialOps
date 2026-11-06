@@ -25,7 +25,6 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use ZipArchive;
@@ -285,11 +284,7 @@ class PostController extends Controller
 
         if ($data['action'] === 'review') {
             [$sendable, $skipped] = $posts->partition(fn (Post $p) => in_array($p->state, ReviewController::SENDABLE, true));
-            try {
-                $reviews = $sendable->groupBy('client_id')->map(fn ($group) => ReviewController::send($group->first()->client, $group->pluck('id')->all(), $request->user()->id));
-            } catch (ValidationException $e) {
-                return back()->withErrors($e->errors());
-            }
+            $reviews = $sendable->groupBy('client_id')->map(fn ($group) => ReviewController::send($group->first()->client, $group->pluck('id')->all(), $request->user()->id));
             $done = __(':n sent for approval', ['n' => $sendable->count()]);
             session()->flash('warning', ReviewController::mailWarning($reviews));
         } else {

@@ -130,3 +130,66 @@ test('the review page serves a post\'s media only through the signed link and on
     $this->get("/review/{$review->id}/asset/{$asset->id}")->assertForbidden();
     $this->get($review->assetUrl($stranger))->assertNotFound();
 });
+
+/** The real mailer against a closed port: what a broken mail setting on the server does. */
+function breakTheMailServer(): void
+{
+    Mail::swap(new MailManager(app()));
+    config(['mail.default' => 'smtp', 'mail.mailers.smtp.host' => '127.0.0.1', 'mail.mailers.smtp.port' => 1, 'mail.mailers.smtp.timeout' => 1]);
+}
+
+function withoutApprovers(Client $client): Client
+{
+    $profile = $client->profile;
+    $profile['approval']['approvers'] = [];
+    $client->update(['profile' => $profile]);
+
+    return $client;
+}
+
+test('a client without approvers still gets a review and its link: no e-mail goes out and the page says to send the link yourself', function () {
+    withoutApprovers($this->client);
+
+    $this->actingAs($this->user)->post(route('reviews.store', $this->client), ['posts' => [$this->dated->id]])
+        ->assertSessionHasNoErrors()->assertRedirect(route('clients.reviews', $this->client))
+        ->assertSessionHas('warning', 'Almyra Beach Lounge has no approver in the profile, so no e-mail went out. Copy the link below and send it to the client yourself.');
+    $review = Review::latest('id')->first();
+
+    expect($this->dated->fresh()->state)->toBe(PostState::InReview);
+    Mail::assertNothingSent();
+    $this->actingAs($this->user)->get(route('clients.reviews', $this->client))->assertOk()
+        ->assertSee($review->url())->assertSee('approvers: none yet, so you send the link yourself.');
+    $this->get($review->url())->assertOk()->assertSee('Almyra Beach Lounge');
+
+    // the calendar list's bulk "send for approval" takes the same road
+    $this->actingAs($this->user)->post(route('posts.bulk'), ['action' => 'review', 'posts' => [$this->undated->id]])->assertSessionHasNoErrors();
+    expect($this->undated->fresh()->state)->toBe(PostState::InReview);
+});
+
+test('the client\'s answer goes through when the mail server is down: no error page, the post moves on and the review closes', function () {
+    $review = sendForApproval($this->client, $this->dated);
+    breakTheMailServer(); // the "all answered" mail to the agency fails
+
+    $this->post($review->url(), ['post_id' => $this->dated->id, 'decision' => 'approved', 'name' => 'Maria'])
+        ->assertSessionHasNoErrors()->assertRedirect($review->url());
+
+    expect($this->dated->fresh()->state)->toBe(PostState::Scheduled)
+        ->and($review->fresh()->completed_at)->not->toBeNull()
+        ->and($review->posts()->first()->pivot->decided_by)->toBe('Maria');
+    $this->get($review->url())->assertOk();
+});
+
+test('reviews:remind carries on past a client without approvers and a mail server that is down', function () {
+    $other = withoutApprovers(Client::factory()->create());
+    $silent = sendForApproval($other, Post::factory()->create(['client_id' => $other->id]));
+    $mailed = sendForApproval($this->client, $this->dated);
+    breakTheMailServer();
+
+    $this->travel(30)->hours(); // past half of the 48 h: reminders (one to nobody, one that fails)
+    $this->artisan('reviews:remind')->assertSuccessful();
+    expect($silent->fresh()->reminded_at)->not->toBeNull()->and($mailed->fresh()->reminded_at)->not->toBeNull();
+
+    $this->travel(30)->hours(); // overdue: the escalation mail fails too, and the run still ends well
+    $this->artisan('reviews:remind')->assertSuccessful();
+    expect($silent->fresh()->escalated_at)->not->toBeNull()->and($mailed->fresh()->escalated_at)->not->toBeNull();
+});

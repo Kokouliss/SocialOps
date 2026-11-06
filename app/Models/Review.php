@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Alerts\Slack;
+use App\Mail\Outbox;
 use App\Mail\ReviewMail;
 use App\Posts\PostState;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -10,7 +11,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 
 /** A batch of posts sent to a client's approvers; the signed link is their only credential. */
@@ -23,6 +23,9 @@ class Review extends Model
 
     /** Why the request e-mail did not go out, when it did not (not stored: the review and the link exist either way). */
     public ?string $mailError = null;
+
+    /** The client's profile has no approver, so no e-mail went out and the staff send the link themselves (not stored). */
+    public bool $noApprover = false;
 
     protected function casts(): array
     {
@@ -83,10 +86,9 @@ class Review extends Model
 
         if ($this->pending()->doesntExist()) {
             $this->forceFill(['completed_at' => now()])->save();
+            // the client's answers are saved by now: a mail server problem is logged, never shown to the client as an error page
             $mail = new ReviewMail($this, 'completed');
-            if ($this->creator) {
-                Mail::to($this->creator->email)->send($mail);
-            }
+            Outbox::send($this->creator?->email, $mail);
             Slack::mailed($mail, route('clients.reviews', $this->client_id));
         }
     }

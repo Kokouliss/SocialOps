@@ -4,7 +4,7 @@
     </x-slot>
 
     @php($approval = $client->profile['approval'])
-    @php($policy = __('Policy: :policy, :hours h to answer, approvers: :approvers.', ['policy' => $approval['policy'], 'hours' => $approval['sla_hours'], 'approvers' => collect($approval['approvers'])->map(fn ($a) => "{$a['name']} <{$a['email']}>")->join(', ') ?: '—']).($approval['auto_approve_on_timeout'] ? ' '.__('Posts are approved automatically when the time runs out.') : ''))
+    @php($policy = __('Policy: :policy, :hours h to answer, approvers: :approvers.', ['policy' => $approval['policy'], 'hours' => $approval['sla_hours'], 'approvers' => collect($approval['approvers'])->map(fn ($a) => "{$a['name']} <{$a['email']}>")->join(', ') ?: __('none yet, so you send the link yourself')]).($approval['auto_approve_on_timeout'] ? ' '.__('Posts are approved automatically when the time runs out.') : ''))
     <div class="py-6">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-4">
             @if (session('status'))

@@ -23,7 +23,7 @@ Own the workflow and the publishing. No paid middleman.
 2. Asset inbox per client: no-login upload link, auto-naming, tags.
 3. Content calendar with post state machine.
 4. AI drafting: Claude API, EL + EN captions, per-platform variants, alt text, hashtags.
-5. Client approval portal: signed expiring magic links, per-network previews, inline comments, approve on mobile, reminders.
+5. Client approval portal: signed expiring magic links, per-network previews, inline comments, approve on mobile, reminders. A client without approvers in the profile still gets the review and its link (no e-mail; the Approvals page says to send the link by hand). Every approval mail (request, reminder, overdue, "all answered") goes through `App\Mail\Outbox::send()`, which logs a mail server problem instead of throwing: the client's answer and the hourly `reviews:remind` never fail because of mail.
 6. Publishing to Instagram, Facebook and TikTok through our own drivers; LinkedIn by hand. TikTok posts stay private (SELF_ONLY) until the audit passes; until then public TikTok posts go through Manual-Needed. No other platforms, now or later.
 7. Token health monitor, plus `posts:preflight` (hourly: every account with a post due in the next 24 hours answers one cheap API call, or Slack hears about it once a day).
 
