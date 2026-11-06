@@ -11,6 +11,41 @@
                 <p class="text-green-600">{{ __(ucfirst(str_replace('-', ' ', session('status')))) }}.</p>
             @endif
 
+            <x-section :title="__('Waiting for Claude')" :description="__('What the team asked Claude for. The scheduled task picks it up once an hour.')" flush class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="text-left text-xs uppercase tracking-wide text-gray-600"><tr><th class="{{ $th }}">{{ __('Request') }}</th><th class="{{ $th }}">{{ __('Client') }}</th><th class="{{ $th }}">{{ __('Queued') }}</th><th></th></tr></thead>
+                    <tbody class="divide-y divide-gray-200">
+                        @forelse ($claude as $request)
+                            @php($plan = $request instanceof \App\Models\Report)
+                            @php($at = \App\Planning\ClaudeQueue::askedAt($request))
+                            <tr class="align-top">
+                                <td class="{{ $td }}">
+                                    @if ($plan)
+                                        <span class="font-medium text-gray-900">{{ __('Plan') }}:</span> {{ \App\Planning\ClaudeQueue::describe($request) }}
+                                        @if (filled($request->meta['instruction'] ?? null))<p class="mt-0.5 text-gray-600">{{ __('About:') }} {{ Str::limit($request->meta['instruction'], 160) }}</p>@endif
+                                    @else
+                                        <span class="font-medium text-gray-900">{{ __('Captions') }}:</span> <a class="font-medium text-gray-900 hover:text-brand-600" href="{{ route('posts.edit', $request) }}">{{ $request->name }}</a>
+                                    @endif
+                                </td>
+                                <td class="{{ $td }} whitespace-nowrap"><a class="font-medium text-gray-900 hover:text-brand-600" href="{{ route('clients.edit', $request->client) }}">{{ $request->client->name }}</a></td>
+                                <td class="{{ $td }} whitespace-nowrap tabular-nums">{{ $at->format('d-m-Y H:i') }} <span class="text-gray-600">· {{ $at->diffForHumans() }}</span>
+                                    @if (\App\Planning\ClaudeQueue::isLate($request)) <span class="rounded-full bg-red-100 px-2 py-0.5 text-xs text-red-800">{{ __('over 2 hours') }}</span>@endif
+                                </td>
+                                <td class="{{ $td }} whitespace-nowrap text-right">
+                                    @if ($plan)
+                                        <form method="POST" action="{{ route('claude.cancel', $request) }}">@csrf @method('DELETE')<button class="font-medium text-gray-900 hover:text-brand-600">{{ __('Cancel') }}</button></form>
+                                    @else
+                                        <form method="POST" action="{{ route('claude.stop', $request) }}">@csrf<button class="font-medium text-gray-900 hover:text-brand-600">{{ __('Stop asking') }}</button></form>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="4" class="{{ $td }} text-gray-600">{{ __('Nothing waiting for Claude.') }}</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </x-section>
+
             <x-section :title="__('Waiting')" :description="__('Publishing and planning run on the queue, which the per-minute scheduled task works through.')" flush>
                 <table class="w-full">
                     <thead class="text-left text-xs uppercase tracking-wide text-gray-600"><tr><th class="{{ $th }}">{{ __('Job') }}</th><th class="{{ $th }}">{{ __('Attempts') }}</th><th class="{{ $th }}">{{ __('Due') }}</th></tr></thead>

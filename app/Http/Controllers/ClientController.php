@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ClientRequest;
 use App\Jobs\PlanContentBatch;
 use App\Models\Client;
+use App\Planning\ClaudeQueue;
 use App\Planning\PlanRequest;
 use App\Posts\PostState;
 use Illuminate\Http\RedirectResponse;
@@ -42,7 +43,11 @@ class ClientController extends Controller
 
     public function edit(Client $client): View
     {
-        return view('clients.edit', ['client' => $client, 'accounts' => PlanRequest::accounts($client->toProfileArray())]);
+        return view('clients.edit', [
+            'client' => $client,
+            'accounts' => PlanRequest::accounts($client->toProfileArray()),
+            'claudeJobs' => $client->reports()->where('kind', 'claude_job')->orderBy('id')->get(),
+        ]);
     }
 
     /** The Instagram grid as it will look: feed, carousel and Reel posts with a date, newest first, three across, with the first asset. */
@@ -100,10 +105,13 @@ class ClientController extends Controller
         return redirect()->route('clients.edit', $client)->with('status', 'post-started');
     }
 
-    /** A plan request for the scheduled Claude worker (list-claude-jobs); save-plan removes it. */
+    /** A plan request for the scheduled Claude worker (list-claude-jobs); save-plan removes it. The same request twice is queued once. */
     public function queueClaude(Request $request, Client $client): RedirectResponse
     {
         $fields = $request->validateWithBag('job', ['posts' => ['required', 'integer', 'min:1', 'max:'.PlanRequest::MAX_POSTS], 'from' => ['required', 'date_format:Y-m-d'], 'days' => ['required', 'integer', 'min:1', 'max:92'], 'instruction' => ['nullable', 'string', 'max:5000']]);
+        if ($waiting = ClaudeQueue::same($client, $fields)->first()) {
+            return redirect()->route('clients.edit', $client)->with('status', 'job-already-waiting')->with('queued_at', $waiting->created_at->format('d-m-Y H:i'));
+        }
         $client->reports()->create(['kind' => 'claude_job', 'title' => __('Plan :posts posts from :from', $fields, $client->uiLocale()), 'body' => (string) ($fields['instruction'] ?? ''), 'meta' => $fields]);
 
         return redirect()->route('clients.edit', $client)->with('status', 'job-queued');

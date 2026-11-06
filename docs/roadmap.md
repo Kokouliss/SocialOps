@@ -57,3 +57,4 @@ Exit: the team plans, briefs, approves and tracks every client's month in Social
 - [x] Clients board: status, person, priority, plan due, posts per week, pending notes, links (the Agency tab of the profile form)
 - [x] Deadlines per client per month: client side and agency side, due date, done (Deadlines tab, due this week on the dashboard)
 - [x] Recycle bin per client: a deleted post waits there whole and can be restored or deleted for good (Recycle bin tab, D20)
+- [x] The Claude queue in sight: waiting requests on the client page and the Jobs page with Cancel and Stop asking, the same plan request queued once, a dashboard box and one Slack line when a request waits over 2 hours

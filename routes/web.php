@@ -109,6 +109,8 @@ Route::middleware(['auth', LimitClients::class])->group(function () {
 
     // Claude called from the server: 404 while FEATURE_CLAUDE_API is off (config/features.php); Claude works through the MCP connector instead
     Route::post('/clients/{client}/claude-jobs', [ClientController::class, 'queueClaude'])->name('clients.queue');
+    Route::delete('/claude-jobs/{report}', [JobController::class, 'cancelPlan'])->name('claude.cancel'); // the queue for the scheduled Claude worker (MCP)
+    Route::post('/posts/{post}/stop-asking-claude', [JobController::class, 'stopAsking'])->name('claude.stop');
     Route::middleware('feature:claude_api')->group(function () {
         Route::post('/clients/{client}/plan', [ClientController::class, 'plan'])->name('clients.plan');
         Route::post('/clients/{client}/draft', [ClientController::class, 'draft'])->name('clients.draft');
