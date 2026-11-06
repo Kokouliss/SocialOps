@@ -41,7 +41,7 @@ class Client extends Model
         return $this->hasMany(Asset::class);
     }
 
-    /** File an upload in this client's inbox under the agency name and record it as an asset; $attrs adds pillar, tags, note, uploaded_via. */
+    /** File an upload in this client's inbox under the agency name and record it as an asset; $attrs adds pillar, tags, note, uploaded_via (Asset::sources(), link by default). */
     public function storeAsset(UploadedFile $file, array $attrs = []): Asset
     {
         $disk = config('filesystems.default');

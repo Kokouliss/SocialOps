@@ -25,6 +25,17 @@ class Asset extends Model
         return ['people_consent' => 'boolean', 'ugc_permission' => 'boolean', 'size' => 'integer'];
     }
 
+    /**
+     * Every `uploaded_via` value with its label: the client's no-login link, a staff upload on the assets page,
+     * a watched Google Drive or Dropbox folder, a Canva import, a Reel made from clips.
+     *
+     * @return array<string, string>
+     */
+    public static function sources(): array
+    {
+        return ['link' => __('Client upload link'), 'staff' => __('Team upload'), 'drive' => 'Google Drive', 'dropbox' => 'Dropbox', 'canva' => 'Canva', 'reel' => __('Reel made here')];
+    }
+
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);

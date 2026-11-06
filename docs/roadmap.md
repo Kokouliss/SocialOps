@@ -59,3 +59,4 @@ Exit: the team plans, briefs, approves and tracks every client's month in Social
 - [x] Recycle bin per client: a deleted post waits there whole and can be restored or deleted for good (Recycle bin tab, D20)
 - [x] The Claude queue in sight: waiting requests on the client page and the Jobs page with Cancel and Stop asking, the same plan request queued once, a dashboard box and one Slack line when a request waits over 2 hours
 - [x] Post today: the posts due today across the clients, media to download, Copy buttons for the exact texts to paste, Mark published (works on a phone)
+- [x] Assets page rework: the team uploads many photos and videos at once (progress per file, batch pillar and tags), the other intake ways and the Reel tool folded, filters (search, kind, pillar, used or not), preview, delete that names the posts using the file

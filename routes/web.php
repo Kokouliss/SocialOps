@@ -48,7 +48,9 @@ Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::resource('clients', ClientController::class)->except('show');
     Route::get('/clients/{client}/assets', [AssetController::class, 'index'])->name('clients.assets');
     Route::get('/clients/{client}/grid', [ClientController::class, 'grid'])->name('clients.grid');
+    Route::post('/clients/{client}/assets', [AssetController::class, 'store'])->name('assets.store'); // staff upload, one file or many
     Route::get('/assets/{asset}/thumb', [AssetController::class, 'thumb'])->name('assets.thumb');
+    Route::get('/assets/{asset}/view', [AssetController::class, 'show'])->name('assets.view');
     Route::get('/assets/{asset}/download', [AssetController::class, 'download'])->name('assets.download');
     Route::delete('/assets/{asset}', [AssetController::class, 'destroy'])->name('assets.destroy');
     Route::post('/clients/{client}/reel', [AssetController::class, 'reel'])->name('assets.reel');

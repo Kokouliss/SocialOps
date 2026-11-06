@@ -2,25 +2,34 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\InboxUploadRequest;
 use App\Jobs\AssembleReel;
 use App\Media\Canva;
 use App\Media\GoogleDrive;
 use App\Media\ReelAssembler;
 use App\Models\Asset;
 use App\Models\Client;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use RuntimeException;
+use Symfony\Component\HttpFoundation\Response as BaseResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 class AssetController extends Controller
 {
     public const LINK_DAYS = 30;
+
+    /** The filters of the files grid, kept in the query string and carried through a delete. */
+    public const FILTERS = ['q', 'kind', 'pillar', 'used'];
 
     /** One queued Reel from the ticked clips; it lands in the inbox like an upload. */
     public function reel(Request $request, Client $client): RedirectResponse
@@ -51,13 +60,22 @@ class AssetController extends Controller
                 [$designs, $canvaError] = [[], $e->getMessage()];
             }
         }
+        $usedBy = fn ($q) => $q->withTrashed(); // a post in the recycle bin still uses its media
+        $term = trim((string) $request->input('q'));
 
         return view('clients.assets', [
             'client' => $client,
-            'assets' => $client->assets()->with(['posts' => fn ($q) => $q->withTrashed()]) // a post in the recycle bin still uses its media
+            'assets' => $client->assets()->with(['posts' => $usedBy])
                 ->when($request->input('kind'), fn ($q, $kind) => $q->where('kind', $kind))
                 ->when($request->input('pillar'), fn ($q, $pillar) => $q->where('pillar', $pillar))
-                ->latest()->get(),
+                ->when($request->input('used') === 'yes', fn ($q) => $q->whereHas('posts', $usedBy))
+                ->when($request->input('used') === 'no', fn ($q) => $q->whereDoesntHave('posts', $usedBy))
+                // the name, the file's own name and the tags; a pillar typed as shown ("food drink") finds food_drink
+                ->when($term !== '', fn ($q) => $q->where(fn ($w) => $w->where('name', 'like', "%$term%")->orWhere('original_name', 'like', "%$term%")
+                    ->orWhere('season', 'like', "%$term%")->orWhere('note', 'like', "%$term%")->orWhere('pillar', 'like', '%'.str_replace(' ', '_', $term).'%')))
+                ->latest()->latest('id')->get(),
+            'filtered' => (bool) array_filter($request->only(self::FILTERS)),
+            'videos' => $client->assets()->where('kind', 'video')->orderBy('original_name')->orderBy('id')->get(), // the Reel tool's clips, in the order they play
             'inboxUrl' => URL::temporarySignedRoute('inbox.show', now()->addDays(self::LINK_DAYS), ['client' => $client->slug]),
             'canva' => $canvaAccount,
             'drive' => $client->accounts()->where('platform', 'drive')->first(),
@@ -66,10 +84,69 @@ class AssetController extends Controller
             'dropboxReady' => (bool) config('services.dropbox.app_key'),
             'canvaReady' => (bool) config('services.canva.client_id'),
             'reelReady' => ReelAssembler::binary() !== null,
-            'hasVideos' => $client->assets()->where('kind', 'video')->exists(),
             'designs' => $designs,
             'canvaError' => $canvaError,
         ]);
+    }
+
+    /**
+     * Staff upload from the assets page: the files of one batch share the pillar and tags and are filed like the client's
+     * upload link (same types and sizes, agency names), uploaded_via staff. Each file is checked and stored on its own, so a
+     * refused or failed file never stops the others. The page sends one file per request to show its progress; a plain form
+     * post sends them all.
+     */
+    public function store(Request $request, Client $client): JsonResponse|RedirectResponse
+    {
+        $data = $request->validateWithBag('upload', [
+            'files' => ['required', 'array', 'min:1', 'max:'.InboxUploadRequest::MAX_FILES],
+            'pillar' => ['nullable', Rule::in(array_keys($client->profile['pillars']))],
+            'season' => ['nullable', 'string', 'max:30'],
+            'people_consent' => ['sometimes', 'boolean'],
+            'ugc_permission' => ['sometimes', 'boolean'],
+            'note' => ['nullable', 'string', 'max:500'],
+        ], ['files.required' => __('Choose at least one photo or video.')]);
+        $tags = [
+            'pillar' => $data['pillar'] ?? null,
+            'season' => $data['season'] ?? null,
+            'people_consent' => $request->boolean('people_consent'),
+            'ugc_permission' => $request->boolean('ugc_permission'),
+            'note' => $data['note'] ?? null,
+            'uploaded_via' => 'staff',
+        ];
+
+        $uploaded = $failed = [];
+        foreach ($request->file('files', []) as $file) {
+            if (! $file instanceof UploadedFile) {
+                continue;
+            }
+            $check = Validator::make(['file' => $file], ['file' => InboxUploadRequest::fileRules()], [
+                'file.mimetypes' => InboxUploadRequest::typeMessage(),
+                'file.max' => InboxUploadRequest::sizeMessage(),
+                'file.uploaded' => __('The upload did not finish, try again.'),
+            ]);
+            if ($check->fails()) {
+                $failed[] = ['name' => $file->getClientOriginalName(), 'error' => $check->errors()->first('file')];
+
+                continue;
+            }
+            try {
+                $asset = $client->storeAsset($file, $tags);
+                $uploaded[] = ['id' => $asset->id, 'name' => $asset->name, 'original_name' => $asset->original_name];
+            } catch (Throwable $e) {
+                report($e);
+                $failed[] = ['name' => $file->getClientOriginalName(), 'error' => __('Could not be saved, try again.')];
+            }
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json(['uploaded' => $uploaded, 'failed' => $failed], $uploaded ? 201 : 422);
+        }
+        $back = redirect()->route('clients.assets', $client);
+        if ($uploaded) {
+            $back->with('status', trans_choice('{1} :n file added|[2,*] :n files added', count($uploaded), ['n' => count($uploaded)]));
+        }
+
+        return $failed ? $back->withErrors(array_map(fn (array $f) => $f['name'].': '.$f['error'], $failed), 'upload') : $back;
     }
 
     /** A small JPEG of an image asset for the grid and lists; 404 for videos. */
@@ -78,16 +155,22 @@ class AssetController extends Controller
         return response($asset->preview(600) ?? abort(404), 200, ['Content-Type' => 'image/jpeg', 'Cache-Control' => 'private, max-age=86400']);
     }
 
+    /** The file itself in the browser, for the preview on the assets page (videos play, with byte ranges on the local disk). */
+    public function show(Asset $asset): BaseResponse
+    {
+        return $asset->inline();
+    }
+
     public function download(Asset $asset): StreamedResponse
     {
         return Storage::disk($asset->disk)->download($asset->path, $asset->name);
     }
 
-    public function destroy(Asset $asset): RedirectResponse
+    public function destroy(Request $request, Asset $asset): RedirectResponse
     {
         Storage::disk($asset->disk)->delete($asset->path);
         $asset->delete();
 
-        return redirect()->route('clients.assets', $asset->client_id)->with('status', 'asset-deleted');
+        return redirect()->route('clients.assets', ['client' => $asset->client_id] + array_filter($request->only(self::FILTERS)))->with('status', 'asset-deleted');
     }
 }
