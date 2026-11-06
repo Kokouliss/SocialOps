@@ -1,7 +1,9 @@
 <?php
 
 use App\Models\User;
+use Illuminate\Mail\MailManager;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Mail;
 
 beforeEach(function () {
     $this->env = base_path('.env.settings-test');
@@ -45,4 +47,19 @@ test('the migration made the oldest login admin and admins hand the flag on from
 
     $this->actingAs($admin)->patch("/staff/{$other->id}", ['is_admin' => 1])->assertRedirect('/staff');
     expect($other->fresh()->is_admin)->toBeTrue();
+});
+
+test('the test e-mail button is for admins and shows the mail server\'s own answer when it fails', function () {
+    $admin = User::factory()->create(['is_admin' => true, 'email' => 'panos@example.com']);
+    $this->actingAs(User::factory()->create())->post(route('settings.test-mail'))->assertForbidden();
+
+    Mail::swap(new MailManager(app()));
+    config(['mail.default' => 'array']);
+    $this->actingAs($admin)->from(route('settings.edit'))->post(route('settings.test-mail'))
+        ->assertRedirect(route('settings.edit'))->assertSessionHas('status', 'test-mail-sent');
+
+    config(['mail.default' => 'smtp', 'mail.mailers.smtp.host' => '127.0.0.1', 'mail.mailers.smtp.port' => 1, 'mail.mailers.smtp.timeout' => 1]);
+    Mail::swap(new MailManager(app()));
+    $this->actingAs($admin)->from(route('settings.edit'))->post(route('settings.test-mail'))
+        ->assertRedirect(route('settings.edit'))->assertSessionHasErrors(['mail' => 'The test e-mail could not be sent: Connection could not be established with host "127.0.0.1:1": stream_socket_client(): Unable to connect to 127.0.0.1:1 (Connection refused)']);
 });

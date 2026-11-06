@@ -869,5 +869,12 @@
     "none yet, so you send the link yourself": "κανένας ακόμη, οπότε στέλνεις εσύ τον σύνδεσμο",
     ":platform captions are limited to :max characters.": "Οι λεζάντες για :platform έχουν όριο :max χαρακτήρες.",
     "The e-mail could not be sent right now. Try again later, or ask an admin to set a new password.": "Το e-mail δεν μπόρεσε να σταλεί αυτή τη στιγμή. Δοκίμασε ξανά αργότερα ή ζήτα από έναν διαχειριστή να ορίσει νέο κωδικό.",
-    "The e-mail could not be sent (:error). Check the mail settings on the Settings page.": "Το e-mail δεν στάλθηκε (:error). Έλεγξε τις ρυθμίσεις e-mail στη σελίδα Ρυθμίσεις."
+    "The e-mail could not be sent (:error). Check the mail settings on the Settings page.": "Το e-mail δεν στάλθηκε (:error). Έλεγξε τις ρυθμίσεις e-mail στη σελίδα Ρυθμίσεις.",
+    "This is a test e-mail from Social Ops. If you can read it, the mail settings work.": "Αυτό είναι ένα δοκιμαστικό e-mail από το Social Ops. Αν το διαβάζεις, οι ρυθμίσεις e-mail δουλεύουν.",
+    "Social Ops test e-mail": "Δοκιμαστικό e-mail του Social Ops",
+    "The test e-mail could not be sent: :error": "Το δοκιμαστικό e-mail δεν στάλθηκε: :error",
+    "Test e-mail sent to :email. If it does not arrive within a few minutes, look in the spam folder.": "Το δοκιμαστικό e-mail στάλθηκε στο :email. Αν δεν φτάσει σε λίγα λεπτά, κοίτα στον φάκελο ανεπιθύμητων.",
+    "Test e-mail": "Δοκιμαστικό e-mail",
+    "Sends a short e-mail to you (:email) with the mail settings below, and shows the mail server's answer when it fails.": "Στέλνει ένα σύντομο e-mail σε σένα (:email) με τις παρακάτω ρυθμίσεις e-mail και δείχνει την απάντηση του διακομιστή όταν αποτυγχάνει.",
+    "Send a test e-mail": "Αποστολή δοκιμαστικού e-mail"
 }
