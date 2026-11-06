@@ -8,6 +8,7 @@ use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DeadlineController;
+use App\Http\Controllers\ExpiredLinkController;
 use App\Http\Controllers\FolderController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\JobController;
@@ -151,5 +152,7 @@ Route::middleware('signed')->group(function () {
     Route::post('/review/{review}', [PortalController::class, 'decide'])->name('portal.decide');
     Route::get('/review/{review}/asset/{asset}', [PortalController::class, 'asset'])->name('portal.asset');
 });
+// An expired or incomplete one of those links shows a page instead of the bare 403 (App\Http\ExpiredLink); its button lands here
+Route::post('/link-request', [ExpiredLinkController::class, 'store'])->name('links.request');
 
 require __DIR__.'/auth.php';
