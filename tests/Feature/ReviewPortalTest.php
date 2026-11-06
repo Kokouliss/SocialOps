@@ -152,7 +152,7 @@ test('a client without approvers still gets a review and its link: no e-mail goe
 
     $this->actingAs($this->user)->post(route('reviews.store', $this->client), ['posts' => [$this->dated->id]])
         ->assertSessionHasNoErrors()->assertRedirect(route('clients.reviews', $this->client))
-        ->assertSessionHas('warning', 'Almyra Beach Lounge has no approver in the profile, so no e-mail went out. Copy the link below and send it to the client yourself.');
+        ->assertSessionHas('warning', 'Almyra Beach Lounge has no approver in the profile, so no e-mail went out. Copy the link on the Approvals page and send it to the client yourself.');
     $review = Review::latest('id')->first();
 
     expect($this->dated->fresh()->state)->toBe(PostState::InReview);

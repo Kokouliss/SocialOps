@@ -48,7 +48,7 @@ class ReviewController extends Controller
                 return __('The e-mail to the approvers could not be sent (:error). Copy the link to the client yourself and check the mail settings on the Settings page.', ['error' => $review->mailError]);
             }
             if ($review->noApprover) {
-                return __(':client has no approver in the profile, so no e-mail went out. Copy the link below and send it to the client yourself.', ['client' => $review->client->name]);
+                return __(':client has no approver in the profile, so no e-mail went out. Copy the link on the Approvals page and send it to the client yourself.', ['client' => $review->client->name]);
             }
         }
 
