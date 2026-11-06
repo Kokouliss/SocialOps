@@ -180,6 +180,7 @@ test('delete asks first and names the posts that would lose the file, one in the
 });
 
 test('the page puts the team upload first, the other ways and the Reel tool folded, then the files', function () {
+    config(['services.ffmpeg.path' => PHP_BINARY]); // any executable shows the Reel form (the page never runs it), so CI without ffmpeg checks it too; ReelTest covers "ffmpeg missing"
     Asset::factory()->create(['client_id' => $this->client->id, 'kind' => 'video', 'mime' => 'video/mp4', 'name' => 'ALMYRA_CLIP.mp4', 'original_name' => 'IMG_0002.mp4']);
     Asset::factory()->create(['client_id' => $this->client->id, 'kind' => 'video', 'mime' => 'video/mp4', 'name' => 'ALMYRA_CLIP2.mp4', 'original_name' => 'IMG_0001.mp4']);
 
