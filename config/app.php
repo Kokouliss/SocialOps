@@ -65,7 +65,8 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    // the agency and its clients are in Greece and Cyprus: times typed in the forms, "today", deadlines and reminders run on Athens time
+    'timezone' => env('APP_TIMEZONE', 'Europe/Athens'),
 
     /*
     |--------------------------------------------------------------------------

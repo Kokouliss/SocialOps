@@ -6,6 +6,7 @@ use Dotenv\Dotenv;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
 /** The server configuration (.env) edited in the browser by an admin, so nobody has to open system files. */
@@ -19,6 +20,20 @@ class SettingsController extends Controller
         $path = app()->environmentFilePath();
 
         return view('settings.index', ['values' => is_file($path) ? Dotenv::parse(file_get_contents($path)) : []]);
+    }
+
+    /** One short mail to the admin with the current mail settings: the server's own answer on the page when it fails. */
+    public function testMail(Request $request): RedirectResponse
+    {
+        try {
+            Mail::raw(__('This is a test e-mail from Social Ops. If you can read it, the mail settings work.'), fn ($message) => $message->to($request->user()->email)->subject(__('Social Ops test e-mail')));
+        } catch (\Throwable $e) {
+            report($e);
+
+            return back()->withErrors(['mail' => __('The test e-mail could not be sent: :error', ['error' => $e->getMessage()])]);
+        }
+
+        return back()->with('status', 'test-mail-sent');
     }
 
     public function update(Request $request): RedirectResponse
