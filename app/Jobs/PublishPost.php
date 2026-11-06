@@ -81,7 +81,7 @@ class PublishPost implements ShouldQueue
     /** The first comment (hashtags or a link) goes under Instagram and Facebook posts; a failure is told to Slack, the post stays Published. */
     private function firstComment(Post $post, Account $account, string $mediaId): void
     {
-        $text = trim($post->client->tagLinks($post->client->substitute((string) ($post->settings['first_comment'] ?? '')), $account->platform, $post->name));
+        $text = $post->firstCommentFor($account->platform);
         if ($text === '' || ! in_array($account->platform, ['instagram', 'facebook'])) {
             return;
         }

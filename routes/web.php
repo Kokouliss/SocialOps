@@ -21,6 +21,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\TodayController;
 use App\Http\Middleware\LimitClients;
 use App\Models\User;
 use Illuminate\Support\Facades\Artisan;
@@ -72,6 +73,7 @@ Route::middleware(['auth', LimitClients::class])->group(function () {
     Route::post('/reports/{report}/send', [ReportController::class, 'send'])->name('reports.send');
     Route::delete('/accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy'); // also Canva, Drive and Dropbox
     Route::get('/calendar', [CalendarController::class, 'index'])->name('calendar');
+    Route::get('/today', [TodayController::class, 'index'])->name('today'); // posting by hand: the texts to paste, then Mark published
     Route::get('/jobs', [JobController::class, 'index'])->name('jobs.index');
     Route::post('/jobs/{uuid}/retry', [JobController::class, 'retry'])->name('jobs.retry');
     Route::delete('/jobs/{uuid}', [JobController::class, 'forget'])->name('jobs.forget');

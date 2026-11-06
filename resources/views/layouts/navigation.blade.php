@@ -15,6 +15,8 @@
         <div class="space-y-0.5">
             <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">{{ __('Dashboard') }}</x-nav-link>
             <x-nav-link :href="route('calendar')" :active="request()->routeIs('calendar') && ! request('client')">{{ __('Calendar') }}</x-nav-link>
+            @php($toPost = \App\Http\Controllers\TodayController::toPost(auth()->user(), today())->count())
+            <x-nav-link :href="route('today')" :active="request()->routeIs('today')">{{ __('Post today') }}@if ($toPost)<span class="ml-auto rounded-full bg-brand-500 px-2 py-0.5 text-xs font-semibold text-white" title="{{ __('Posts still to post today') }}">{{ $toPost }}</span>@endif</x-nav-link>
             <x-nav-link :href="route('clients.index')" :active="request()->routeIs('clients.index', 'clients.create')">{{ __('Clients') }}</x-nav-link>
             <x-nav-link :href="route('jobs.index')" :active="request()->routeIs('jobs.*')">{{ __('Jobs') }}</x-nav-link>
             <x-nav-link :href="route('staff.index')" :active="request()->routeIs('staff.*')">{{ __('Staff') }}</x-nav-link>

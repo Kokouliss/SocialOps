@@ -38,6 +38,7 @@
                                         @endforeach
                                     @endif
                                 @endforeach
+                                <li class="px-6 py-3"><a href="{{ route('today') }}" class="font-medium text-gray-900 underline decoration-gray-400 underline-offset-4 hover:text-brand-600">{{ __('Post them by hand: open Post today') }}</a></li>
                             </ul>
                         </x-section>
                     @endif
